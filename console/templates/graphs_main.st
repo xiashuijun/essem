@@ -10,42 +10,35 @@ $topbar(index, indexList, zoneList)$
         <ul class="side-nav">
             <li id="rs_hour" class="range-select"><a id="rn_hour" class="range-nav" name="hour" href="#">Hour</a></li>
             <li id="rs_day" class="range-select"><a id="rn_day" class="range-nav" name="day" href="#">Day</a></li>
-            <li id="rs_week" class="range-select"><a id="rn_week" class="range-nav" name="week" href="#">Week</a></li>
-            <li id="rs_month" class="range-select"><a id="rn_month" class="range-nav" name="month" href="#">Month</a>
-            </li>
+            <li id="rs_week" class="range-select"><a id="rn_week" class="range-nav" name="week"  href="#">Week</a></li>
+            <li id="rs_month" class="range-select"><a id="rn_month" class="range-nav" name="month"  href="#">Month</a></li>
         </ul>
 
         $if(metric.multiField)$
         <h5 class="subheader">Graphs</h5>
-
         <div class="gfselect">
             $graphs:{graph |
             $if(graph.active)$
-            <span class="nowrap"><input name="msfield" id="msfield_$graph.field$" type="checkbox"
-                                        checked="checked"><label for="msfield_$graph.field$">$graph.shortTitle$</label></span>
+            <span class="nowrap"><input name="msfield" id="msfield_$graph.field$" type="checkbox" checked="checked"><label for="msfield_$graph.field$">$graph.shortTitle$</label></span>
             $else$
-            <span class="nowrap"><input name="msfield" id="msfield_$graph.field$" type="checkbox"><label
-                    for="msfield_$graph.field$">$graph.shortTitle$</label></span>
+            <span class="nowrap"><input name="msfield" id="msfield_$graph.field$" type="checkbox"><label for="msfield_$graph.field$">$graph.shortTitle$</label></span>
             $endif$
             }$
         </div>
         $endif$
 
         <h5 class="subheader">Downsample With</h5>
-
         <div class="gfselect">
-            $downsampleList:{downsampleFn |
+        $downsampleList:{downsampleFn |
             <span class="nowrap">
                 $if(downsampleFn.active)$
-                <input class="dfs" type="radio" checked="checked" name="dsfield" value="$downsampleFn.functionName$"
-                       id="dsfield_$downsampleFn.functionName$">
+                <input class="dfs" type="radio" checked="checked" name="dsfield" value="$downsampleFn.functionName$" id="dsfield_$downsampleFn.functionName$">
                 $else$
-                <input class="dfs" type="radio" name="dsfield" value="$downsampleFn.functionName$"
-                       id="dsfield_$downsampleFn.functionName$">
+                <input class="dfs" type="radio" name="dsfield" value="$downsampleFn.functionName$" id="dsfield_$downsampleFn.functionName$">
                 $endif$
                 <label for="dsfield_$downsampleFn.functionName$">$downsampleFn.displayName$</label>
             </span>
-            }$
+        }$
         </div>
 
         $if(app.multiHost)$
@@ -53,8 +46,7 @@ $topbar(index, indexList, zoneList)$
         <ul class="side-nav">
             <li id="hs_all" class="host-select"><a id="hn_all" class="host-nav" name="all" href="#">All</a></li>
             $app.hostList:{host |
-            <li id="hs_$host.name$" class="host-select"><a id="hn_$host.name$" class="host-nav" name="$host.name$"
-                                                           href="#">$host.name$</a></li>
+            <li id="hs_$host.name$" class="host-select"><a id="hn_$host.name$" class="host-nav" name="$host.name$" href="#">$host.name$</a></li>
             }$
         </ul>
         $endif$
@@ -71,8 +63,7 @@ $topbar(index, indexList, zoneList)$
                     <span class="subheader" id="range-detail" class="subheader"></span>
                     &nbsp;&nbsp;<a title="Previous range" href="" id="range-back"><i class="fi-rewind"></i></a>
                     &nbsp;&nbsp;<a title="Next range" href="" id="range-forward"><i class="fi-fast-forward"></i></a>
-                    &nbsp;&nbsp;|&nbsp;&nbsp;<a href="" title="Share these graphs" id="range-permalink"><i
-                        class="fi-link"></i></a>
+                    &nbsp;&nbsp;|&nbsp;&nbsp;<a href="" title="Share these graphs" id="range-permalink"><i class="fi-link"></i></a>
                     &nbsp;&nbsp;<a href="" title="JSON API" id="json-link"><i class="fi-cloud"></i></a>
                 </h6>
             </div>
@@ -100,25 +91,19 @@ $footer()$
     jQuery('#gloading').hide();
     jQuery('#missing_graph').hide();
 
-    $graphs:{
-        graph |
-        $if(!graph.active)
-        $
-        jQuery('#gr_$graph.field$').hide();
-        $endif$
-    }
-    $
+    $graphs:{graph |
+     $if(!graph.active)$
+     jQuery('#gr_$graph.field$').hide();
+     $endif$
+    }$
 
     var downsampleFn = 'avg';
 
-    $downsampleList:{
-        df |
-        $if(df.active)
-        $
+    $downsampleList:{df |
+      $if(df.active)$
         downsampleFn = '$df.functionName$';
-        $endif$
-    }
-    $
+      $endif$
+    }$
 
     var dataConfig = {};
     dataConfig.index = '$index$';
@@ -130,13 +115,12 @@ $footer()$
     dataConfig.downsampleInterval = downsampleInterval(dataConfig.range);
     dataConfig.startTimestamp = $range.startMillis$; //Echo if input timestamps...
     dataConfig.endTimestamp = $range.endMillis$;
-    if (dataConfig.startTimestamp == 0 || dataConfig.endTimestamp == 0) {
+    if(dataConfig.startTimestamp == 0 || dataConfig.endTimestamp == 0) {
         dataConfig.endTimestamp = new Date().getTime();
         dataConfig.startTimestamp = dataConfig.endTimestamp - rangeMillis(dataConfig.range);
     }
 
-    $if(host)
-    $
+    $if(host)$
     dataConfig.host = '$host$';
     activateHost(dataConfig.host);
     $else$
@@ -144,13 +128,11 @@ $footer()$
     $endif$
 
     function render(data) {
-        if (data.length > 0) {
+        if(data.length > 0) {
             jQuery('#missing_graph').hide();
-            $graphs:{
-                graph |
-                loadGraph(data, $graph.asJSON$, dataConfig);
-            }
-            $
+            $graphs:{ graph |
+            loadGraph(data, $graph.asJSON$, dataConfig);
+            }$
             showCheckedFields();
         } else {
             hideCheckedFields();
@@ -162,7 +144,7 @@ $footer()$
     activateRange(dataConfig.range);
     loadMetricData(dataConfig, render);
 
-    jQuery('.range-nav').click(function (event) {
+    jQuery('.range-nav').click(function(event) {
         event.preventDefault();
         var selectedRange = jQuery(this).attr('name');
         dataConfig.range = selectedRange;
@@ -172,36 +154,35 @@ $footer()$
         loadMetricData(dataConfig, render);
     });
 
-    jQuery('.dfs').click(function (event) {
+    jQuery('.dfs').click(function(event) {
         var fn = jQuery('input[name=dsfield]:checked').val();
         dataConfig.downsampleFn = fn;
         loadMetricData(dataConfig, render);
     });
 
-    jQuery('#range-back').click(function (event) {
+    jQuery('#range-back').click(function(event){
         event.preventDefault();
         dataConfig.endTimestamp = dataConfig.startTimestamp;
         dataConfig.startTimestamp = dataConfig.endTimestamp - rangeMillis(dataConfig.range);
         loadMetricData(dataConfig, render);
     });
 
-    jQuery('#range-forward').click(function (event) {
+    jQuery('#range-forward').click(function(event){
         event.preventDefault();
 
-        if (dataConfig.endTimestamp < (new Date().getTime() - 60000)) {
+        if(dataConfig.endTimestamp < (new Date().getTime() - 60000)) {
             dataConfig.startTimestamp = dataConfig.endTimestamp;
             dataConfig.endTimestamp = dataConfig.startTimestamp + rangeMillis(dataConfig.range);
             loadMetricData(dataConfig, render);
         }
     });
 
-    $if(app.multiHost)
-    $
-    if (dataConfig.host == '') activateHost('all');
-    jQuery('.host-nav').click(function (event) {
+   $if(app.multiHost)$
+    if(dataConfig.host == '') activateHost('all');
+    jQuery('.host-nav').click(function(event) {
         event.preventDefault();
         var host = jQuery(this).attr('name');
-        if (host == 'all') {
+        if(host == 'all') {
             dataConfig.host = '';
         } else {
             dataConfig.host = host;
@@ -209,19 +190,16 @@ $footer()$
         activateHost(host);
         loadMetricData(dataConfig, render);
     });
-    $endif$
+   $endif$
 
-    var currTimeField = jQuery('#curr-time');
-    var currTimeFormat = 'YYYY-MM-DD HH:mm:ss Z';
+   var currTimeField = jQuery('#curr-time');
+   var currTimeFormat = 'YYYY-MM-DD HH:mm:ss Z';
 
-    $if(zoneList)
-    $
-    $zoneList:{
-        zone |
-        if (offsetMatchesLocal('$zone.id$')) setCurrentTimezone('$zone.display$');
-    }
-    $
-    jQuery('.zone-nav').click(function (event) {
+   $if(zoneList)$
+    $zoneList:{zone |
+    if(offsetMatchesLocal('$zone.id$')) setCurrentTimezone('$zone.display$');
+    }$
+    jQuery('.zone-nav').click(function(event) {
         event.preventDefault();
         var zn = jQuery(this);
         var zid = zn.attr('name');
@@ -230,9 +208,9 @@ $footer()$
         setCurrentTimezone(zn.text());
         loadMetricData(dataConfig, render);
     });
-    $endif$
+   $endif$
 
-    currTimeField.text(moment().format(currTimeFormat));
+   currTimeField.text(moment().format(currTimeFormat));
 
     /*
      function update() {

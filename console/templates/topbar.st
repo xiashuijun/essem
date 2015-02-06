@@ -39,8 +39,7 @@ topbar(index, indexList, zoneList) ::= <<
                 <a class="active" href="#"><span class="capitalize">$first(indexList)$</span></a>
                 <ul class="dropdown">
                     $rest(indexList):{allowedIndex |
-                    <li><a href="/console/$allowedIndex$" class=""><span class="capitalize">$allowedIndex$</span></a>
-                    </li>
+                    <li><a href="/console/$allowedIndex$" class=""><span class="capitalize">$allowedIndex$</span></a></li>
                     }$
                 </ul>
             </li>
@@ -50,8 +49,7 @@ topbar(index, indexList, zoneList) ::= <<
                 <a id="set_tz" href="#"></a>
                 <ul class="dropdown">
                     $zoneList:{zone |
-                    <li id="tzs_$i$" class="zone-select"><a id="tzn_$i$" class="zone-nav" name="$zone.id$" href="#">$zone.display$</a>
-                    </li>
+                    <li id="tzs_$i$" class="zone-select"><a id="tzn_$i$" class="zone-nav" name="$zone.id$" href="#">$zone.display$</a></li>
                     }$
                 </ul>
             </li>
