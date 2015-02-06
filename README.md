@@ -4,7 +4,7 @@ Essem is a server that accepts, stores, indexes, and graphs metrics as supplied
 by [Dropwizard Metrics](https://dropwizard.github.io/metrics/3.1.0/). It
 uses an [Elsaticsearch](http://www.elasticsearch.org/) [&reg;](http://www.elasticsearch.org/trademarks/) instance for storing and selecting data for graphs.
 A Metrics [`ScheduledReporter`](https://github.com/dropwizard/metrics/blob/master/metrics-core/src/main/java/com/codahale/metrics/ScheduledReporter.java) is provided
-so you can configure your applications to periodically push metrics to Essem.
+to allow applications to periodically push metrics to Essem.
 Essem can also be configured to poll endpoints that expose metrics in the JSON format defined by
 the Dropwizard [`MetricsModule`](https://github.com/dropwizard/metrics/blob/master/metrics-json/src/main/java/com/codahale/metrics/json/MetricsModule.java).
 JSON documents in this same format may also be `PUT` to the server.
@@ -74,6 +74,7 @@ Quick Start
 * Add some test data: `bin/simulate` One minute of historical data is added per second.
 * Open `http://localhost:8086/console/test` in a browser to view the console for the essem server metrics.
   At the prompt: username: `test` password: `secret`
+* Stop adding simulated data: `bin/stop-simulator`
 * Stop: `bin/stop`
 
 Bugs
@@ -85,13 +86,13 @@ Bugs
 TODO
 ----
 
-* Create Maven build(s).
 * Create "shaded" build for standard reporter to avoid potential client protocol buffer incompatibility.
 * Create JSON-based `ScheduledReporter`.
 * Allow CORS headers to be configured for API access.
 * Auto-refresh
 
-Enhancements
-------------
+Possible Enhancements
+----------------------
 
 * Graphite sampler/back-end
+* Emit Graphite JSON format
