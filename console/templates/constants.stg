@@ -1,0 +1,9 @@
+constants ::= [
+"defaultTitle":"Essem - Admin Console",
+"logo":"essemlogo0.png",
+"imageBase":"/img",
+"jsBase":"/js",
+"cssBase":"/css",
+"mgBase":"/mgraphics",
+default:"null"
+]

@@ -1,0 +1,740 @@
+/*
+ * Copyright 2014 Attribyte, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ *
+ */
+
+package com.attribyte.essem;
+
+import com.attribyte.essem.model.Application;
+import com.attribyte.essem.model.DisplayTZ;
+import com.attribyte.essem.model.DownsampleFunction;
+import com.attribyte.essem.model.Metric;
+import com.attribyte.essem.model.MetricGraph;
+import com.attribyte.essem.model.Sort;
+import com.attribyte.essem.model.GraphRange;
+import com.attribyte.essem.model.index.IndexStats;
+import com.attribyte.essem.query.Fields;
+import com.attribyte.essem.query.GraphQuery;
+import com.attribyte.essem.query.QueryBase;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+import org.attribyte.api.Logger;
+import org.attribyte.api.http.AsyncClient;
+import org.attribyte.api.http.Request;
+import org.attribyte.api.http.RequestOptions;
+import org.attribyte.api.http.Response;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.servlet.DefaultServlet;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
+import org.stringtemplate.v4.DateRenderer;
+import org.stringtemplate.v4.ST;
+import org.stringtemplate.v4.STErrorListener;
+import org.stringtemplate.v4.STGroup;
+import org.stringtemplate.v4.STGroupDir;
+import org.stringtemplate.v4.STGroupFile;
+import org.stringtemplate.v4.misc.STMessage;
+
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+
+import static com.attribyte.essem.Util.splitPath;
+
+public class ConsoleServlet extends HttpServlet {
+
+   public ConsoleServlet(final ESEndpoint esEndpoint,
+                         final ServletContextHandler rootContext,
+                         final IndexAuthorization indexAuthorization,
+                         final String templateDirectory,
+                         String assetDirectory,
+                         final Collection<String> allowedAssetPaths,
+                         final Collection<String> allowedIndexes,
+                         final List<DisplayTZ> zones,
+                         final AsyncClient client,
+                         final RequestOptions requestOptions,
+                         final Logger logger,
+                         final boolean debug) {
+
+      this.esEndpoint = esEndpoint;
+      this.indexAuthorization = indexAuthorization;
+      this.templateDirectory = templateDirectory;
+      this.allowedIndexes = ImmutableList.copyOf(allowedIndexes);
+      this.zones = ImmutableList.copyOf(zones);
+      this.client = client;
+      this.logger = logger;
+      this.debug = debug;
+      this.templateGroup = debug ? null : loadTemplates();
+
+      if(!assetDirectory.endsWith("/")) {
+         assetDirectory = assetDirectory + "/";
+      }
+
+      rootContext.addAliasCheck(new ContextHandler.ApproveAliases());
+      rootContext.setInitParameter("org.eclipse.jetty.servlet.Default.resourceBase", assetDirectory);
+      rootContext.setInitParameter("org.eclipse.jetty.servlet.Default.acceptRanges", "false");
+      rootContext.setInitParameter("org.eclipse.jetty.servlet.Default.dirAllowed", "false");
+      rootContext.setInitParameter("org.eclipse.jetty.servlet.Default.welcomeServlets", "true");
+      rootContext.setInitParameter("org.eclipse.jetty.servlet.Default.redirectWelcome", "false");
+      rootContext.setInitParameter("org.eclipse.jetty.servlet.Default.aliases", "true");
+      rootContext.setInitParameter("org.eclipse.jetty.servlet.Default.gzip", "true");
+
+      DefaultServlet defaultServlet = new DefaultServlet();
+      for(String path : allowedAssetPaths) {
+         logger.info("Enabling asset path: " + path);
+         rootContext.addServlet(new ServletHolder(defaultServlet), path);
+      }
+
+      this.applicationCache = new ApplicationCache(client, requestOptions, esEndpoint, logger);
+
+      for(String index : allowedIndexes) {
+         try {
+            List<Application> apps = this.applicationCache.getApplications(index);
+            if(apps != null && apps.size() > 0) {
+               logger.info("Found " + apps.size() + " apps for '" + index + "'");
+               for(Application app : apps) {
+                  long start = System.currentTimeMillis();
+                  logger.info("Priming '" + app.name + "'");
+                  int totalMetrics = app.getMetricsCount();
+                  int activeMetrics = this.applicationCache.removeBoringMetrics(app).getMetricsCount();
+                  logger.info("Found " + activeMetrics + " active metrics of " + totalMetrics);
+                  logger.info("Primed in " + (System.currentTimeMillis() - start) + " ms");
+               }
+
+            }
+         } catch(IOException ioe) {
+            logger.error("Problem getting applications", ioe);
+         }
+      }
+   }
+
+   static final class ErrorListener implements STErrorListener {
+
+      ErrorListener(final Logger logger) {
+         this.logger = logger;
+      }
+
+      public void compileTimeError(STMessage msg) {
+         logger.error("Template compilation error: " + msg);
+      }
+
+      public void runTimeError(STMessage msg) {
+         logger.error("Template rendering error: " + msg);
+      }
+
+      public void IOError(STMessage msg) {
+         logger.error("Template load error: " + msg);
+      }
+
+      public void internalError(STMessage msg) {
+         logger.error("Template system error: " + msg);
+      }
+
+      private final Logger logger;
+   }
+
+   /**
+    * Allowed operations.
+    */
+   private enum Op {
+      DEFAULT, DEFAULT_WITH_APP, APPS, METRICS, GRAPHS, INDEX_STATS
+   }
+
+   /**
+    * Valid operations.
+    */
+   private static ImmutableMap<String, Op> ops =
+           ImmutableMap.of("", Op.DEFAULT, "apps", Op.APPS, "metrics",
+                   Op.METRICS, "graphs", Op.GRAPHS, "stats", Op.INDEX_STATS);
+
+   @Override
+   protected void doPost(final HttpServletRequest request,
+                         final HttpServletResponse response) throws IOException {
+      doGet(request, response);
+   }
+
+   @Override
+   protected void doGet(final HttpServletRequest request,
+                        final HttpServletResponse response) throws IOException {
+
+      Iterator<String> path = splitPath(request).iterator();
+      if(!path.hasNext()) {
+         sendError(request, response, HttpServletResponse.SC_BAD_REQUEST);
+         return;
+      }
+
+      String index = path.next();
+      if(indexAuthorization != null && !indexAuthorization.isAuthorized(index, request)) {
+         indexAuthorization.sendUnauthorized(index, response);
+         return;
+      }
+
+      String opPath = path.hasNext() ? path.next().toLowerCase() : "";
+
+      Op op = ops.get(opPath);
+      if(op == null) {
+         op = Op.DEFAULT_WITH_APP;
+      }
+
+      switch(op) {
+         case DEFAULT:
+            doDefault(request, index, null, response);
+            break;
+         case DEFAULT_WITH_APP:
+            doDefault(request, index, opPath, response);
+            break;
+         case APPS:
+            doApps(request, index, response);
+            break;
+         case METRICS: {
+            if(!path.hasNext()) {
+               sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'application' must be specified");
+               return;
+            }
+            String appName = path.next();
+            String metricType = path.hasNext() ? path.next() : "all";
+            doMetrics(request, index, appName, metricType, response);
+            break;
+         }
+         case GRAPHS:
+            if(!path.hasNext()) {
+               sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'application' must be specified");
+               return;
+            }
+            String appName = path.next();
+            doGraphs(request, index, appName, response);
+            break;
+         case INDEX_STATS:
+            doIndexStats(request, index, response);
+            break;
+         default:
+            response.sendError(404, "Not Found");
+      }
+   }
+
+   /**
+    * Renders the default page.
+    * @param request The request.
+    * @param index The index.
+    * @param appName The application name.
+    * @param response The response.
+    * @throws IOException on output error.
+    */
+   protected void doDefault(final HttpServletRequest request,
+                            final String index,
+                            final String appName,
+                            final HttpServletResponse response) throws IOException {
+      ST template = getTemplate(MAIN_TEMPLATE);
+      if(template == null) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + MAIN_TEMPLATE + "' template");
+         return;
+      }
+
+      List<String> indexList = buildAllowedIndexList(request, index);
+      List<Application> apps = applicationCache.getApplications(index);
+
+      Application defaultApp = null;
+
+      if(!Strings.isNullOrEmpty(appName)) {
+         for(Application app : apps) {
+            if(app.name.equalsIgnoreCase(appName)) {
+               defaultApp = app;
+               break;
+            }
+         }
+      } else if(apps.size() > 0) {
+         defaultApp = apps.get(0);
+      }
+
+      if(defaultApp == null) {
+         response.sendError(404, "No application found");
+         return;
+      }
+
+      template.add("index", index);
+      template.add("content", "");
+      template.add("time", new Date());
+      template.add("indexList", indexList);
+      template.add("zoneList", zones);
+      template.add("appList", apps);
+      template.add("defaultApp", defaultApp.name);
+
+      response.setStatus(HttpServletResponse.SC_OK);
+      response.setContentType(HTML_CONTENT_TYPE);
+      response.getWriter().print(template.render());
+      response.getWriter().flush();
+   }
+
+   /**
+    * Renders the content for the application list.
+    * @param request The request.
+    * @param response The response.
+    * @throws IOException on output error.
+    */
+   protected void doApps(final HttpServletRequest request,
+                         final String index,
+                         final HttpServletResponse response) throws IOException {
+      ST template = getTemplate(APPS_TEMPLATE);
+      if(template == null) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + APPS_TEMPLATE + "' template");
+         return;
+      }
+
+      try {
+         List<Application> apps = applicationCache.getApplications(index);
+         template.add("index", index);
+         template.add("appList", apps);
+         response.setStatus(HttpServletResponse.SC_OK);
+         response.setContentType(HTML_CONTENT_TYPE);
+         response.getWriter().print(template.render());
+         response.getWriter().flush();
+      } catch(Exception e) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         e.printStackTrace();
+      }
+   }
+
+   /**
+    * Renders the content for application metrics.
+    * @param request The request.
+    * @param index The index.
+    * @param appName The application name.
+    * @param metricType The metric type.
+    * @param response The response.
+    * @throws IOException on output error.
+    */
+   protected void doMetrics(final HttpServletRequest request,
+                            final String index,
+                            final String appName,
+                            final String metricType,
+                            final HttpServletResponse response) throws IOException {
+      ST template = getTemplate(METRICS_TEMPLATE);
+      if(template == null) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + METRICS_TEMPLATE + "' template");
+         return;
+      }
+
+      try {
+         Application app = applicationCache.getApplication(index, appName);
+         if(app != null) {
+
+            String filter = Strings.nullToEmpty(request.getParameter("filter")).trim();
+            if(filter.equals("active")) {
+               app = applicationCache.removeBoringMetrics(app);
+            } else if(filter.equals("boring")) {
+               app = applicationCache.onlyBoringMetrics(app);
+            }
+
+            template.add("index", index);
+            template.add("app", app);
+            String sortStr = request.getParameter("sort");
+            Sort sort = Sort.fromString(sortStr, Sort.ASC);
+            Metric.Type type = Metric.Type.fromString(metricType);
+            String matchPrefix = Strings.nullToEmpty(request.getParameter("prefix")).trim();
+
+            if(matchPrefix.length() == 0) {
+               List<Metric> metrics = type == Metric.Type.UNKNOWN ? app.getMetrics(sort) : app.getMetrics(type, sort);
+               template.add("type", type == Metric.Type.UNKNOWN ? "all" : type.toString().toLowerCase());
+               template.add("metrics", metrics);
+            } else {
+               List<Metric> metrics = app.matchPrefix(matchPrefix, type);
+               if(sort == Sort.DESC) {
+                  Collections.reverse(metrics);
+               }
+               template.add("type", type == Metric.Type.UNKNOWN ? "all" : type.toString().toLowerCase());
+               template.add("metrics", metrics);
+            }
+         }
+         response.setStatus(HttpServletResponse.SC_OK);
+         response.setContentType(HTML_CONTENT_TYPE);
+         response.getWriter().print(template.render());
+         response.getWriter().flush();
+      } catch(Exception e) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         e.printStackTrace();
+      }
+   }
+
+   protected final ImmutableMap<Metric.Type, List<MetricGraph>> defaultGraphFields =
+           ImmutableMap.<Metric.Type, List<MetricGraph>>builder()
+                   .put(Metric.Type.TIMER,
+                           ImmutableList.of(
+                                   new MetricGraph(Fields.P999_FIELD, "99.9th Percentile", "99.9 Pctl", MetricGraph.DEFAULT_TIMER_LABLES, false),
+                                   new MetricGraph(Fields.P99_FIELD, "99th Percentile", "99 Pctl", MetricGraph.DEFAULT_TIMER_LABLES, true),
+                                   new MetricGraph(Fields.P98_FIELD, "98th Percentile", "98 Pctl", MetricGraph.DEFAULT_TIMER_LABLES, false),
+                                   new MetricGraph(Fields.P95_FIELD, "95th Percentile", "95 Pctl", MetricGraph.DEFAULT_TIMER_LABLES, true),
+                                   new MetricGraph(Fields.P75_FIELD, "75th Percentile", "75 Pctl", MetricGraph.DEFAULT_TIMER_LABLES, false),
+                                   new MetricGraph(Fields.P50_FIELD, "Median", "Median", MetricGraph.DEFAULT_TIMER_LABLES, false),
+                                   new MetricGraph(Fields.MAX_FIELD, "Max", "Max", MetricGraph.DEFAULT_TIMER_LABLES, false),
+                                   new MetricGraph(Fields.MIN_FIELD, "Min", "Min", MetricGraph.DEFAULT_TIMER_LABLES, false),
+                                   new MetricGraph(Fields.MEAN_FIELD, "Mean", "Mean", MetricGraph.DEFAULT_TIMER_LABLES, false),
+                                   new MetricGraph(Fields.STD_FIELD, "Standard Deviation", "Std", MetricGraph.DEFAULT_TIMER_LABLES, false),
+
+                                   new MetricGraph(Fields.ONE_MINUTE_RATE_FIELD, "One Minute Rate", "1m Rate", MetricGraph.DEFAULT_METER_LABLES, true),
+                                   new MetricGraph(Fields.FIVE_MINUTE_RATE_FIELD, "Five Minute Rate", "5m Rate", MetricGraph.DEFAULT_METER_LABLES, false),
+                                   new MetricGraph(Fields.FIFTEEN_MINUTE_RATE_FIELD, "Fifteen Minute Rate", "15m Rate", MetricGraph.DEFAULT_METER_LABLES, false),
+                                   new MetricGraph(Fields.MEAN_RATE_FIELD, "Mean Rate", "Mean Rate", MetricGraph.DEFAULT_METER_LABLES, false),
+                                   new MetricGraph(Fields.COUNT_FIELD, "Count", "Count", MetricGraph.DEFAULT_OTHER_LABLES, false)
+
+                           )
+                   )
+                   .put(Metric.Type.METER,
+                           ImmutableList.of(
+                                   new MetricGraph(Fields.ONE_MINUTE_RATE_FIELD, "One Minute Rate", "1m Rate", MetricGraph.DEFAULT_METER_LABLES, true),
+                                   new MetricGraph(Fields.FIVE_MINUTE_RATE_FIELD, "Five Minute Rate", "5m Rate", MetricGraph.DEFAULT_METER_LABLES, true),
+                                   new MetricGraph(Fields.FIFTEEN_MINUTE_RATE_FIELD, "Fifteen Minute Rate", "15m Rate", MetricGraph.DEFAULT_METER_LABLES, true),
+                                   new MetricGraph(Fields.MEAN_RATE_FIELD, "Mean Rate", "Mean Rate", MetricGraph.DEFAULT_METER_LABLES, false),
+                                   new MetricGraph(Fields.COUNT_FIELD, "Count", "Count", MetricGraph.DEFAULT_OTHER_LABLES, false)
+                           )
+                   )
+                   .put(Metric.Type.HISTOGRAM,
+                           ImmutableList.of(
+                                   new MetricGraph(Fields.P999_FIELD, "99.9th Percentile", "99.9 Pctl", MetricGraph.DEFAULT_OTHER_LABLES, false),
+                                   new MetricGraph(Fields.P99_FIELD, "99th Percentile", "99 Pctl", MetricGraph.DEFAULT_OTHER_LABLES, true),
+                                   new MetricGraph(Fields.P98_FIELD, "98th Percentile", "98 Pctl", MetricGraph.DEFAULT_OTHER_LABLES, false),
+                                   new MetricGraph(Fields.P95_FIELD, "95th Percentile", "95 Pctl", MetricGraph.DEFAULT_OTHER_LABLES, true),
+                                   new MetricGraph(Fields.P75_FIELD, "75th Percentile", "75 Pctl", MetricGraph.DEFAULT_OTHER_LABLES, false),
+                                   new MetricGraph(Fields.P50_FIELD, "Median", "Median", MetricGraph.DEFAULT_OTHER_LABLES, false),
+                                   new MetricGraph(Fields.MAX_FIELD, "Max", "Max", MetricGraph.DEFAULT_OTHER_LABLES, false),
+                                   new MetricGraph(Fields.MIN_FIELD, "Min", "Min", MetricGraph.DEFAULT_OTHER_LABLES, false),
+                                   new MetricGraph(Fields.MEAN_FIELD, "Mean", "Mean", MetricGraph.DEFAULT_OTHER_LABLES, true),
+                                   new MetricGraph(Fields.STD_FIELD, "Standard Deviation", "Std", MetricGraph.DEFAULT_OTHER_LABLES, false),
+                                   new MetricGraph(Fields.COUNT_FIELD, "Count", "Count", MetricGraph.DEFAULT_OTHER_LABLES, false)
+                           )
+                   )
+                   .put(Metric.Type.GAUGE,
+                           ImmutableList.of(
+                                   new MetricGraph("value", "Value", "Value", MetricGraph.DEFAULT_OTHER_LABLES, true)
+                           )
+                   )
+                   .put(Metric.Type.COUNTER,
+                           ImmutableList.of(
+                                   new MetricGraph("count", "Count", "Count", MetricGraph.DEFAULT_OTHER_LABLES, true)
+                           )
+                   )
+                   .build();
+
+   /**
+    * Renders a page of graphs for one or more metrics.
+    * @param request The request.
+    * @param index The index.
+    * @param appName The application name.
+    * @param response The response.
+    * @throws IOException on output error.
+    */
+   protected void doGraphs(final HttpServletRequest request,
+                           final String index,
+                           final String appName,
+                           final HttpServletResponse response) throws IOException {
+
+
+      ST template = getTemplate(GRAPHS_TEMPLATE);
+      if(template == null) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + GRAPHS_TEMPLATE + "' template");
+         return;
+      }
+
+      try {
+         Application app = applicationCache.getApplication(index, appName);
+         List<MetricGraph> graphs = Lists.newArrayListWithExpectedSize(8);
+         String metricName = request.getParameter("name");
+         if(app != null) {
+            Metric metric = app.getMetric(metricName);
+            if(metric != null) {
+               template.add("metric", metric);
+               List<MetricGraph> protos = defaultGraphFields.get(metric.type);
+               for(MetricGraph proto : protos) {
+                  graphs.add(new MetricGraph(proto, metric));
+               }
+            }
+         }
+
+         long rangeStart = Util.getLongParameter(request, QueryBase.START_TIMESTAMP_PARAMETER, 0L);
+         long rangeEnd = Util.getLongParameter(request, QueryBase.END_TIMESTAMP_PARAMETER, 0L);
+         String rangeName = Strings.nullToEmpty(request.getParameter(QueryBase.RANGE_PARAMETER)).trim();
+         if(rangeName.length() == 0) {
+            rangeName = Util.nearestInterval(rangeEnd - rangeStart);
+         }
+
+         if(rangeName == null) {
+            rangeName = DEFAULT_GRAPH_RANGE;
+            rangeStart = 0;
+            rangeEnd = 0;
+         }
+
+         GraphRange range = new GraphRange(rangeName, rangeStart, rangeEnd);
+
+         String host = Strings.nullToEmpty(request.getParameter("host")).trim();
+         if(host.length() > 0) {
+            template.add("host", host);
+         }
+
+         template.add("indexList", buildAllowedIndexList(request, index));
+         template.add("zoneList", zones);
+         template.add("downsampleList", buildDownsampleFunctionList(request));
+         template.add("range", range);
+         template.add("app", app);
+         template.add("index", index);
+         template.add("graphs", graphs);
+
+         response.setStatus(HttpServletResponse.SC_OK);
+         response.setContentType(HTML_CONTENT_TYPE);
+         response.getWriter().print(template.render());
+         response.getWriter().flush();
+      } catch(Exception e) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         e.printStackTrace();
+      }
+   }
+
+   /**
+    * Renders stats for an index.
+    * @param request The request.
+    * @param index The index.
+    * @param response The response.
+    * @throws IOException on output error.
+    */
+   protected void doIndexStats(final HttpServletRequest request,
+                               final String index,
+                               final HttpServletResponse response) throws IOException {
+
+      ST template = getTemplate(INDEX_STATS_TEMPLATE);
+      if(template == null) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + INDEX_STATS_TEMPLATE + "' template");
+         return;
+      }
+
+      try {
+
+         template.add("index", index);
+
+         final Request esIndexRequest = esEndpoint.getRequestBuilder(esEndpoint.buildIndexStatsURI(index)).create();
+         final Response esIndexResponse = client.send(esIndexRequest);
+
+         final Request esClusterRequest = esEndpoint.getRequestBuilder(esEndpoint.buildClusterStatsURI()).create();
+         final Response esClusterResponse = client.send(esClusterRequest);
+
+         if(esIndexResponse.getStatusCode() == 200 && esClusterResponse.getStatusCode() == 200) {
+            ObjectNode indexObject = Util.mapper.readTree(Util.parserFactory.createParser(esIndexResponse.getBody().toByteArray()));
+            ObjectNode clusterObject = Util.mapper.readTree(Util.parserFactory.createParser(esClusterResponse.getBody().toByteArray()));
+            JsonNode totalNode = indexObject.path("_all").path("total");
+            if(!totalNode.isMissingNode()) {
+               IndexStats stats = new IndexStats(totalNode, clusterObject);
+               template.add("stats", stats);
+            } else {
+               logger.error("Invalid stats response for '" + index + "'");
+            }
+         } else if(esIndexResponse.getStatusCode() != 200) {
+            logger.error("Index stats response error for '" + index + "' (" + esIndexResponse.getStatusCode() + ")");
+         } else {
+            logger.error("Cluster stats response error for '" + index + "' (" + esClusterResponse.getStatusCode() + ")");
+         }
+
+      } catch(Exception e) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         e.printStackTrace();
+         return;
+      }
+
+      response.setStatus(HttpServletResponse.SC_OK);
+      response.setContentType(HTML_CONTENT_TYPE);
+      response.getWriter().print(template.render());
+      response.getWriter().flush();
+   }
+
+   protected void sendError(final HttpServletRequest request,
+                            final HttpServletResponse response,
+                            final int code) throws IOException {
+      sendError(request, response, code, null);
+   }
+
+
+   protected void sendError(final HttpServletRequest request,
+                            final HttpServletResponse response,
+                            final int code, final String message) throws IOException {
+      if(message != null) {
+         response.sendError(code, message);
+      } else {
+         response.sendError(code);
+      }
+   }
+
+   /**
+    * Builds a list of indexes the user is allowed to access.
+    * @param request The request (for index auth).
+    * @param index The current index.
+    * @return The list of indexes (with current first).
+    */
+   protected List<String> buildAllowedIndexList(final HttpServletRequest request, final String index) {
+
+      List<String> indexList = Lists.newArrayListWithCapacity(this.allowedIndexes.size());
+      indexList.add(index);
+      for(String allowedIndex : this.allowedIndexes) {
+         if(!allowedIndex.equals(index)) {
+            List<Application> apps = applicationCache.getApplications(allowedIndex);
+            if(apps != null && apps.size() > 0) {
+               if(indexAuthorization == null) {
+                  indexList.add(allowedIndex);
+               } else if(indexAuthorization.isAuthorized(allowedIndex, request)) {
+                  indexList.add(allowedIndex);
+               }
+            }
+         }
+      }
+      return indexList;
+   }
+
+   /**
+    * Builds the list of downsample functions, activating the one in-use.
+    * @param request The servlet request.
+    * @return The list of functions.
+    */
+   protected List<DownsampleFunction> buildDownsampleFunctionList(final HttpServletRequest request) {
+      String fnName = Strings.nullToEmpty(request.getParameter(GraphQuery.DOWNSAMPLE_FN_PARAMETER)).trim();
+      if(fnName.length() == 0 || fnName.equals("avg")) {
+         return downsampleFunctions;
+      } else {
+         List<DownsampleFunction> functionList = Lists.newArrayListWithCapacity(downsampleFunctions.size());
+         for(DownsampleFunction fn : downsampleFunctions) {
+            if(fn.functionName.equals(fnName)) {
+               functionList.add(fn.activate());
+            } else {
+               functionList.add(fn.deactivate());
+            }
+         }
+         return functionList;
+      }
+   }
+
+   /**
+    * Load (or reload) templates.
+    */
+   private STGroup loadTemplates() {
+
+      STGroup group = new STGroupDir(templateDirectory, '$', '$');
+
+      File globalConstantsFile = new File(templateDirectory, "constants.stg");
+      if(globalConstantsFile.exists()) {
+         STGroupFile globalConstants = new STGroupFile(globalConstantsFile.getAbsolutePath());
+         group.importTemplates(globalConstants);
+      }
+
+      group.setListener(new ErrorListener(logger));
+      group.registerRenderer(java.util.Date.class, new DateRenderer());
+      return group;
+   }
+
+   /**
+    * Gets a template instance.
+    * <p>
+    * If debug mode is configured, templates are reloaded from disk
+    * on every request. Otherwise, template changes are recognized
+    * only on restart.
+    * </p>
+    * @param name The template name.
+    * @return The instance or <code>null</code> if template not found.
+    */
+   protected ST getTemplate(final String name) {
+
+      if(this.templateGroup == null) {
+         STGroup debugTemplateGroup = loadTemplates();
+         try {
+            return debugTemplateGroup.getInstanceOf(name);
+         } catch(Exception e) {
+            e.printStackTrace();
+            return null;
+         }
+      } else {
+         try {
+            return templateGroup.getInstanceOf(name);
+         } catch(Exception e) {
+            e.printStackTrace();
+            return null;
+         }
+      }
+   }
+
+   /**
+    * The default graph range if none specified.
+    */
+   public static final String DEFAULT_GRAPH_RANGE = "day";
+
+   /**
+    * The value sent with HTML for 'Content-Type'.
+    */
+   public static final String HTML_CONTENT_TYPE = "text/html; charset=utf8";
+
+   /**
+    * The main (index) template.
+    */
+   public static final String MAIN_TEMPLATE = "main";
+
+   /**
+    * The main graphs template.
+    */
+   public static final String GRAPHS_TEMPLATE = "graphs_main";
+
+   /**
+    * The template that renders the list of apps.
+    */
+   public static final String APPS_TEMPLATE = "apps";
+
+   /**
+    * The template that renders the list of metrics for an app.
+    */
+   public static final String METRICS_TEMPLATE = "metrics";
+
+   /**
+    * The template for rendering index stats.
+    */
+   public static final String INDEX_STATS_TEMPLATE = "index_stats";
+
+
+   /**
+    * Available downsample functions.
+    */
+   public static final ImmutableList<DownsampleFunction> downsampleFunctions =
+           ImmutableList.of(
+                   new DownsampleFunction("Avg", "avg", true),
+                   new DownsampleFunction("Max", "max", false),
+                   new DownsampleFunction("Min", "min", false),
+                   new DownsampleFunction("Sum", "sum", false)
+           );
+
+   /*
+    * This template group may be null if debug mode is configured.
+    */
+   private final STGroup templateGroup;
+
+   private final String templateDirectory;
+   private final Logger logger;
+   private final AsyncClient client;
+   private final boolean debug;
+   private final IndexAuthorization indexAuthorization;
+   private final ESEndpoint esEndpoint;
+   private final ImmutableList<String> allowedIndexes;
+   private final ImmutableList<DisplayTZ> zones;
+
+   final ApplicationCache applicationCache;
+}

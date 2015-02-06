@@ -1,0 +1,103 @@
+{
+  "endpoint": "http://localhost:8086/report/test",
+  "endpointUsername": "tester",
+  "endpointPassword": "secret",
+  "application": [
+    {
+      "name": "webapp",
+      "reportFrequencySeconds": 1,
+      "simulatePeriodSeconds": 60,
+      "driverPeriodMillis": 100,
+      "instance": [
+        {
+          "host": "app01"
+        },
+        {
+          "host": "app02"
+        }
+      ],
+      "gauge": [
+        {
+          "name": "appdex",
+          "min": 0.80,
+          "max": 0.95
+        }
+      ],
+      "counter": [
+        {
+          "name": "active-sessions",
+          "max": 1000
+        }
+      ],
+      "meter": [
+        {
+          "name": "errors",
+          "maxEvents": 2
+        }
+      ],
+      "histogram": [
+        {
+          "name": "response-size-bytes",
+          "min": 1024,
+          "max": 4096
+        }
+      ],
+      "timer": [
+        {
+          "name": "requests",
+          "minTimeMillis": 20,
+          "maxTimeMillis": 200,
+          "maxEvents": 20
+        }
+      ]
+    },
+    {
+      "name": "database",
+      "reportFrequencySeconds": 1,
+      "simulatePeriodSeconds": 60,
+      "driverPeriodMillis": 100,
+      "instance": [
+        {
+          "host": "db01"
+        },
+        {
+          "host": "db02"
+        }
+      ],
+      "gauge": [
+        {
+          "name": "connection-utilization",
+          "min": 0.40,
+          "max": 0.65
+        }
+      ],
+      "counter": [
+        {
+          "name": "connection-errors",
+          "max": 5
+        }
+      ],
+      "meter": [
+        {
+          "name": "connections",
+          "maxEvents": 2
+        }
+      ],
+      "histogram": [
+        {
+          "name": "response-size-bytes",
+          "min": 1024,
+          "max": 4096
+        }
+      ],
+      "timer": [
+        {
+          "name": "queries",
+          "minTimeMillis": 5,
+          "maxTimeMillis": 500,
+          "maxEvents": 50
+        }
+      ]
+    }
+  ]
+}

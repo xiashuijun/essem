@@ -1,0 +1,97 @@
+/*
+ * Copyright 2014 Attribyte, LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations under the License.
+ *
+ */
+
+package com.attribyte.essem;
+
+option java_outer_classname = "ReportProtos";
+
+message EssemReport {
+
+   enum TimeUnit {
+     NANOS = 1;
+     MICROS = 2;
+     MILLIS = 3;
+     SECONDS = 4;
+     MINUTES = 5;
+     HOURS = 6;
+     DAYS = 7;
+   }
+
+   message Gauge {
+     optional string name = 1;
+     optional double value = 2;
+     optional string comment = 3;
+   }
+
+   message Counter {
+     optional string name = 1;
+     optional uint64 count = 2;
+   }
+
+   message Meter {
+     optional string name = 1;
+     optional double oneMinuteRate = 2;
+     optional double fiveMinuteRate = 3;
+     optional double fifteenMinuteRate = 4;
+     optional double meanRate = 5;
+     optional uint64 count = 6;
+   }
+
+   message Histogram {
+     optional string name = 1;
+     optional uint64 count = 2;
+     optional double max = 3;
+     optional double mean = 4;
+     optional double min = 5;
+     optional double std = 6;
+     optional double median = 7;
+     optional double percentile75 = 8;
+     optional double percentile95 = 9;
+     optional double percentile98 = 10;
+     optional double percentile99 = 11;
+     optional double percentile999 = 12;
+   }
+
+   message Timer {
+     optional string name = 1;
+     optional double oneMinuteRate = 2;
+     optional double fiveMinuteRate = 3;
+     optional double fifteenMinuteRate = 4;
+     optional double meanRate = 5;
+     optional uint64 count = 6;
+     optional double max = 7;
+     optional double mean = 8;
+     optional double min = 9;
+     optional double std = 10;
+     optional double median = 11;
+     optional double percentile75 = 12;
+     optional double percentile95 = 13;
+     optional double percentile98 = 14;
+     optional double percentile99 = 15;
+     optional double percentile999 = 16;
+   }
+
+   repeated Meter meter = 1;
+   repeated Timer timer = 2;
+   repeated Counter counter = 3;
+   repeated Histogram histogram = 4;
+   repeated Gauge gauge = 5;
+   optional uint64 timestamp = 6;
+   optional TimeUnit rateUnit = 7;
+   optional TimeUnit durationUnit = 8;
+   optional string application = 9;
+   optional string host = 10;
+   optional string instance = 11;
+}

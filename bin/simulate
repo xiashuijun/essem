@@ -1,0 +1,54 @@
+# The location of the java interpreter may be set explicitly with JAVA_EXE.
+# Otherwise, JAVA_HOME is used.
+# Finally, if JAVA_HOME is undefined, simply use 'java'.
+#JAVA_EXE="/usr/local/jdk8/bin/java"
+
+if [ -z "$JAVA_EXE" ]; then
+  if [ -z "$JAVA_HOME" ]; then
+    JAVA_EXE="java"
+  else
+    JAVA_EXE="$JAVA_HOME/bin/java"
+  fi
+fi
+
+# The installation directory containing configuration and dependencies may be set explicitly with ESSEM_INSTALL_DIR.
+# Otherwise, an attempt is made to discover the location of this start script.
+#ESSEM_INSTALL_DIR=/var/attribyte/essem
+
+if [ -z "$ESSEM_INSTALL_DIR" ]; then
+  DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+  ESSEM_INSTALL_DIR="$(dirname "$DIR")"
+fi
+
+PIDFILE="essem-simulate.pid"
+
+if [ -f "$ESSEM_INSTALL_DIR/bin/$PIDFILE" ]
+then
+	echo Essem simulator appears to be running! Aborting.
+	exit 1
+fi
+
+LIB_DIR="$ESSEM_INSTALL_DIR/lib"
+EXTLIB_DIR="$ESSEM_INSTALL_DIR/dist/extlib"
+DISTLIB="$ESSEM_INSTALL_DIR/dist/lib/attribyte-essem.0.1.0.jar:$ESSEM_INSTALL_DIR/dist/lib/attribyte-essem-test.0.1.0.jar"
+CLASSPATH=$DISTLIB
+
+for jar in `ls $EXTLIB_DIR/*.jar`;
+do
+        CLASSPATH=$CLASSPATH:$jar
+done
+
+
+for jar in `ls $LIB_DIR/*.jar`;
+do
+        CLASSPATH=$CLASSPATH:$jar
+done
+
+export CLASSPATH
+
+LOCAL_CONFIG="$ESSEM_INSTALL_DIR/config/simulation.json"
+CONSOLE_LOG="$ESSEM_INSTALL_DIR/bin/simulation.log"
+
+nohup $JAVA_EXE com.attribyte.essem.test.Simulator $LOCAL_CONFIG 1> $CONSOLE_LOG 2>&1 &
+
+echo $! > $ESSEM_INSTALL_DIR/bin/$PIDFILE

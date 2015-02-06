@@ -1,0 +1,403 @@
+{
+  "mappings": {
+    "counter": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "application": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "host": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "instance": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "name": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "count": {
+          "type": "long",
+          "store": true,
+          "null_value": 0,
+          "doc_values": false
+        },
+        "ts": {
+          "type": "date",
+          "store": true,
+          "format": "basic_date_time",
+          "doc_values": false
+        }
+      }
+    },
+    "gauge": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "application": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "host": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "instance": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "name": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "value": {
+          "type": "double",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "comment": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "unit": {
+          "type": "string",
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "ts": {
+          "type": "date",
+          "store": true,
+          "format": "basic_date_time",
+          "doc_values": false
+        }
+      }
+    },
+    "histogram": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "application": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "host": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "instance": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "name": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "count": {
+          "type": "long",
+          "store": true,
+          "null_value": 0,
+          "doc_values": false
+        },
+        "max": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "mean": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "min": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "std": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "median": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "p75": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "p95": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "p98": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "p99": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "p999": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "ts": {
+          "type": "date",
+          "store": true,
+          "format": "basic_date_time",
+          "doc_values": false
+        },
+        "unit": {
+          "type": "string",
+          "index": "not_analyzed",
+          "doc_values": false
+        }
+      }
+    },
+    "meter": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "application": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "host": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "instance": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "name": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "count": {
+          "type": "long",
+          "store": true,
+          "null_value": 0,
+          "doc_values": false
+        },
+        "m1Rate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "m5Rate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "m15Rate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "meanRate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "ts": {
+          "type": "date",
+          "store": true,
+          "format": "basic_date_time",
+          "doc_values": false
+        }
+      }
+    },
+    "timer": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "application": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "host": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "instance": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "name": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "count": {
+          "type": "long",
+          "store": true,
+          "null_value": 0,
+          "doc_values": false
+        },
+        "m1Rate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "m5Rate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "m15Rate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "meanRate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "max": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "mean": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "min": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "std": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "median": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "p75": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "p95": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "p98": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "p99": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "p999": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": false
+        },
+        "ts": {
+          "type": "date",
+          "store": true,
+          "format": "basic_date_time",
+          "doc_values": false
+        }
+      }
+    }
+  }
+}

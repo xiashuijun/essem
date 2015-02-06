@@ -1,0 +1,403 @@
+{
+  "mappings": {
+    "counter": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "application": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "host": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "instance": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "name": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "count": {
+          "type": "long",
+          "store": true,
+          "null_value": 0,
+          "doc_values": true
+        },
+        "ts": {
+          "type": "date",
+          "store": true,
+          "format": "basic_date_time",
+          "doc_values": true
+        }
+      }
+    },
+    "gauge": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "application": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "host": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "instance": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "name": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "value": {
+          "type": "double",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "comment": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "unit": {
+          "type": "string",
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "ts": {
+          "type": "date",
+          "store": true,
+          "format": "basic_date_time",
+          "doc_values": true
+        }
+      }
+    },
+    "histogram": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "application": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "host": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "instance": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "name": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "count": {
+          "type": "long",
+          "store": true,
+          "null_value": 0,
+          "doc_values": true
+        },
+        "max": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "mean": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "min": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "std": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "median": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "p75": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "p95": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "p98": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "p99": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "p999": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "ts": {
+          "type": "date",
+          "store": true,
+          "format": "basic_date_time",
+          "doc_values": true
+        },
+        "unit": {
+          "type": "string",
+          "index": "not_analyzed",
+          "doc_values": true
+        }
+      }
+    },
+    "meter": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "application": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "host": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "instance": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "name": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "count": {
+          "type": "long",
+          "store": true,
+          "null_value": 0,
+          "doc_values": true
+        },
+        "m1Rate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "m5Rate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "m15Rate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "meanRate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "ts": {
+          "type": "date",
+          "store": true,
+          "format": "basic_date_time",
+          "doc_values": true
+        }
+      }
+    },
+    "timer": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "application": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "host": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "instance": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "name": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": true
+        },
+        "count": {
+          "type": "long",
+          "store": true,
+          "null_value": 0,
+          "doc_values": true
+        },
+        "m1Rate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "m5Rate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "m15Rate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "meanRate": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "max": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "mean": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "min": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "std": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "median": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "p75": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "p95": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "p98": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "p99": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "p999": {
+          "type": "float",
+          "store": true,
+          "null_value": 0.0,
+          "doc_values": true
+        },
+        "ts": {
+          "type": "date",
+          "store": true,
+          "format": "basic_date_time",
+          "doc_values": true
+        }
+      }
+    }
+  }
+}
