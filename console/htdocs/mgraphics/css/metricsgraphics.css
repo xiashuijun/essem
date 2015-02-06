@@ -126,7 +126,7 @@
     vertical-align: top;
 }
 
-.mg-data-table tbody tr td.table-text {
+.mg-data-table  tbody tr td.table-text {
     opacity: 0.8;
     padding-left: 30px;
 }

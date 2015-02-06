@@ -11,8 +11,7 @@ head() ::= <<
 
     <script type="application/javascript" src="$constants.jsBase$/vendor/modernizr.js"></script>
     <script type="application/javascript" src="$constants.jsBase$/vendor/jquery.js"></script>
-    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"
-            charset="utf-8"></script>
+    <script type="application/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js" charset="utf-8"></script>
     <script type="application/javascript" src="$constants.mgBase$/js/metricsgraphics.js"></script>
     <script type="application/javascript" src="$constants.jsBase$/foundation.min.js"></script>
     <script type="application/javascript" src="$constants.jsBase$/moment.min.js"></script>
