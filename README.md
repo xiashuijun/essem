@@ -2,7 +2,7 @@
 
 Essem is a server that accepts, stores, indexes, and graphs metrics as supplied
 by [Dropwizard Metrics](https://dropwizard.github.io/metrics/3.1.0/). It
-uses an [Elsaticsearch](http://www.elasticsearch.org/) [&reg;](http://www.elasticsearch.org/trademarks/) instance for storing and selecting data for graphs.
+uses an [Elasticsearch](http://www.elasticsearch.org/) [&reg;](http://www.elasticsearch.org/trademarks/) instance for storing and selecting data for graphs.
 A Metrics [`ScheduledReporter`](https://github.com/dropwizard/metrics/blob/master/metrics-core/src/main/java/com/codahale/metrics/ScheduledReporter.java) is provided
 to allow applications to periodically push metrics to Essem.
 Essem can also be configured to poll endpoints that expose metrics in the JSON format defined by
