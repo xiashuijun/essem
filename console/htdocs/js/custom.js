@@ -302,8 +302,8 @@ function loadMetricData(config, renderFn) {
 
 function rangeDetail(config) {
 
-    var mformat0 = 'MM/DD/YYYY HH:mm:ss';
-    var mformat1 = 'MM/DD/YYYY HH:mm:ss Z z';
+    var mformat0 = 'YYYY-MM-DD HH:mm:ss';
+    var mformat1 = 'YYYY-MM-DD HH:mm:ss Z z';
 
     var rangeDetail = '';
     if(config.tz != null && config.tz != '') {
