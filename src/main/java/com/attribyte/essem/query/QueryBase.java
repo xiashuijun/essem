@@ -346,8 +346,22 @@ public class QueryBase {
     * @return The parsed key.
     */
    protected static MetricKey parseKey(final HttpServletRequest request) {
-      String app = request.getParameter("app");
-      if(app == null) app = request.getParameter("application");
+      return parseKey(request, null);
+   }
+
+   /**
+    * Parses the components of a key from request parameters.
+    * @param request The request.
+    * @param app The application name to use (overrides any parameter).
+    * @return The parsed key.
+    */
+   protected static MetricKey parseKey(final HttpServletRequest request, String app) {
+
+      if(app == null) {
+         app = request.getParameter("app");
+         if(app == null) app = request.getParameter("application");
+      }
+
       return new MetricKey(request.getParameter("name"), app,
               request.getParameter("host"), request.getParameter("instance"),
               request.getParameter("field"));
@@ -372,7 +386,7 @@ public class QueryBase {
    protected static ImmutableMap<String, Long> rangeMillisMap =
            ImmutableMap.<String, Long>builder()
                    .put("minute", 60L * 1000L)
-                   .put("1m", 60L * 1000L * 1L)
+                   .put("1m", 60L * 1000L)
                    .put("2m", 60L * 1000L * 2L)
                    .put("3m", 60L * 1000L * 3L)
                    .put("4m", 60L * 1000L * 4L)

@@ -38,6 +38,16 @@ public class StatsQuery extends QueryBase {
    }
 
    /**
+    * Creates a query from request parameters.
+    * @param request The request.
+    * @param app The application name.
+    * @param range The range.
+    */
+   public StatsQuery(final HttpServletRequest request, final String app, final String range) {
+      this(parseKey(request, app), range);
+   }
+
+   /**
     * Creates a query that returns statistics for a field for a range.
     * @param key The metric key. The 'field' must be defined.
     * @param range The range expression.
