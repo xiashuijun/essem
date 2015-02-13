@@ -44,17 +44,35 @@ $topbar(index, indexList, zoneList)$
 </div>
 $footer()$
 <script type="application/javascript">
+
+    var currTimeFormat = 'YYYY-MM-DD HH:mm:ss Z';
+
     jQuery(document).foundation();
+
+    var currTimeField = jQuery('#curr-time');
+
     jQuery(document).ready(function() {
         bindApps('$index$');
         bindTopBar('$index$');
         loadMetrics('$index$', '$defaultApp$');
         bindMetricsFilter('$index$', '$defaultApp$');
         activateApp('$defaultApp$');
-        var currTimeField = jQuery('#curr-time');
-        var currTimeFormat = 'YYYY-MM-DD HH:mm:ss Z';
         currTimeField.text(moment().format(currTimeFormat));
     });
+
+    $if(zoneList)$
+    $zoneList:{zone |
+        if(offsetMatchesLocal('$zone.id$')) setCurrentTimezone('$zone.display$');
+    }$
+    jQuery('.zone-nav').click(function(event) {
+        event.preventDefault();
+        var zn = jQuery(this);
+        var zid = zn.attr('name');
+        currTimeField.text(moment().tz(zid).format(currTimeFormat));
+        setCurrentTimezone(zn.text());
+    });
+    $endif$
+
 </script>
 $modals()$
 </body>
