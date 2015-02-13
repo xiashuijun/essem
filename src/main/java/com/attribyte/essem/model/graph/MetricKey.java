@@ -144,17 +144,23 @@ public class MetricKey {
     */
    public MetricKey(final String name, final String application, final String host,
                     final String instance, final String field) {
-      this.name = name;
-      this.application = application;
-      this.host = host;
-      this.instance = instance;
-      this.field = field;
-      this.hashCode = Objects.hash(Strings.nullToEmpty(name).toLowerCase(),
-              Strings.nullToEmpty(application).toLowerCase(),
-              Strings.nullToEmpty(host).toLowerCase(),
-              Strings.nullToEmpty(instance).toLowerCase(),
-              Strings.nullToEmpty(field).toLowerCase()
+      this.name = Strings.nullToEmpty(name);
+      this.application = Strings.nullToEmpty(application);
+      this.host = Strings.nullToEmpty(host);
+      this.instance = Strings.nullToEmpty(instance);
+      this.field = Strings.nullToEmpty(field);
+      this.hashCode = Objects.hash(
+              this.name.toLowerCase(),
+              this.application.toLowerCase(),
+              this.host.toLowerCase(),
+              this.instance.toLowerCase(),
+              this.field.toLowerCase()
       );
+      this.hasApplication = this.application.length() > 0;
+      this.hasName = this.name.length() > 0;
+      this.hasHost = this.host.length() > 0;
+      this.hasInstance = this.instance.length() > 0;
+      this.hasField = this.instance.length() > 0;
    }
 
    @Override
@@ -180,13 +186,58 @@ public class MetricKey {
     * @return Are they equal according to key equality rules?
     */
    private static boolean eq(final String str0, final String str1) {
-      return Strings.nullToEmpty(str0).equalsIgnoreCase(Strings.nullToEmpty(str1));
+      return str0.equalsIgnoreCase(str1);
    }
 
+   /**
+    * The metric name.
+    */
    public final String name;
+
+   /**
+    * Is the name set?
+    */
+   public final boolean hasName;
+
+   /**
+    * The application name.
+    */
    public final String application;
+
+   /**
+    * Is the application name set?
+    */
+   public final boolean hasApplication;
+
+   /**
+    * The host.
+    */
    public final String host;
+
+   /**
+    * Is the host set?
+    */
+   public final boolean hasHost;
+
+   /**
+    * The instance name.
+    */
    public final String instance;
+
+   /**
+    * Is the instance name set?
+    */
+   public final boolean hasInstance;
+
+   /**
+    * The field name.
+    */
    public final String field;
+
+   /**
+    * Is the field name set?
+    */
+   public final boolean hasField;
+
    private final int hashCode;
 }
