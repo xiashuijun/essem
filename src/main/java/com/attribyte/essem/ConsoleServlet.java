@@ -22,12 +22,15 @@ import com.attribyte.essem.model.Metric;
 import com.attribyte.essem.model.MetricGraph;
 import com.attribyte.essem.model.Sort;
 import com.attribyte.essem.model.GraphRange;
+import com.attribyte.essem.model.graph.Stats;
 import com.attribyte.essem.model.index.IndexStats;
 import com.attribyte.essem.query.Fields;
 import com.attribyte.essem.query.GraphQuery;
 import com.attribyte.essem.query.QueryBase;
+import com.attribyte.essem.query.StatsQuery;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -83,6 +86,7 @@ public class ConsoleServlet extends HttpServlet {
       this.allowedIndexes = ImmutableList.copyOf(allowedIndexes);
       this.zones = ImmutableList.copyOf(zones);
       this.client = client;
+      this.requestOptions = requestOptions;
       this.logger = logger;
       this.debug = debug;
       this.templateGroup = debug ? null : loadTemplates();
@@ -158,15 +162,19 @@ public class ConsoleServlet extends HttpServlet {
     * Allowed operations.
     */
    private enum Op {
-      DEFAULT, DEFAULT_WITH_APP, APPS, METRICS, GRAPHS, INDEX_STATS
+      DEFAULT, DEFAULT_WITH_APP, APPS, METRICS, GRAPHS, INDEX_STATS, FIELD_STATS
    }
 
    /**
     * Valid operations.
     */
-   private static ImmutableMap<String, Op> ops =
-           ImmutableMap.of("", Op.DEFAULT, "apps", Op.APPS, "metrics",
-                   Op.METRICS, "graphs", Op.GRAPHS, "stats", Op.INDEX_STATS);
+   private static ImmutableMap<String, Op> ops = ImmutableMap.<String, Op>builder()
+           .put("", Op.DEFAULT)
+           .put("apps", Op.APPS)
+           .put("metrics", Op.METRICS)
+           .put("graphs", Op.GRAPHS)
+           .put("fstats", Op.FIELD_STATS)
+           .put("stats", Op.INDEX_STATS).build();
 
    @Override
    protected void doPost(final HttpServletRequest request,
@@ -217,7 +225,7 @@ public class ConsoleServlet extends HttpServlet {
             doMetrics(request, index, appName, metricType, response);
             break;
          }
-         case GRAPHS:
+         case GRAPHS: {
             if(!path.hasNext()) {
                sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'application' must be specified");
                return;
@@ -225,6 +233,16 @@ public class ConsoleServlet extends HttpServlet {
             String appName = path.next();
             doGraphs(request, index, appName, response);
             break;
+         }
+         case FIELD_STATS: {
+            if(!path.hasNext()) {
+               sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'application' must be specified");
+               return;
+            }
+            String appName = path.next();
+            doFieldStats(request, index, appName, response);
+            break;
+         }
          case INDEX_STATS:
             doIndexStats(request, index, response);
             break;
@@ -563,6 +581,73 @@ public class ConsoleServlet extends HttpServlet {
       response.getWriter().flush();
    }
 
+   /**
+    * Renders stats for a field.
+    * @param request The request.
+    * @param index The index.
+    * @param response The response.
+    * @throws IOException on output error.
+    */
+   protected void doFieldStats(final HttpServletRequest request,
+                               final String index,
+                               final String app,
+                               final HttpServletResponse response) throws IOException {
+
+      ST template = getTemplate(FIELD_STATS_TEMPLATE);
+      if(template == null) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + INDEX_STATS_TEMPLATE + "' template");
+         return;
+      }
+
+      if(Strings.nullToEmpty(request.getParameter("name")).trim().isEmpty()) {
+         sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "A 'name' parameter is required");
+         return;
+      }
+
+      if(Strings.nullToEmpty(request.getParameter("field")).trim().isEmpty()) {
+         sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "A 'field' parameter is required");
+         return;
+      }
+
+      String range = Strings.nullToEmpty(request.getParameter("range")).trim();
+      if(range.isEmpty()) {
+         sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "A 'range' parameter is required");
+         return;
+      }
+
+      try {
+
+         StatsQuery query = new StatsQuery(request, app, range);
+         template.add("index", index);
+         template.add("app", app);
+         template.add("key", query.key);
+         template.add("range", query.range);
+
+         String esQuery = query.searchRequest.toJSON();
+         Request esRequest = esEndpoint.postRequestBuilder(esEndpoint.buildIndexURI(index),
+                 esQuery.getBytes(Charsets.UTF_8)).create();
+         Response esResponse = client.send(esRequest, requestOptions);
+
+         if(esResponse.getStatusCode() == 200) {
+            ObjectNode statsObject = Util.mapper.readTree(Util.parserFactory.createParser(esResponse.getBody().toByteArray()));
+            Stats stats = StatsParser.parseStats(statsObject);
+            template.add("stats", stats);
+         } else {
+            logger.error("Field stats response error for '" + index + "' (" + esResponse.getStatusCode() + ")");
+         }
+      } catch(Exception e) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         e.printStackTrace();
+         return;
+      }
+
+      response.setStatus(HttpServletResponse.SC_OK);
+      response.setContentType(HTML_CONTENT_TYPE);
+      response.getWriter().print(template.render());
+      response.getWriter().flush();
+   }
+
+
    protected void sendError(final HttpServletRequest request,
                             final HttpServletResponse response,
                             final int code) throws IOException {
@@ -710,6 +795,11 @@ public class ConsoleServlet extends HttpServlet {
     */
    public static final String INDEX_STATS_TEMPLATE = "index_stats";
 
+   /**
+    * The template for rendering field stats.
+    */
+   public static final String FIELD_STATS_TEMPLATE = "field_stats";
+
 
    /**
     * Available downsample functions.
@@ -730,6 +820,7 @@ public class ConsoleServlet extends HttpServlet {
    private final String templateDirectory;
    private final Logger logger;
    private final AsyncClient client;
+   private final RequestOptions requestOptions;
    private final boolean debug;
    private final IndexAuthorization indexAuthorization;
    private final ESEndpoint esEndpoint;

@@ -300,6 +300,21 @@ function loadMetricData(config, renderFn) {
     });
 }
 
+function rangeDetail(config) {
+
+    var mformat0 = 'MM/DD/YYYY HH:mm:ss';
+    var mformat1 = 'MM/DD/YYYY HH:mm:ss Z z';
+
+    var rangeDetail = '';
+    if(config.tz != null && config.tz != '') {
+        rangeDetail = moment.tz(config.startTimestamp, config.tz).format(mformat0) + ' - ' +
+        moment.tz(config.endTimestamp, config.tz).format(mformat1);
+    } else {
+        rangeDetail = moment(config.startTimestamp).format(mformat0) + ' - ' + moment(config.endTimestamp).format(mformat0);
+    }
+    return rangeDetail;
+}
+
 function setDynamicTitles(config) {
 
     if(config.host != '') {
@@ -308,18 +323,7 @@ function setDynamicTitles(config) {
         $('#app-title').text(config.app);
     }
 
-    var mformat0 = 'MM/DD/YYYY HH:mm:ss';
-    var mformat1 = 'MM/DD/YYYY HH:mm:ss Z z';
-
-    var rangeDetail = '';
-    if(config.tz != null && config.tz != '') {
-        rangeDetail = moment.tz(config.startTimestamp, config.tz).format(mformat0) + ' - ' +
-            moment.tz(config.endTimestamp, config.tz).format(mformat1);
-    } else {
-        rangeDetail = moment(config.startTimestamp).format(mformat0) + ' - ' + moment(config.endTimestamp).format(mformat0);
-    }
-
-    $('#range-detail').text(rangeDetail);
+    $('#range-detail').text(rangeDetail(config));
 
     var permalinkURL = "/console/"+config.index+"/graphs/"+config.app+
         "?name="+encodeURIComponent(config.name)+
@@ -385,5 +389,24 @@ function loadGraph(data, config, dataConfig) {
             var content = d[config.field].toFixed(3)+' '+hoverFormatter(d.date)+' '+' ('+ samplePlural(d.samples)+')';
             $(target+' svg .mg-active-datapoint').text(content);
         }
+    });
+}
+
+function showFieldStats(config, field, range) {
+    var url = '/console/' + config.index + '/fstats/' + config.app + '?name=' + config.name + '&field=' + field + '&range=' + range;
+    if(config.host != null) url = url + '&host=' + config.host;
+    $.ajax({
+        type: 'GET',
+        url: url,
+        dataType: 'html',
+        success: function(html, textStatus) {
+            $('#top_modal_content').html(html);
+            $('#fstats-range-detail').text(rangeDetail(config));
+            var fieldTitle = $('#fstats_' + field).attr('title');
+            $('#fstats-field-title').text(fieldTitle);
+            $('#top_modal').foundation('reveal', 'open');
+            scrollToTop();
+        },
+        error: handleXHRError
     });
 }

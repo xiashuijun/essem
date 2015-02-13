@@ -127,6 +127,15 @@ $footer()$
     dataConfig.host = '';
     $endif$
 
+    function triggerFieldStats(event) {
+        event.preventDefault();
+        showFieldStats(dataConfig, getId(this.id), dataConfig.range);
+    }
+
+    $graphs:{graph |
+        jQuery('#fstats_$graph.field$').click(triggerFieldStats);
+    }$
+
     function render(data) {
         if(data.length > 0) {
             jQuery('#missing_graph').hide();
