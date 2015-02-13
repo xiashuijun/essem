@@ -2,6 +2,8 @@ package com.attribyte.essem.model.graph;
 
 import com.google.common.base.Objects;
 
+import java.text.NumberFormat;
+
 /**
  * Statistics for a field.
  */
@@ -49,9 +51,25 @@ public class Stats {
    public final double min;
 
    /**
+    * Gets the minimum value with formatting.
+    * @return The formatted value.
+    */
+   public String getFormattedMin() {
+      return formatNumber(min);
+   }
+
+   /**
     * The maximum value.
     */
    public final double max;
+
+   /**
+    * Gets the maximum value with formatting.
+    * @return The formatted value.
+    */
+   public String getFormattedMax() {
+      return formatNumber(max);
+   }
 
    /**
     * The average value.
@@ -59,9 +77,25 @@ public class Stats {
    public final double avg;
 
    /**
+    * Gets the average value with formatting.
+    * @return The formatted value.
+    */
+   public String getFormattedAvg() {
+      return formatNumber(avg);
+   }
+
+   /**
     * The sum of all values.
     */
    public final double sum;
+
+   /**
+    * Gets the sum of values with formatting.
+    * @return The formatted value.
+    */
+   public String getFormattedSum() {
+      return formatNumber(sum);
+   }
 
    /**
     * The sum of the square of each value.
@@ -69,12 +103,43 @@ public class Stats {
    public final double sumOfSquares;
 
    /**
+    * Gets the sum of squares value with formatting.
+    * @return The formatted value.
+    */
+   public String getFormattedSumOfSquares() {
+      return formatNumber(sumOfSquares);
+   }
+
+   /**
     * The variance.
     */
    public final double variance;
 
    /**
+    * Gets the variance value with formatting.
+    * @return The formatted value.
+    */
+   public String getFormattedVariance() {
+      return formatNumber(variance);
+   }
+
+   /**
     * The standard deviation.
     */
    public final double std;
+
+   /**
+    * Gets the standard deviation value with formatting.
+    * @return The formatted value.
+    */
+   public String getFormattedStd() {
+      return formatNumber(std);
+   }
+
+   private String formatNumber(final double num) {
+      NumberFormat nf = NumberFormat.getNumberInstance();
+      nf.setMaximumFractionDigits(3);
+      nf.setMinimumIntegerDigits(1);
+      return nf.format(num);
+   }
 }
