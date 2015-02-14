@@ -1,9 +1,9 @@
-graphs_main(index, indexList, app, host, downsampleList, zoneList, metric, graphs, range) ::= <<
+graphs_main(uid, index, indexList, app, host, downsampleList, zoneList, metric, graphs, range) ::= <<
 <!doctype html>
 <html class="no-js" lang="en">
 $head()$
 <body>
-$topbar(index, indexList, zoneList)$
+$topbar(index, indexList, zoneList, uid)$
 <div class="row">
     <div id="sidebar" class="large-3 columns">
         <h5 class="subheader">Range</h5>

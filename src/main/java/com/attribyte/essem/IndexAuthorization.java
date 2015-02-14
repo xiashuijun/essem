@@ -35,9 +35,25 @@ public interface IndexAuthorization {
        */
       public static final Auth UNAUTHORIZED = new Auth(null, false);
 
-      protected Auth(final String uid, final boolean isAuthorized) {
+      /**
+       * A 'system' user.
+       */
+      public static final Auth SYSTEM = new Auth("__SYSTEM__", true, true);
+
+      private Auth(final String uid, final boolean isAuthorized, final boolean isSystem) {
          this.uid = uid;
          this.isAuthorized = isAuthorized;
+         this.isSystem = isSystem;
+      }
+
+      /**
+       * Creates auth.
+       * @param uid The user id.
+       */
+      public Auth(final String uid, final boolean isAuthorized) {
+         this.uid = uid;
+         this.isAuthorized = isAuthorized;
+         this.isSystem = false;
       }
 
       /**
@@ -49,8 +65,12 @@ public interface IndexAuthorization {
        * Is the user authorized?
        */
       public final boolean isAuthorized;
-   }
 
+      /**
+       * Is this the global system user?
+       */
+      public final boolean isSystem;
+   }
 
    /**
     * Determine if access to the index is authorized.

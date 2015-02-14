@@ -1,9 +1,9 @@
-main(index, indexList, appList, defaultApp, zoneList, time, content) ::= <<
+main(uid, index, indexList, appList, defaultApp, zoneList, time, content) ::= <<
 <!doctype html>
 <html class="no-js" lang="en">
 $head()$
 <body>
-$topbar(index, indexList, zoneList)$
+$topbar(index, indexList, zoneList, uid)$
 <div class="row">
     <div id="sidebar" class="large-3 columns">
         <h5 class="subheader">Applications</h5>

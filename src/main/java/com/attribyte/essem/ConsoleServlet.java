@@ -179,7 +179,7 @@ public class ConsoleServlet extends HttpServlet {
    @Override
    protected void doPost(final HttpServletRequest request,
                          final HttpServletResponse response) throws IOException {
-      doGet(request, response);
+      sendError(request, response, HttpServletResponse.SC_NOT_FOUND);
    }
 
    @Override
@@ -192,10 +192,17 @@ public class ConsoleServlet extends HttpServlet {
          return;
       }
 
-      String index = path.next();
-      if(indexAuthorization != null && !indexAuthorization.isAuthorized(index, request)) {
-         indexAuthorization.sendUnauthorized(index, response);
-         return;
+      final String index = path.next();
+      final IndexAuthorization.Auth auth;
+
+      if(indexAuthorization == null) { //No auth configured
+         auth = IndexAuthorization.Auth.SYSTEM;
+      } else {
+         auth = indexAuthorization.getAuth(index, request);
+         if(!auth.isAuthorized) {
+            indexAuthorization.sendUnauthorized(index, response);
+            return;
+         }
       }
 
       String opPath = path.hasNext() ? path.next().toLowerCase() : "";
@@ -207,10 +214,10 @@ public class ConsoleServlet extends HttpServlet {
 
       switch(op) {
          case DEFAULT:
-            doDefault(request, index, null, response);
+            doDefault(request, auth, index, null, response);
             break;
          case DEFAULT_WITH_APP:
-            doDefault(request, index, opPath, response);
+            doDefault(request, auth, index, opPath, response);
             break;
          case APPS:
             doApps(request, index, response);
@@ -231,7 +238,7 @@ public class ConsoleServlet extends HttpServlet {
                return;
             }
             String appName = path.next();
-            doGraphs(request, index, appName, response);
+            doGraphs(request, auth, index, appName, response);
             break;
          }
          case FIELD_STATS: {
@@ -254,12 +261,14 @@ public class ConsoleServlet extends HttpServlet {
    /**
     * Renders the default page.
     * @param request The request.
+    * @param auth The auth info.
     * @param index The index.
     * @param appName The application name.
     * @param response The response.
     * @throws IOException on output error.
     */
    protected void doDefault(final HttpServletRequest request,
+                            final IndexAuthorization.Auth auth,
                             final String index,
                             final String appName,
                             final HttpServletResponse response) throws IOException {
@@ -267,6 +276,10 @@ public class ConsoleServlet extends HttpServlet {
       if(template == null) {
          sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + MAIN_TEMPLATE + "' template");
          return;
+      }
+
+      if(!auth.isSystem) {
+         template.add("uid", auth.uid);
       }
 
       List<String> indexList = buildAllowedIndexList(request, index);
@@ -289,6 +302,7 @@ public class ConsoleServlet extends HttpServlet {
          response.sendError(404, "No application found");
          return;
       }
+
 
       template.add("index", index);
       template.add("content", "");
@@ -456,12 +470,14 @@ public class ConsoleServlet extends HttpServlet {
    /**
     * Renders a page of graphs for one or more metrics.
     * @param request The request.
+    * @param auth The auth info.
     * @param index The index.
     * @param appName The application name.
     * @param response The response.
     * @throws IOException on output error.
     */
    protected void doGraphs(final HttpServletRequest request,
+                           final IndexAuthorization.Auth auth,
                            final String index,
                            final String appName,
                            final HttpServletResponse response) throws IOException {
@@ -471,6 +487,10 @@ public class ConsoleServlet extends HttpServlet {
       if(template == null) {
          sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + GRAPHS_TEMPLATE + "' template");
          return;
+      }
+
+      if(!auth.isSystem) {
+         template.add("uid", auth.uid);
       }
 
       try {
