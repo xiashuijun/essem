@@ -244,7 +244,6 @@ function offsetMatchesLocal(tz) {
     return localOffsetMinutes == checkOffsetMinutes;
 }
 
-
 function bindMetricSearchBox(index, app) {
 
     var mf = $('#mf');
@@ -406,6 +405,42 @@ function showFieldStats(config, field, range) {
             $('#fstats-field-title').text(fieldTitle);
             $('#top_modal').foundation('reveal', 'open');
             scrollToTop();
+        },
+        error: handleXHRError
+    });
+}
+
+function showFieldSave(config, field) {
+    var url = '/console/' + config.index + '/savekey/' + config.app + '?name=' + config.name + '&field=' + field;
+    if(config.host != null) url = url + '&host=' + config.host;
+    $.ajax({
+        type: 'GET',
+        url: url,
+        dataType: 'html',
+        success: function(html, textStatus) {
+            $('#top_modal_content').html(html);
+            $('#top_modal').foundation('reveal', 'open');
+            scrollToTop();
+            $('#save-key-form').bind('submit', function(event) {
+                event.preventDefault();
+                saveField(config.index, config.app);
+            });
+        },
+        error: handleXHRError
+    });
+}
+
+function saveField(index, app) {
+    $.ajax({
+        type: 'POST',
+        url: '/console/' + index + '/savekey/' + app,
+        data: $('#save-key-form').serialize(),
+        success: function (html, textStatus) {
+            if (textStatus == "success") {
+                alert("OK");
+            } else {
+                alert("Error: " + textStatus);
+            }
         },
         error: handleXHRError
     });

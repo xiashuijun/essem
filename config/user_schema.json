@@ -1,0 +1,65 @@
+{
+  "mappings": {
+    "graph_key": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "uid": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "index": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "application": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "host": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "instance": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "name": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "field": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "title": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "created": {
+          "type": "date",
+          "store": true,
+          "format": "basic_date_time",
+          "doc_values": false
+        }
+      }
+    }
+  }
+}

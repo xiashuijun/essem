@@ -22,6 +22,8 @@ import com.attribyte.essem.model.Metric;
 import com.attribyte.essem.model.MetricGraph;
 import com.attribyte.essem.model.Sort;
 import com.attribyte.essem.model.GraphRange;
+import com.attribyte.essem.model.StoredKey;
+import com.attribyte.essem.model.graph.MetricKey;
 import com.attribyte.essem.model.graph.Stats;
 import com.attribyte.essem.model.index.IndexStats;
 import com.attribyte.essem.query.Fields;
@@ -68,6 +70,7 @@ import static com.attribyte.essem.Util.splitPath;
 public class ConsoleServlet extends HttpServlet {
 
    public ConsoleServlet(final ESEndpoint esEndpoint,
+                         final ESUserStore userStore,
                          final ServletContextHandler rootContext,
                          final IndexAuthorization indexAuthorization,
                          final String templateDirectory,
@@ -81,6 +84,7 @@ public class ConsoleServlet extends HttpServlet {
                          final boolean debug) {
 
       this.esEndpoint = esEndpoint;
+      this.userStore = userStore;
       this.indexAuthorization = indexAuthorization;
       this.templateDirectory = templateDirectory;
       this.allowedIndexes = ImmutableList.copyOf(allowedIndexes);
@@ -162,7 +166,7 @@ public class ConsoleServlet extends HttpServlet {
     * Allowed operations.
     */
    private enum Op {
-      DEFAULT, DEFAULT_WITH_APP, APPS, METRICS, GRAPHS, INDEX_STATS, FIELD_STATS
+      DEFAULT, DEFAULT_WITH_APP, APPS, METRICS, GRAPHS, INDEX_STATS, FIELD_STATS, SAVEKEY
    }
 
    /**
@@ -174,12 +178,57 @@ public class ConsoleServlet extends HttpServlet {
            .put("metrics", Op.METRICS)
            .put("graphs", Op.GRAPHS)
            .put("fstats", Op.FIELD_STATS)
+           .put("savekey", Op.SAVEKEY)
            .put("stats", Op.INDEX_STATS).build();
+
+   /**
+    * Valid PUT operations.
+    */
+   private static ImmutableMap<String, Op> putOps = ImmutableMap.of("savekey", Op.SAVEKEY);
 
    @Override
    protected void doPost(final HttpServletRequest request,
                          final HttpServletResponse response) throws IOException {
-      sendError(request, response, HttpServletResponse.SC_NOT_FOUND);
+      doPut(request, response);
+   }
+
+   @Override
+   protected void doPut(final HttpServletRequest request,
+                        final HttpServletResponse response) throws IOException {
+
+      Iterator<String> path = splitPath(request).iterator();
+      if(!path.hasNext()) {
+         sendError(request, response, HttpServletResponse.SC_BAD_REQUEST);
+         return;
+      }
+
+      final String index = path.next();
+      final IndexAuthorization.Auth auth;
+
+      if(indexAuthorization == null) { //No auth configured
+         auth = IndexAuthorization.Auth.SYSTEM;
+      } else {
+         auth = indexAuthorization.getAuth(index, request);
+         if(!auth.isAuthorized) {
+            indexAuthorization.sendUnauthorized(index, response);
+            return;
+         }
+      }
+
+      String opPath = path.hasNext() ? path.next().toLowerCase() : "";
+      Op op = putOps.get(opPath);
+      if(op == null) {
+         response.sendError(404, "Not Found");
+         return;
+      }
+
+      switch(op) {
+         case SAVEKEY:
+            doSaveKeyPut(request, auth, index, response);
+            break;
+         default:
+            sendError(request, response, HttpServletResponse.SC_NOT_FOUND);
+      }
    }
 
    @Override
@@ -248,6 +297,15 @@ public class ConsoleServlet extends HttpServlet {
             }
             String appName = path.next();
             doFieldStats(request, index, appName, response);
+            break;
+         }
+         case SAVEKEY: {
+            if(!path.hasNext()) {
+               sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'application' must be specified");
+               return;
+            }
+            String appName = path.next();
+            doSaveKeyForm(request, auth, index, appName, response);
             break;
          }
          case INDEX_STATS:
@@ -601,6 +659,26 @@ public class ConsoleServlet extends HttpServlet {
       response.getWriter().flush();
    }
 
+   protected void doSaveKeyPut(final HttpServletRequest request,
+                               final IndexAuthorization.Auth auth,
+                               final String index,
+                               final HttpServletResponse response) throws IOException {
+
+      MetricKey metricKey = Util.createKey(request);
+      StoredKey key = new StoredKey(index, auth.uid, metricKey, request.getParameter("title"));
+      try {
+         boolean stored = userStore.storeKey(key);
+         if(stored) {
+            response.setStatus(201);
+         } else {
+            sendError(request, response, 500, "Problem storing key");
+         }
+      } catch(IOException ioe) {
+         logger.error("Problem storing user key", ioe);
+         sendError(request, response, 500, "Problem storing key");
+      }
+   }
+
    /**
     * Renders stats for a field.
     * @param request The request.
@@ -654,6 +732,68 @@ public class ConsoleServlet extends HttpServlet {
             template.add("stats", stats);
          } else {
             logger.error("Field stats response error for '" + index + "' (" + esResponse.getStatusCode() + ")");
+         }
+      } catch(Exception e) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         e.printStackTrace();
+         return;
+      }
+
+      response.setStatus(HttpServletResponse.SC_OK);
+      response.setContentType(HTML_CONTENT_TYPE);
+      response.getWriter().print(template.render());
+      response.getWriter().flush();
+   }
+
+   /**
+    * Renders stats for a field.
+    * @param request The request.
+    * @param index The index.
+    * @param response The response.
+    * @throws IOException on output error.
+    */
+   protected void doSaveKeyForm(final HttpServletRequest request,
+                                final IndexAuthorization.Auth auth,
+                                final String index,
+                                final String app,
+                                final HttpServletResponse response) throws IOException {
+
+      ST template = getTemplate(SAVE_KEY_TEMPLATE);
+      if(template == null) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + SAVE_KEY_TEMPLATE + "' template");
+         return;
+      }
+
+      if(Strings.nullToEmpty(request.getParameter("name")).trim().isEmpty()) {
+         sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "A 'name' parameter is required");
+         return;
+      }
+
+      if(Strings.nullToEmpty(request.getParameter("field")).trim().isEmpty()) {
+         sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "A 'field' parameter is required");
+         return;
+      }
+
+      try {
+
+         StatsQuery query = new StatsQuery(request, app, "hour");
+         template.add("key", query.key);
+
+
+         String esQuery = query.searchRequest.toJSON();
+         Request esRequest = esEndpoint.postRequestBuilder(esEndpoint.buildIndexURI(index),
+                 esQuery.getBytes(Charsets.UTF_8)).create();
+         Response esResponse = client.send(esRequest, requestOptions);
+         switch(esResponse.getStatusCode()) {
+            case 200:
+               String title = ""; //TODO....see if there's an existing title
+               template.add("title", title);
+               StoredKey key = new StoredKey(index, auth.uid, query.key, title);
+               template.add("id", key.id);
+               break;
+            default:
+               logger.error("Field stats response error for '" + index + "' (" + esResponse.getStatusCode() + ")");
+               break;
          }
       } catch(Exception e) {
          sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
@@ -820,6 +960,10 @@ public class ConsoleServlet extends HttpServlet {
     */
    public static final String FIELD_STATS_TEMPLATE = "field_stats";
 
+   /**
+    * The template for rendering the save key form.
+    */
+   public static final String SAVE_KEY_TEMPLATE = "save_key_form";
 
    /**
     * Available downsample functions.
@@ -844,6 +988,7 @@ public class ConsoleServlet extends HttpServlet {
    private final boolean debug;
    private final IndexAuthorization indexAuthorization;
    private final ESEndpoint esEndpoint;
+   private final ESUserStore userStore;
    private final ImmutableList<String> allowedIndexes;
    private final ImmutableList<DisplayTZ> zones;
 

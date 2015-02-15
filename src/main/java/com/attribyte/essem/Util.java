@@ -16,6 +16,8 @@
 package com.attribyte.essem;
 
 import com.attribyte.essem.es.DateHistogramAggregation;
+import com.attribyte.essem.model.graph.MetricKey;
+import com.attribyte.essem.query.Fields;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -230,6 +232,27 @@ public class Util {
       } else {
          return defaultValue;
       }
+   }
+
+   /**
+    * Creates a metric key from request parameters.
+    * @param request The request.
+    * @return The created key.
+    */
+   public static MetricKey createKey(final HttpServletRequest request) {
+
+      String app = request.getParameter(Fields.APPLICATION_FIELD);
+      if(app == null) {
+         app = request.getParameter("app");
+      }
+
+      return new MetricKey(
+              request.getParameter(Fields.NAME_FIELD),
+              app,
+              request.getParameter(Fields.HOST_FIELD),
+              request.getParameter(Fields.INSTANCE_FIELD),
+              request.getParameter("field")
+      );
    }
 
    /**

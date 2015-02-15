@@ -1,7 +1,7 @@
 package com.attribyte.essem.query;
 
 /**
- * Contants that define the name of fields stored in ES.
+ * Constants that define the name of fields stored in ES.
  */
 public class Fields {
 

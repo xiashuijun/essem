@@ -132,8 +132,14 @@ $footer()$
         showFieldStats(dataConfig, getId(this.id), dataConfig.range);
     }
 
+    function triggerFieldSave(event) {
+        event.preventDefault();
+        showFieldSave(dataConfig, getId(this.id));
+    }
+
     $graphs:{graph |
         jQuery('#fstats_$graph.field$').click(triggerFieldStats);
+        jQuery('#fsave_$graph.field$').click(triggerFieldSave);
     }$
 
     function render(data) {

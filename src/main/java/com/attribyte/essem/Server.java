@@ -263,12 +263,13 @@ public class Server {
          testES(esEndpoint, httpClient); //Throws exception on failure...
 
          File esSchemaFile = getSystemFile("esSchemaFile", props, true); //Must exist
-
          ByteString esSchema = ByteString.copyFrom(Files.toByteArray(esSchemaFile));
-
          Reporter reporter = new ESReporter(esEndpoint, esSchema, httpClient, logger);
-
          reporter.createStore(ESSEM_INDEX_NAME);
+
+         File esUserSchemaFile = getSystemFile("esUserSchemaFile", props, true); //Must exist
+         ByteString esUserSchema = ByteString.copyFrom(Files.toByteArray(esUserSchemaFile));
+         ESUserStore userStore = new ESUserStore(esEndpoint, esUserSchema, httpClient, logger);
 
          RetryStrategy retryStrategy = new RetryStrategy.ExponentialBackoff();
          retryStrategy.init(new InitUtil("retry.", props, false).getProperties());
@@ -277,6 +278,10 @@ public class Server {
 
          Properties authProps = new InitUtil("auth.", props, false).getProperties();
          final IndexAuthorization authorization = buildAuth(authProps, reporter);
+         for(String index : authorization.authorizedIndexes()) {
+            logInfo(logger, "Creating user store for " + index);
+            userStore.createStore(index);
+         }
 
          Properties reportAuthProps = new InitUtil("reportAuth.", props, false).getProperties();
          final IndexAuthorization reportAuthorization = buildAuth(reportAuthProps, reporter);
@@ -353,7 +358,7 @@ public class Server {
                consoleZones = Collections.emptyList();
             }
 
-            ConsoleServlet consoleServlet = new ConsoleServlet(esEndpoint, rootContext, authorization,
+            ConsoleServlet consoleServlet = new ConsoleServlet(esEndpoint, userStore, rootContext, authorization,
                     templateDirFile.getAbsolutePath(), assetDirFile.getAbsolutePath(), allowedAssetPaths, allowedIndexes,
                     consoleZones, httpClient, requestOptions, logger, consoleDebugMode);
             rootContext.addServlet(new ServletHolder(consoleServlet), "/console/*");
