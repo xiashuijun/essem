@@ -22,25 +22,33 @@ import com.attribyte.essem.es.StringTermQuery;
 /**
  * Creates ES query for stored keys.
  */
-public class StoredKeyQuery extends QueryBase {
+public class StoredGraphQuery {
 
    /**
-    * Creates a query that returns all stored keys for a user that match the components
-    * of the key.
+    * Builds a search request for all user graphs.
     * @param uid The user id.
     */
-   public StoredKeyQuery(final String uid) {
+   public static SearchRequest buildUserGraphsRequest(final String uid) {
       SearchRequest.Builder requestBuilder = SearchRequest.builder();
       BooleanQuery.Builder queryBuilder = BooleanQuery.builder();
       queryBuilder.mustMatch(new StringTermQuery("uid", uid));
       requestBuilder.returnAllFields();
       requestBuilder.setQuery(queryBuilder.build());
       requestBuilder.setStart(0).setLimit(1000);
-      this.searchRequest = requestBuilder.build();
+      return requestBuilder.build();
    }
 
    /**
-    * The search request.
+    * Builds a search request for a graph by id.
+    * @param id The graph id.
     */
-   public final SearchRequest searchRequest;
+   public static SearchRequest buildGraphRequest(final String id) {
+      SearchRequest.Builder requestBuilder = SearchRequest.builder();
+      BooleanQuery.Builder queryBuilder = BooleanQuery.builder();
+      queryBuilder.mustMatch(new StringTermQuery("_id", id));
+      requestBuilder.returnAllFields();
+      requestBuilder.setQuery(queryBuilder.build());
+      requestBuilder.setStart(0).setLimit(1);
+      return requestBuilder.build();
+   }
 }

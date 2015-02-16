@@ -15,8 +15,8 @@
 
 package com.attribyte.essem;
 
-import com.attribyte.essem.model.StoredKey;
-import com.attribyte.essem.query.StoredKeyQuery;
+import com.attribyte.essem.model.StoredGraph;
+import com.attribyte.essem.query.StoredGraphQuery;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
 import com.google.protobuf.ByteString;
@@ -40,9 +40,9 @@ public class ESUserStore {
     * @param logger The logger.
     */
    public ESUserStore(final ESEndpoint esEndpoint,
-                     final ByteString schema,
-                     final AsyncClient httpClient,
-                     final Logger logger) {
+                      final ByteString schema,
+                      final AsyncClient httpClient,
+                      final Logger logger) {
       this.esEndpoint = esEndpoint;
       this.schema = schema;
       this.httpClient = httpClient;
@@ -90,12 +90,12 @@ public class ESUserStore {
    }
 
    /**
-    * Stores a key.
-    * @param key The key.
-    * @return Was the key stored?
+    * Stores a graph.
+    * @param key The graph.
+    * @return Was the graph stored?
     * @throws IOException on store error.
     */
-   public boolean storeKey(final StoredKey key) throws IOException {
+   public boolean storeGraph(final StoredGraph key) throws IOException {
 
       String indexName = key.index + SUFFIX;
 
@@ -106,13 +106,7 @@ public class ESUserStore {
                  esEndpoint.uri.getPort(), "/" + indexName + "/" + STORED_KEY_TYPE + "/" + key.id, null, null);
 
          Request esRequest = esEndpoint.putRequestBuilder(indexURI, key.getAsJSON().getBytes(Charsets.UTF_8)).create();
-
-         System.out.println(esRequest.toString());
-
          Response esResponse = httpClient.send(esRequest);
-
-         System.out.println(esResponse.toString());
-
          return esResponse.getStatusCode() / 100 == 2;
       } catch(URISyntaxException use) {
          throw new AssertionError();
@@ -120,20 +114,21 @@ public class ESUserStore {
    }
 
    /**
-    * Deletes a key.
-    * @param key The key.
-    * @return Was the key deleted?
+    * Deletes a graph.
+    * @param index The index.
+    * @param id The graph id.
+    * @return Was the graph deleted?
     * @throws IOException on delete error.
     */
-   public boolean deleteKey(final StoredKey key) throws IOException {
+   public boolean deleteGraph(final String index, final String id) throws IOException {
 
-      String indexName = key.index + SUFFIX;
+      String indexName = index + SUFFIX;
 
       try {
          URI indexURI = new URI(esEndpoint.uri.getScheme(),
                  esEndpoint.uri.getUserInfo(),
                  esEndpoint.uri.getHost(),
-                 esEndpoint.uri.getPort(), "/" + indexName + "/" + STORED_KEY_TYPE + "/" + key.id, null, null);
+                 esEndpoint.uri.getPort(), "/" + indexName + "/" + STORED_KEY_TYPE + "/" + id, null, null);
 
          Request esRequest = esEndpoint.deleteRequestBuilder(indexURI).create();
          Response esResponse = httpClient.send(esRequest);
@@ -144,13 +139,13 @@ public class ESUserStore {
    }
 
    /**
-    * Gets all keys for a user.
+    * Gets a previously saved graph.
     * @param index The index.
-    * @param uid The user id.
-    * @return The list of keys.
+    * @param id The graph id.
+    * @return The previously saved graph or <code>null</code> if none.
     * @throws IOException on retrieve error.
     */
-   public List<StoredKey> getUserKeys(final String index, final String uid) throws IOException {
+   public StoredGraph getGraph(final String index, final String id) throws IOException {
 
       String indexName = index + SUFFIX;
 
@@ -158,14 +153,43 @@ public class ESUserStore {
          URI indexURI = new URI(esEndpoint.uri.getScheme(),
                  esEndpoint.uri.getUserInfo(),
                  esEndpoint.uri.getHost(),
-                 esEndpoint.uri.getPort(), "/" + indexName + "/" + STORED_KEY_TYPE, null, null);
-         StoredKeyQuery query = new StoredKeyQuery(uid);
-         Request esRequest = esEndpoint.postRequestBuilder(indexURI, query.searchRequest.toJSON().getBytes(Charsets.UTF_8)).create();
+                 esEndpoint.uri.getPort(), "/" + indexName + "/_search", null, null);
+         Request esRequest = esEndpoint.postRequestBuilder(indexURI, StoredGraphQuery.buildGraphRequest(id).toJSON().getBytes(Charsets.UTF_8)).create();
+         Response esResponse = httpClient.send(esRequest);
+         if(esResponse.getStatusCode() == 200) {
+            ObjectNode keysObject = Util.mapper.readTree(Util.parserFactory.createParser(esResponse.getBody().toByteArray()));
+            List<StoredGraph> graphs = StoredGraphParser.parseGraphs(keysObject);
+            return graphs.size() > 0 ? graphs.get(0) : null;
+         } else {
+            return null;
+         }
+      } catch(URISyntaxException use) {
+         throw new AssertionError();
+      }
+   }
+
+   /**
+    * Gets all graphs for a user.
+    * @param index The index.
+    * @param uid The user id.
+    * @return The list of graphs.
+    * @throws IOException on retrieve error.
+    */
+   public List<StoredGraph> getUserGraphs(final String index, final String uid) throws IOException {
+
+      String indexName = index + SUFFIX;
+
+      try {
+         URI indexURI = new URI(esEndpoint.uri.getScheme(),
+                 esEndpoint.uri.getUserInfo(),
+                 esEndpoint.uri.getHost(),
+                 esEndpoint.uri.getPort(), "/" + indexName + "/search", null, null);
+         Request esRequest = esEndpoint.postRequestBuilder(indexURI, StoredGraphQuery.buildUserGraphsRequest(uid).toJSON().getBytes(Charsets.UTF_8)).create();
          Response esResponse = httpClient.send(esRequest);
          switch(esResponse.getStatusCode()) {
             case 200:
                ObjectNode keysObject = Util.mapper.readTree(Util.parserFactory.createParser(esResponse.getBody().toByteArray()));
-               return StoredKeyParser.parseKeys(keysObject);
+               return StoredGraphParser.parseGraphs(keysObject);
             default:
                throw new IOException("Problem selecting user keys (" + esResponse.getStatusCode() + ")");
          }
@@ -178,5 +202,4 @@ public class ESUserStore {
    private final AsyncClient httpClient;
    private final ByteString schema;
    private final Logger logger;
-
 }

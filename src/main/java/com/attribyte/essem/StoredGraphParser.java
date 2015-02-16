@@ -15,7 +15,7 @@
 
 package com.attribyte.essem;
 
-import com.attribyte.essem.model.StoredKey;
+import com.attribyte.essem.model.StoredGraph;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
@@ -23,18 +23,17 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Parse keys from ES response that results from <code>StoredKeyQuery</code>.
+ * Parse keys from ES response that results from <code>StoredGraphQuery</code> methods.
  */
-public class StoredKeyParser {
+public class StoredGraphParser {
 
    /**
-    * Parses a stored key response.
+    * Parses a stored graph response.
     * @param esObject The ES response object.
-    * @return The list of keys.
+    * @return The list of graphs.
     */
-   public static List<StoredKey> parseKeys(ObjectNode esObject) throws IOException {
-
-      List<StoredKey> keyList = Lists.newArrayListWithExpectedSize(16);
+   public static List<StoredGraph> parseGraphs(ObjectNode esObject) throws IOException {
+      List<StoredGraph> graphList = Lists.newArrayListWithExpectedSize(16);
       JsonNode hitsObj = esObject.get("hits");
       if(hitsObj != null) {
          JsonNode hitsArr = hitsObj.get("hits");
@@ -42,11 +41,11 @@ public class StoredKeyParser {
             for(JsonNode hitObj : hitsArr) {
                JsonNode fieldsObj = hitObj.get("fields");
                if(fieldsObj != null) {
-                  keyList.add(StoredKey.fromJSON(fieldsObj));
+                  graphList.add(StoredGraph.fromJSON(fieldsObj));
                }
             }
          }
       }
-      return keyList;
+      return graphList;
    }
 }

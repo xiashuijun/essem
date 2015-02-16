@@ -22,8 +22,7 @@ import com.attribyte.essem.model.Metric;
 import com.attribyte.essem.model.MetricGraph;
 import com.attribyte.essem.model.Sort;
 import com.attribyte.essem.model.GraphRange;
-import com.attribyte.essem.model.StoredKey;
-import com.attribyte.essem.model.graph.MetricKey;
+import com.attribyte.essem.model.StoredGraph;
 import com.attribyte.essem.model.graph.Stats;
 import com.attribyte.essem.model.index.IndexStats;
 import com.attribyte.essem.query.Fields;
@@ -224,7 +223,13 @@ public class ConsoleServlet extends HttpServlet {
 
       switch(op) {
          case SAVEKEY:
-            doSaveKeyPut(request, auth, index, response);
+
+            if(!path.hasNext()) {
+               sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'application' must be specified");
+               return;
+            }
+            String appName = path.next();
+            doSaveKeyPut(request, auth, index, appName, response);
             break;
          default:
             sendError(request, response, HttpServletResponse.SC_NOT_FOUND);
@@ -661,13 +666,15 @@ public class ConsoleServlet extends HttpServlet {
 
    protected void doSaveKeyPut(final HttpServletRequest request,
                                final IndexAuthorization.Auth auth,
-                               final String index,
+                               final String index, final String app,
                                final HttpServletResponse response) throws IOException {
 
-      MetricKey metricKey = Util.createKey(request);
-      StoredKey key = new StoredKey(index, auth.uid, metricKey, request.getParameter("title"));
+      StoredGraph.Builder graphBuilder = StoredGraph.parseGraph(request, app);
+      graphBuilder.setUserId(auth.uid);
+      graphBuilder.setIndex(index);
+
       try {
-         boolean stored = userStore.storeKey(key);
+         boolean stored = userStore.storeGraph(graphBuilder.build());
          if(stored) {
             response.setStatus(201);
          } else {
@@ -775,32 +782,24 @@ public class ConsoleServlet extends HttpServlet {
       }
 
       try {
-
-         StatsQuery query = new StatsQuery(request, app, "hour");
-         template.add("key", query.key);
-
-
-         String esQuery = query.searchRequest.toJSON();
-         Request esRequest = esEndpoint.postRequestBuilder(esEndpoint.buildIndexURI(index),
-                 esQuery.getBytes(Charsets.UTF_8)).create();
-         Response esResponse = client.send(esRequest, requestOptions);
-         switch(esResponse.getStatusCode()) {
-            case 200:
-               String title = ""; //TODO....see if there's an existing title
-               template.add("title", title);
-               StoredKey key = new StoredKey(index, auth.uid, query.key, title);
-               template.add("id", key.id);
-               break;
-            default:
-               logger.error("Field stats response error for '" + index + "' (" + esResponse.getStatusCode() + ")");
-               break;
+         StoredGraph.Builder graphBuilder = StoredGraph.parseGraph(request, app);
+         graphBuilder.setUserId(auth.uid);
+         graphBuilder.setIndex(index);
+         String gid = graphBuilder.build().id;
+         StoredGraph currGraph = userStore.getGraph(index, gid);
+         if(currGraph != null) {
+            graphBuilder.setTitle(currGraph.title);
+            graphBuilder.setDescription(currGraph.description);
+            graphBuilder.setXLabel(currGraph.xLabel);
+            graphBuilder.setYLabel(currGraph.yLabel);
+            graphBuilder.setCreateTime(currGraph.createTime);
          }
+         template.add("graph", graphBuilder.build());
       } catch(Exception e) {
          sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
          e.printStackTrace();
          return;
       }
-
       response.setStatus(HttpServletResponse.SC_OK);
       response.setContentType(HTML_CONTENT_TYPE);
       response.getWriter().print(template.render());
