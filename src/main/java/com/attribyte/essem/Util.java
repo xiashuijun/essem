@@ -219,6 +219,22 @@ public class Util {
    }
 
    /**
+    * Gets an long value from a node.
+    * @param node The parent node.
+    * @param key The key.
+    * @param defaultValue The default value.
+    * @return The value or default value.
+    */
+   public static long getLongField(final JsonNode node, final String key, final long defaultValue) {
+      JsonNode field = node.get(key);
+      if(field != null && field.canConvertToInt()) {
+         return field.longValue();
+      } else {
+         return defaultValue;
+      }
+   }
+
+   /**
     * Gets a double value from a node.
     * @param node The parent node.
     * @param key The key.
