@@ -47,10 +47,50 @@
           "index": "not_analyzed",
           "doc_values": false
         },
-        "title": {
+        "range": {
           "type": "string",
           "store": true,
           "index": "not_analyzed",
+          "doc_values": false
+        },
+        "startTimestamp": {
+          "type": "long",
+          "store": true,
+          "doc_values": false
+        },
+        "endTimestamp": {
+          "type": "long",
+          "store": true,
+          "doc_values": false
+        },
+        "downsampleFn": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "title": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "doc_values": false
+        },
+        "description": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "doc_values": false
+        },
+        "xLabel": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "doc_values": false
+        },
+        "yLabel": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
           "doc_values": false
         },
         "created": {
