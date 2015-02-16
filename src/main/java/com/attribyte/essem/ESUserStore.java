@@ -175,7 +175,7 @@ public class ESUserStore {
     * @return The list of graphs.
     * @throws IOException on retrieve error.
     */
-   public List<StoredGraph> getUserGraphs(final String index, final String uid) throws IOException {
+   public List<StoredGraph> getUserGraphs(final String index, final String uid, final int start, final int limit) throws IOException {
 
       String indexName = index + SUFFIX;
 
@@ -183,15 +183,15 @@ public class ESUserStore {
          URI indexURI = new URI(esEndpoint.uri.getScheme(),
                  esEndpoint.uri.getUserInfo(),
                  esEndpoint.uri.getHost(),
-                 esEndpoint.uri.getPort(), "/" + indexName + "/search", null, null);
-         Request esRequest = esEndpoint.postRequestBuilder(indexURI, StoredGraphQuery.buildUserGraphsRequest(uid).toJSON().getBytes(Charsets.UTF_8)).create();
+                 esEndpoint.uri.getPort(), "/" + indexName + "/_search", null, null);
+         Request esRequest = esEndpoint.postRequestBuilder(indexURI, StoredGraphQuery.buildUserGraphsRequest(uid, start, limit).toJSON().getBytes(Charsets.UTF_8)).create();
          Response esResponse = httpClient.send(esRequest);
          switch(esResponse.getStatusCode()) {
             case 200:
                ObjectNode keysObject = Util.mapper.readTree(Util.parserFactory.createParser(esResponse.getBody().toByteArray()));
                return StoredGraphParser.parseGraphs(keysObject);
             default:
-               throw new IOException("Problem selecting user keys (" + esResponse.getStatusCode() + ")");
+               throw new IOException("Problem selecting user graphs (" + esResponse.getStatusCode() + ")");
          }
       } catch(URISyntaxException use) {
          throw new AssertionError();
