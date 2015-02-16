@@ -341,33 +341,6 @@ public class QueryBase {
    }
 
    /**
-    * Parses the components of a key from request parameters.
-    * @param request The request.
-    * @return The parsed key.
-    */
-   protected static MetricKey parseKey(final HttpServletRequest request) {
-      return parseKey(request, null);
-   }
-
-   /**
-    * Parses the components of a key from request parameters.
-    * @param request The request.
-    * @param app The application name to use (overrides any parameter).
-    * @return The parsed key.
-    */
-   protected static MetricKey parseKey(final HttpServletRequest request, String app) {
-
-      if(app == null) {
-         app = request.getParameter("app");
-         if(app == null) app = request.getParameter("application");
-      }
-
-      return new MetricKey(request.getParameter("name"), app,
-              request.getParameter("host"), request.getParameter("instance"),
-              request.getParameter("field"));
-   }
-
-   /**
     * Builds a range query for the default value.
     * @param defaultRange The default range.
     * @return The range query.
