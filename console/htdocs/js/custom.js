@@ -411,7 +411,15 @@ function showFieldStats(config, field, range) {
 }
 
 function showFieldSave(config, field) {
-    var url = '/console/' + config.index + '/savekey/' + config.app + '?name=' + config.name + '&field=' + field;
+
+    var rangeComponent = '&range=' + config.range;
+    if(config.startTimestamp > 0 && config.endTimestamp > 0) {
+        rangeComponent = rangeComponent + '&rangeStart=' + config.startTimestamp +'&rangeEnd=' + config.endTimestamp;
+    }
+
+    var url = '/console/' + config.index + '/savekey/' + config.app + '?name=' + encodeURIComponent(config.name) + '&field=' + field +
+            '&host=' + config.host + '&downsampleFn=' + config.downsampleFn + rangeComponent;
+
     if(config.host != null) url = url + '&host=' + config.host;
     $.ajax({
         type: 'GET',
