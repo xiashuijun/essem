@@ -28,13 +28,13 @@ public class StoredGraphQuery {
     * Builds a search request for all user graphs.
     * @param uid The user id.
     */
-   public static SearchRequest buildUserGraphsRequest(final String uid) {
+   public static SearchRequest buildUserGraphsRequest(final String uid, final int start, final int limit) {
       SearchRequest.Builder requestBuilder = SearchRequest.builder();
       BooleanQuery.Builder queryBuilder = BooleanQuery.builder();
       queryBuilder.mustMatch(new StringTermQuery("uid", uid));
       requestBuilder.returnAllFields();
       requestBuilder.setQuery(queryBuilder.build());
-      requestBuilder.setStart(0).setLimit(1000);
+      requestBuilder.setStart(start).setLimit(limit);
       return requestBuilder.build();
    }
 
