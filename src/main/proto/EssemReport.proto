@@ -13,7 +13,7 @@
  *
  */
 
-package com.attribyte.essem;
+package org.attribyte.essem;
 
 option java_outer_classname = "ReportProtos";
 

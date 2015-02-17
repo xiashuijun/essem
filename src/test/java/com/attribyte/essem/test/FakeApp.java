@@ -1,6 +1,6 @@
 package com.attribyte.essem.test;
 
-import com.attribyte.essem.reporter.EssemReporter;
+import org.attribyte.essem.reporter.EssemReporter;
 import com.codahale.metrics.Clock;
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.JsonNode;

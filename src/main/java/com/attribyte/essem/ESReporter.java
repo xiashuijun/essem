@@ -34,6 +34,7 @@ import org.attribyte.api.Logger;
 import org.attribyte.api.http.AsyncClient;
 import org.attribyte.api.http.Request;
 import org.attribyte.api.http.Response;
+import org.attribyte.essem.ReportProtos;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

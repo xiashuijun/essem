@@ -1,6 +1,5 @@
-package com.attribyte.essem.reporter;
+package org.attribyte.essem.reporter;
 
-import com.attribyte.essem.ReportProtos;
 import com.codahale.metrics.Clock;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.ExponentiallyDecayingReservoir;
@@ -19,6 +18,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
+import org.attribyte.essem.ReportProtos;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

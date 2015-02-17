@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
+import org.attribyte.essem.ReportProtos;
 
 import java.io.File;
 import java.io.IOException;

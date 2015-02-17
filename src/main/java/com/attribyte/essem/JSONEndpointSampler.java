@@ -1,7 +1,7 @@
 package com.attribyte.essem;
 
 import com.attribyte.essem.model.MonitoredEndpoint;
-import com.attribyte.essem.reporter.EssemReporter;
+import org.attribyte.essem.reporter.EssemReporter;
 import com.codahale.metrics.ExponentiallyDecayingReservoir;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
@@ -15,6 +15,7 @@ import org.attribyte.api.http.GetRequestBuilder;
 import org.attribyte.api.http.Request;
 import org.attribyte.api.http.RequestOptions;
 import org.attribyte.api.http.Response;
+import org.attribyte.essem.ReportProtos;
 
 import java.util.Collection;
 import java.util.Random;

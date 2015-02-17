@@ -23,6 +23,7 @@ import com.codahale.metrics.Timer;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
+import org.attribyte.essem.ReportProtos;
 import org.attribyte.util.EncodingUtil;
 
 import javax.servlet.http.HttpServlet;

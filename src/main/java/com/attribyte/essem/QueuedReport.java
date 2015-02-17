@@ -15,6 +15,8 @@
 
 package com.attribyte.essem;
 
+import org.attribyte.essem.ReportProtos;
+
 /**
  * A report in the queue.
  */
