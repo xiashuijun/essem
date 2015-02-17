@@ -26,6 +26,8 @@ import com.google.common.collect.Sets;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import com.google.common.io.BaseEncoding;
+import org.apache.commons.codec.binary.Base64;
 import org.attribyte.api.http.RequestBuilder;
 import org.attribyte.util.EncodingUtil;
 
@@ -109,6 +111,35 @@ public class BasicAuth implements IndexAuthorization {
          HashCode authHash = hashFunction.hashString(auth, Charsets.UTF_8);
          Set<String> allowedIndexes = authMap.get(authHash);
          return allowedIndexes != null && (allowedIndexes.contains("*") || allowedIndexes.contains(index));
+      }
+   }
+
+   @Override
+   public Auth getAuth(final String index, final HttpServletRequest request) {
+      String auth = request.getHeader(AUTHORIZATION_HEADER);
+      if(auth == null) {
+         return Auth.UNAUTHORIZED;
+      } else {
+         HashCode authHash = hashFunction.hashString(auth, Charsets.UTF_8);
+         Set<String> allowedIndexes = authMap.get(authHash);
+         boolean authorized = allowedIndexes != null && (allowedIndexes.contains("*") || allowedIndexes.contains(index));
+         if(authorized) {
+            if(!auth.toLowerCase().startsWith("basic ")) {
+               return Auth.UNAUTHORIZED; //Should never happen...
+            }
+
+            auth = auth.substring(6).trim();
+            String upass = new String(BaseEncoding.base64().decode(auth), Charsets.US_ASCII).trim();
+
+            int pos = upass.indexOf(':');
+            if(pos < 1) {
+               return Auth.UNAUTHORIZED; //Should never happen...
+            } else {
+               return new Auth(upass.substring(0, pos), true);
+            }
+         } else {
+            return Auth.UNAUTHORIZED;
+         }
       }
    }
 

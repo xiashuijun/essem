@@ -17,6 +17,7 @@ package com.attribyte.essem.model.graph;
 
 import com.google.common.base.Strings;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
 
 /**
@@ -27,6 +28,33 @@ import java.util.Objects;
  * </p>
  */
 public class MetricKey {
+
+   /**
+    * Parses the components of a key from request parameters.
+    * @param request The request.
+    * @param app The application name to use (overrides any parameter).
+    * @return The parsed key.
+    */
+   public static MetricKey parseKey(final HttpServletRequest request, String app) {
+
+      if(app == null) {
+         app = request.getParameter("app");
+         if(app == null) app = request.getParameter("application");
+      }
+
+      return new MetricKey(request.getParameter("name"), app,
+              request.getParameter("host"), request.getParameter("instance"),
+              request.getParameter("field"));
+   }
+
+   /**
+    * Parses the components of a key from request parameters.
+    * @param request The request.
+    * @return The parsed key.
+    */
+   public static MetricKey parseKey(final HttpServletRequest request) {
+      return parseKey(request, null);
+   }
 
    /**
     * Convenience builder for immutable instances of key.

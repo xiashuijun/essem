@@ -26,12 +26,67 @@ import java.util.Collection;
 public interface IndexAuthorization {
 
    /**
+    * Info about authorization.
+    */
+   public static class Auth {
+
+      /**
+       * The unauthorized user.
+       */
+      public static final Auth UNAUTHORIZED = new Auth(null, false);
+
+      /**
+       * A 'system' user.
+       */
+      public static final Auth SYSTEM = new Auth("__SYSTEM__", true, true);
+
+      private Auth(final String uid, final boolean isAuthorized, final boolean isSystem) {
+         this.uid = uid;
+         this.isAuthorized = isAuthorized;
+         this.isSystem = isSystem;
+      }
+
+      /**
+       * Creates auth.
+       * @param uid The user id.
+       */
+      public Auth(final String uid, final boolean isAuthorized) {
+         this.uid = uid;
+         this.isAuthorized = isAuthorized;
+         this.isSystem = false;
+      }
+
+      /**
+       * The user id.
+       */
+      public final String uid;
+
+      /**
+       * Is the user authorized?
+       */
+      public final boolean isAuthorized;
+
+      /**
+       * Is this the global system user?
+       */
+      public final boolean isSystem;
+   }
+
+   /**
     * Determine if access to the index is authorized.
     * @param index The index.
     * @param request The request.
     * @return Is access authorized?
     */
    public boolean isAuthorized(final String index, final HttpServletRequest request);
+
+   /**
+    * Determine if access to the index is authorized.
+    * @param index The index.
+    * @param request The request.
+    * @return The authorization info.
+    */
+   public Auth getAuth(final String index, final HttpServletRequest request);
 
    /**
     * Sends an appropriate "unauthorized" response.

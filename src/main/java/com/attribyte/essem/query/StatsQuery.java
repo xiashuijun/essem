@@ -34,7 +34,7 @@ public class StatsQuery extends QueryBase {
     * @param range The range.
     */
    public StatsQuery(final HttpServletRequest request, final String range) {
-      this(parseKey(request), range);
+      this(MetricKey.parseKey(request), range);
    }
 
    /**
@@ -44,7 +44,7 @@ public class StatsQuery extends QueryBase {
     * @param range The range.
     */
    public StatsQuery(final HttpServletRequest request, final String app, final String range) {
-      this(parseKey(request, app), range);
+      this(MetricKey.parseKey(request, app), range);
    }
 
    /**

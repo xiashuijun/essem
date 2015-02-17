@@ -1,0 +1,105 @@
+{
+  "mappings": {
+    "graph_key": {
+      "_source": {
+        "enabled": false
+      },
+      "properties": {
+        "uid": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "index": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "application": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "host": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "instance": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "name": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "field": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "range": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "startTimestamp": {
+          "type": "long",
+          "store": true,
+          "doc_values": false
+        },
+        "endTimestamp": {
+          "type": "long",
+          "store": true,
+          "doc_values": false
+        },
+        "downsampleFn": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
+        "title": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "doc_values": false
+        },
+        "description": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "doc_values": false
+        },
+        "xLabel": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "doc_values": false
+        },
+        "yLabel": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "doc_values": false
+        },
+        "created": {
+          "type": "date",
+          "store": true,
+          "format": "basic_date_time",
+          "doc_values": false
+        }
+      }
+    }
+  }
+}

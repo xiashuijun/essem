@@ -1,4 +1,4 @@
-topbar(index, indexList, zoneList) ::= <<
+topbar(index, indexList, zoneList, uid) ::= <<
 <nav class="top-bar" data-topbar data-options="is_hover: false">
     <ul class="title-area">
 
@@ -29,7 +29,12 @@ topbar(index, indexList, zoneList) ::= <<
                 </ul>
             </li>
             <li class="divider"></li>
-            <li><a href="" id="curr-time"></a></li>
+            <li>
+                <a>
+                    <i class="fi-torso-female"></i>&nbsp;$uid$&nbsp;
+                    <i class="fi-clock"></i>&nbsp;<span id="curr-time"></span>
+                </a>
+            </li>
             <li class="divider"></li>
         </ul>
 
