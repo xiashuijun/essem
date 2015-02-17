@@ -2,7 +2,8 @@
 # Otherwise, an attempt is made to discover the location of this start script.
 #ESSEM_INSTALL_DIR=/var/attribyte/essem
 
-if [ -z "$ESSEM_INSTALL_DIR" ]; then
+if [ -z "$ESSEM_INSTALL_DIR" ]
+then
   DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
   ESSEM_INSTALL_DIR="$(dirname "$DIR")"
 fi
@@ -19,9 +20,11 @@ PID=`cat $ESSEM_INSTALL_DIR/bin/$PIDFILE`
 echo "Stopping essem $PID"
 
 ATTEMPTS_LEFT=30
-while [ $ATTEMPTS_LEFT -gt 0 ]; do
+while [ $ATTEMPTS_LEFT -gt 0 ]
+do
     kill $PID 2>/dev/null
-    if [ $? -eq 1 ]; then
+    if [ $? -eq 1 ]
+    then
         echo "Stopped essem $PID normally"
         rm $ESSEM_INSTALL_DIR/bin/$PIDFILE
         break
@@ -31,7 +34,8 @@ while [ $ATTEMPTS_LEFT -gt 0 ]; do
 done
 
 #Kill
-if [ $ATTEMPTS_LEFT -eq 0 ]; then
+if [ $ATTEMPTS_LEFT -eq 0 ]
+then
     echo "Killed essem $PID!"
     kill -9 $PID
     rm $ESSEM_INSTALL_DIR/bin/$PIDFILE

@@ -28,10 +28,15 @@ then
 	exit 1
 fi
 
-EXTLIB_DIR="$ESSEM_INSTALL_DIR/dist/extlib"
-DISTLIB="$ESSEM_INSTALL_DIR/dist/lib/attribyte-essem.0.1.0.jar:$ESSEM_INSTALL_DIR/dist/lib/attribyte-essem-test.0.1.0.jar"
-CLASSPATH=$DISTLIB
+CLASSPATH=""
 
+LIB_DIR="$ESSEM_INSTALL_DIR/dist/lib"
+for jar in `ls $LIB_DIR/*.jar`;
+do
+        CLASSPATH=$CLASSPATH:$jar
+done
+
+EXTLIB_DIR="$ESSEM_INSTALL_DIR/dist/extlib"
 for jar in `ls $EXTLIB_DIR/*.jar`;
 do
         CLASSPATH=$CLASSPATH:$jar

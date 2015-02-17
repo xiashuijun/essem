@@ -3,8 +3,10 @@
 # Finally, if JAVA_HOME is undefined, simply use 'java'.
 #JAVA_EXE="/usr/local/jdk8/bin/java"
 
-if [ -z "$JAVA_EXE" ]; then
-  if [ -z "$JAVA_HOME" ]; then
+if [ -z "$JAVA_EXE" ]
+then
+  if [ -z "$JAVA_HOME" ]
+  then
     JAVA_EXE="java"
   else
     JAVA_EXE="$JAVA_HOME/bin/java"
@@ -15,15 +17,21 @@ fi
 # Otherwise, an attempt is made to discover the location of this start script.
 #ESSEM_INSTALL_DIR=/var/attribyte/essem
 
-if [ -z "$ESSEM_INSTALL_DIR" ]; then
+if [ -z "$ESSEM_INSTALL_DIR" ]
+then
   DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
   ESSEM_INSTALL_DIR="$(dirname "$DIR")"
 fi
 
-EXTLIB_DIR="$ESSEM_INSTALL_DIR/dist/extlib"
-DISTLIB="$ESSEM_INSTALL_DIR/dist/lib/attribyte-essem.0.1.0.jar"
-CLASSPATH=$DISTLIB
+CLASSPATH=""
 
+LIB_DIR="$ESSEM_INSTALL_DIR/dist/lib"
+for jar in `ls $LIB_DIR/*.jar`;
+do
+        CLASSPATH=$CLASSPATH:$jar
+done
+
+EXTLIB_DIR="$ESSEM_INSTALL_DIR/dist/extlib"
 for jar in `ls $EXTLIB_DIR/*.jar`;
 do
         CLASSPATH=$CLASSPATH:$jar
