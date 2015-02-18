@@ -91,21 +91,21 @@ public class ESUserStore {
 
    /**
     * Stores a graph.
-    * @param key The graph.
+    * @param graph The graph.
     * @return Was the graph stored?
     * @throws IOException on store error.
     */
-   public boolean storeGraph(final StoredGraph key) throws IOException {
+   public boolean storeGraph(final StoredGraph graph) throws IOException {
 
-      String indexName = key.index + SUFFIX;
+      String indexName = graph.index + SUFFIX;
 
       try {
          URI indexURI = new URI(esEndpoint.uri.getScheme(),
                  esEndpoint.uri.getUserInfo(),
                  esEndpoint.uri.getHost(),
-                 esEndpoint.uri.getPort(), "/" + indexName + "/" + STORED_KEY_TYPE + "/" + key.id, null, null);
+                 esEndpoint.uri.getPort(), "/" + indexName + "/" + STORED_KEY_TYPE + "/" + graph.id, null, null);
 
-         Request esRequest = esEndpoint.putRequestBuilder(indexURI, key.getAsJSON().getBytes(Charsets.UTF_8)).create();
+         Request esRequest = esEndpoint.putRequestBuilder(indexURI, graph.getAsJSON().getBytes(Charsets.UTF_8)).create();
          Response esResponse = httpClient.send(esRequest);
          return esResponse.getStatusCode() / 100 == 2;
       } catch(URISyntaxException use) {
