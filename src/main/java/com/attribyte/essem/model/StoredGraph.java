@@ -160,6 +160,22 @@ public class StoredGraph {
       }
 
       /**
+       * Does this builder have an absolute range specified?
+       * @return Is the range absolute?
+       */
+      public boolean hasAbsoluteRange() {
+         return startTimestamp > 0 && endTimestamp > 0;
+      }
+
+      /**
+       * Gets the current absolute range.
+       * @return The range in milliseconds.
+       */
+      public long getRangeMillis() {
+         return endTimestamp - startTimestamp;
+      }
+
+      /**
        * Builds a stored graph.
        * @return The graph.
        */

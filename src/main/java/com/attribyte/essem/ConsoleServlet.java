@@ -165,7 +165,15 @@ public class ConsoleServlet extends HttpServlet {
     * Allowed operations.
     */
    private enum Op {
-      DEFAULT, DEFAULT_WITH_APP, APPS, METRICS, GRAPHS, INDEX_STATS, FIELD_STATS, SAVEKEY
+      DEFAULT,
+      DEFAULT_WITH_APP,
+      APPS,
+      METRICS,
+      GRAPHS,
+      INDEX_STATS,
+      FIELD_STATS,
+      SAVEGRAPH,
+      USERGRAPH
    }
 
    /**
@@ -177,13 +185,14 @@ public class ConsoleServlet extends HttpServlet {
            .put("metrics", Op.METRICS)
            .put("graphs", Op.GRAPHS)
            .put("fstats", Op.FIELD_STATS)
-           .put("savekey", Op.SAVEKEY)
+           .put("savegraph", Op.SAVEGRAPH)
+           .put("usergraph", Op.USERGRAPH)
            .put("stats", Op.INDEX_STATS).build();
 
    /**
     * Valid PUT operations.
     */
-   private static ImmutableMap<String, Op> putOps = ImmutableMap.of("savekey", Op.SAVEKEY);
+   private static ImmutableMap<String, Op> putOps = ImmutableMap.of("savegraph", Op.SAVEGRAPH);
 
    @Override
    protected void doPost(final HttpServletRequest request,
@@ -222,14 +231,14 @@ public class ConsoleServlet extends HttpServlet {
       }
 
       switch(op) {
-         case SAVEKEY:
+         case SAVEGRAPH:
 
             if(!path.hasNext()) {
                sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'application' must be specified");
                return;
             }
             String appName = path.next();
-            doSaveKeyPut(request, auth, index, appName, response);
+            doSaveGraphPut(request, auth, index, appName, response);
             break;
          default:
             sendError(request, response, HttpServletResponse.SC_NOT_FOUND);
@@ -295,6 +304,10 @@ public class ConsoleServlet extends HttpServlet {
             doGraphs(request, auth, index, appName, response);
             break;
          }
+         case USERGRAPH:
+            String id = path.hasNext() ? path.next() : null;
+            doUserGraph(request, auth, index, id, response);
+            break;
          case FIELD_STATS: {
             if(!path.hasNext()) {
                sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'application' must be specified");
@@ -304,13 +317,13 @@ public class ConsoleServlet extends HttpServlet {
             doFieldStats(request, index, appName, response);
             break;
          }
-         case SAVEKEY: {
+         case SAVEGRAPH: {
             if(!path.hasNext()) {
                sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'application' must be specified");
                return;
             }
             String appName = path.next();
-            doSaveKeyForm(request, auth, index, appName, response);
+            doSaveGraphForm(request, auth, index, appName, response);
             break;
          }
          case INDEX_STATS:
@@ -531,7 +544,7 @@ public class ConsoleServlet extends HttpServlet {
                    .build();
 
    /**
-    * Renders a page of graphs for one or more metrics.
+    * Renders a page of graphs a metric.
     * @param request The request.
     * @param auth The auth info.
     * @param index The index.
@@ -610,6 +623,89 @@ public class ConsoleServlet extends HttpServlet {
    }
 
    /**
+    * Renders a saved user graph.
+    * @param request The request.
+    * @param auth The auth info.
+    * @param index The index.
+    * @param response The response.
+    * @throws IOException on output error.
+    */
+   protected void doUserGraph(final HttpServletRequest request,
+                              final IndexAuthorization.Auth auth,
+                              final String index,
+                              String id,
+                              final HttpServletResponse response) throws IOException {
+
+
+      ST template = getTemplate(USER_GRAPH_TEMPLATE);
+      if(template == null) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + GRAPHS_TEMPLATE + "' template");
+         return;
+      }
+
+      if(Strings.nullToEmpty(id).isEmpty()) {
+         id = Strings.nullToEmpty(request.getParameter("id")).trim();
+      }
+
+      if(id.length() == 0) {
+         sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'id' is required");
+         return;
+      }
+
+      try {
+
+         StoredGraph graph = userStore.getGraph(index, id);
+         if(graph == null) {
+            sendError(request, response, HttpServletResponse.SC_NOT_FOUND, "The graph with id = '" + id + "' does not exist");
+            return;
+         }
+
+         //if(!auth.uid.equals(graph.uid)) We'll let this slide. Any authorized user should be able to view a saved graph.
+
+         template.add("graph", graph);
+
+         final StatsQuery statsQuery;
+         if(graph.startTimestamp > 0 || graph.endTimestamp > 0) {
+            statsQuery = new StatsQuery(graph.key, graph.range, graph.startTimestamp, graph.endTimestamp);
+         } else {
+            statsQuery = new StatsQuery(graph.key, graph.range);
+         }
+         String esStatsQuery = statsQuery.searchRequest.toJSON();
+         Request esStatsRequest = esEndpoint.postRequestBuilder(esEndpoint.buildIndexURI(index),
+                 esStatsQuery.getBytes(Charsets.UTF_8)).create();
+         Response esStatsResponse = client.send(esStatsRequest, requestOptions);
+
+         if(esStatsResponse.getStatusCode() == 200) {
+            ObjectNode statsObject = Util.mapper.readTree(Util.parserFactory.createParser(esStatsResponse.getBody().toByteArray()));
+            Stats stats = StatsParser.parseStats(statsObject);
+            template.add("stats", stats);
+         } else {
+            sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Problem retrieving field stats");
+            logger.error("Field stats response error for '" + index + "' (" + esStatsResponse.getStatusCode() + ")");
+            return;
+         }
+
+         if(!auth.isSystem) {
+            template.add("uid", auth.uid);
+         }
+
+         template.add("downsampleList", buildDownsampleFunctionList(request));
+         template.add("indexList", buildAllowedIndexList(request, index));
+         template.add("zoneList", zones);
+         template.add("index", index);
+
+         response.setStatus(HttpServletResponse.SC_OK);
+         response.setContentType(HTML_CONTENT_TYPE);
+         response.getWriter().print(template.render());
+         response.getWriter().flush();
+      } catch(Exception e) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         e.printStackTrace();
+      }
+   }
+
+
+   /**
     * Renders stats for an index.
     * @param request The request.
     * @param index The index.
@@ -664,19 +760,24 @@ public class ConsoleServlet extends HttpServlet {
       response.getWriter().flush();
    }
 
-   protected void doSaveKeyPut(final HttpServletRequest request,
-                               final IndexAuthorization.Auth auth,
-                               final String index, final String app,
-                               final HttpServletResponse response) throws IOException {
+   protected void doSaveGraphPut(final HttpServletRequest request,
+                                 final IndexAuthorization.Auth auth,
+                                 final String index, final String app,
+                                 final HttpServletResponse response) throws IOException {
 
       StoredGraph.Builder graphBuilder = StoredGraph.parseGraph(request, app);
+      if(graphBuilder.hasAbsoluteRange()) {
+         graphBuilder.setRangeName(Util.nearestInterval(graphBuilder.getRangeMillis()));
+      }
       graphBuilder.setUserId(auth.uid);
       graphBuilder.setIndex(index);
 
       try {
-         boolean stored = userStore.storeGraph(graphBuilder.build());
+         StoredGraph graph = graphBuilder.build();
+         boolean stored = userStore.storeGraph(graph);
          if(stored) {
             response.setStatus(201);
+            response.getOutputStream().print(graph.id);
          } else {
             sendError(request, response, 500, "Problem storing key");
          }
@@ -759,11 +860,11 @@ public class ConsoleServlet extends HttpServlet {
     * @param response The response.
     * @throws IOException on output error.
     */
-   protected void doSaveKeyForm(final HttpServletRequest request,
-                                final IndexAuthorization.Auth auth,
-                                final String index,
-                                final String app,
-                                final HttpServletResponse response) throws IOException {
+   protected void doSaveGraphForm(final HttpServletRequest request,
+                                  final IndexAuthorization.Auth auth,
+                                  final String index,
+                                  final String app,
+                                  final HttpServletResponse response) throws IOException {
 
       ST template = getTemplate(SAVE_KEY_TEMPLATE);
       if(template == null) {
@@ -938,6 +1039,11 @@ public class ConsoleServlet extends HttpServlet {
     * The main graphs template.
     */
    public static final String GRAPHS_TEMPLATE = "graphs_main";
+
+   /**
+    * The user (saved) graph template.
+    */
+   public static final String USER_GRAPH_TEMPLATE = "user_graph_main";
 
    /**
     * The template that renders the list of apps.

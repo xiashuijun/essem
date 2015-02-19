@@ -42,7 +42,6 @@ $topbar(index, indexList, zoneList, uid)$
         </div>
     </div>
 </div>
-$footer()$
 <script type="application/javascript">
 
     var currTimeFormat = 'YYYY-MM-DD HH:mm:ss Z';

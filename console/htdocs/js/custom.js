@@ -347,11 +347,10 @@ function samplePlural(samples) {
 
 function loadGraph(data, config, dataConfig) {
 
-    var target = '#m_'+config.name_hash+'_'+config.field;
-
-    var torso = {};
-    torso.width = 375;
-    torso.height = 200;
+    var target = dataConfig.target;
+    if(target == '') {
+        target = '#m_' + config.name_hash + '_' + config.field;
+    }
 
     var xAxisFormatter = d3.time.format(xFormatForRange(dataConfig.range));
 
@@ -361,16 +360,19 @@ function loadGraph(data, config, dataConfig) {
         hoverFormatter = d3.time.format('%Y-%m-%d %H:%M:%S ' + tzf);
     }
 
+    var left_margin = config.left_margin != null ? config.left_margin : 100;
+    var bottom_margin = config.bottom_margin != null ? config.bottom_margin : 55;
+
     MG.data_graphic({
         area: true,
         missing_is_zero: false,
         interpolate: 'linear', //linear
         animate_on_load: true,
         data: data,
-        width: torso.width * 2,
-        height: torso.height,
-        left: 100,
-        bottom: 75,
+        width: dataConfig.width,
+        height: dataConfig.height,
+        left: left_margin,
+        bottom: bottom_margin,
         show_years: false,
         xax_tick: 0,
         xax_count: 6,
@@ -410,6 +412,23 @@ function showFieldStats(config, field, range) {
     });
 }
 
+function renderFieldStats(config, field, target) {
+    var url = '/console/' + config.index + '/fstats/' + config.app + '?name=' + config.name + '&field=' + field + '&range=' + config.range;
+    if(config.host != null) url = url + '&host=' + config.host;
+    if(config.startTimestamp > 0) url = url + "&startTimestamp=" + config.startTimestamp;
+    if(config.endTimestamp > 0) url = url + "&endTimestamp=" + config.endTimestamp;
+
+    $.ajax({
+        type: 'GET',
+        url: url,
+        dataType: 'html',
+        success: function(html, textStatus) {
+            $(target).html(html);
+        },
+        error: handleXHRError
+    });
+}
+
 function showFieldSave(config, field) {
 
     var rangeComponent = '&range=' + config.range;
@@ -417,7 +436,7 @@ function showFieldSave(config, field) {
         rangeComponent = rangeComponent + '&rangeStart=' + config.startTimestamp +'&rangeEnd=' + config.endTimestamp;
     }
 
-    var url = '/console/' + config.index + '/savekey/' + config.app + '?name=' + encodeURIComponent(config.name) + '&field=' + field +
+    var url = '/console/' + config.index + '/savegraph/' + config.app + '?name=' + encodeURIComponent(config.name) + '&field=' + field +
             '&host=' + config.host + '&downsampleFn=' + config.downsampleFn + rangeComponent;
 
     if(config.host != null) url = url + '&host=' + config.host;
@@ -429,23 +448,23 @@ function showFieldSave(config, field) {
             $('#top_modal_content').html(html);
             $('#top_modal').foundation('reveal', 'open');
             scrollToTop();
-            $('#save-key-form').bind('submit', function(event) {
+            $('#save-key-form').submit(function(event) {
                 event.preventDefault();
-                saveField(config.index, config.app);
+                saveField(config.index, config.app, jQuery(this).serialize());
             });
         },
         error: handleXHRError
     });
 }
 
-function saveField(index, app) {
+function saveField(index, app, data) {
     $.ajax({
         type: 'POST',
-        url: '/console/' + index + '/savekey/' + app,
-        data: $('#save-key-form').serialize(),
+        url: '/console/' + index + '/savegraph/' + app,
+        data: data,
         success: function (html, textStatus) {
             if (textStatus == "success") {
-                alert("OK");
+                window.location = '/console/' + index + '/usergraph/' + html.trim();
             } else {
                 alert("Error: " + textStatus);
             }

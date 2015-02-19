@@ -1,4 +1,4 @@
-graphs_main(uid, index, indexList, app, host, downsampleList, zoneList, metric, graphs, range) ::= <<
+user_graph_main(uid, index, indexList, downsampleList, zoneList, graph, stats) ::= <<
 <!doctype html>
 <html class="no-js" lang="en">
 $head()$
@@ -14,19 +14,6 @@ $topbar(index, indexList, zoneList, uid)$
             <li id="rs_month" class="range-select"><a id="rn_month" class="range-nav" name="month"  href="#">Month</a></li>
         </ul>
 
-        $if(metric.multiField)$
-        <h5 class="subheader">Graphs</h5>
-        <div class="gfselect">
-            $graphs:{graph |
-            $if(graph.active)$
-            <span class="nowrap"><input name="msfield" id="msfield_$graph.field$" type="checkbox" checked="checked"><label for="msfield_$graph.field$">$graph.shortTitle$</label></span>
-            $else$
-            <span class="nowrap"><input name="msfield" id="msfield_$graph.field$" type="checkbox"><label for="msfield_$graph.field$">$graph.shortTitle$</label></span>
-            $endif$
-            }$
-        </div>
-        $endif$
-
         <h5 class="subheader">Downsample With</h5>
         <div class="gfselect">
         $downsampleList:{downsampleFn |
@@ -40,24 +27,15 @@ $topbar(index, indexList, zoneList, uid)$
             </span>
         }$
         </div>
-
-        $if(app.multiHost)$
-        <h5 class="subheader">Hosts</h5>
-        <ul class="side-nav">
-            <li id="hs_all" class="host-select"><a id="hn_all" class="host-nav" name="all" href="#">All</a></li>
-            $app.hostList:{host |
-            <li id="hs_$host.name$" class="host-select"><a id="hn_$host.name$" class="host-nav" name="$host.name$" href="#">$host.name$</a></li>
-            }$
-        </ul>
-        $endif$
-
     </div>
     <div id="content" class="large-9 columns">
         <div class="row">
             <div class="large-12 columns">
+                <h4>$graph.title$</h4>
+                <h4 class="subheader">$graph.description$</h4>
                 <h5 class="subheader">
                     <span id="app-title" class="subheader"></span>&nbsp;&raquo;
-                    $metric.name$ <span id="gloading"><img src="$constants.imageBase$/ajax-loader4.gif"/></span>
+                    $graph.key.name$&nbsp;&raquo;&nbsp;$graph.key.field$ <span id="gloading"><img src="$constants.imageBase$/ajax-loader4.gif"/></span>
                 </h5>
                 <h6 class="subheader">
                     <span class="subheader" id="range-detail"></span>
@@ -65,6 +43,7 @@ $topbar(index, indexList, zoneList, uid)$
                     &nbsp;&nbsp;<a title="Next range" href="" id="range-forward"><i class="fi-fast-forward"></i></a>
                     &nbsp;&nbsp;|&nbsp;&nbsp;<a href="" title="Share these graphs" id="range-permalink"><i class="fi-link"></i></a>
                     &nbsp;&nbsp;<a href="" title="JSON API" id="json-link"><i class="fi-cloud"></i></a>
+                    &nbsp;&nbsp;<a title="Edit this graph" href="" id="graph-edit"><i class="fi-page-edit"></i></a>
                 </h6>
             </div>
         </div>
@@ -74,27 +53,22 @@ $topbar(index, indexList, zoneList, uid)$
                 <img src="$constants.imageBase$/missing-data.png"/>
             </div>
         </div>
-        $graphs:{graph |
         <div class="row" id="gr_$graph.field$">
-            <div class="large-12 columns">
-                $metric_page(index, app, metric, graph)$
+            <div class="large-12 columns" id="main_graph">
             </div>
         </div>
-        }$
+
+        <div class="row" id="grfs_$graph.field$">
+            <div class="large-12 columns" id="main_graph_stats">
+            </div>
+        </div>
     </div>
 </div>
 <script type="application/javascript">
     jQuery(document).foundation();
-    bindFieldChecks();
     bindTopBar('$index$');
     jQuery('#gloading').hide();
     jQuery('#missing_graph').hide();
-
-    $graphs:{graph |
-     $if(!graph.active)$
-     jQuery('#gr_$graph.field$').hide();
-     $endif$
-    }$
 
     var downsampleFn = 'avg';
 
@@ -104,56 +78,44 @@ $topbar(index, indexList, zoneList, uid)$
       $endif$
     }$
 
+    var config = {};
+    config.field = '$graph.key.field$';
+    config.x_label = '$graph.xLabel$';
+    config.y_label = '$graph.yLabel$';
+    config.left_margin = 100;
+    config.bottom_margin = 75;
+
     var dataConfig = {};
-    dataConfig.target = '';
-    dataConfig.height = 250;
-    dataConfig.width = 750;
+
+    dataConfig.target = '#main_graph';
+    dataConfig.height = 450;
+    dataConfig.width = 950;
+
     dataConfig.index = '$index$';
-    dataConfig.app = '$app.name$';
-    dataConfig.name = '$metric.name$';
-    dataConfig.downsampleFn = downsampleFn;
+    dataConfig.app = '$graph.key.application$';
+    dataConfig.name = '$graph.key.name$';
+    dataConfig.downsampleFn = '$graph.downsampleFn$';
     dataConfig.tz = '';
-    dataConfig.range = '$range.name$'; //Range always has the "closest" name...even if only an interval was specified.
+    dataConfig.range = '$graph.range$';
     dataConfig.downsampleInterval = downsampleInterval(dataConfig.range);
-    dataConfig.startTimestamp = $range.startMillis$; //Echo if input timestamps...
-    dataConfig.endTimestamp = $range.endMillis$;
+    dataConfig.startTimestamp = $graph.startTimestamp$;
+    dataConfig.endTimestamp = $graph.endTimestamp$;
     if(dataConfig.startTimestamp == 0 || dataConfig.endTimestamp == 0) {
         dataConfig.endTimestamp = new Date().getTime();
         dataConfig.startTimestamp = dataConfig.endTimestamp - rangeMillis(dataConfig.range);
     }
 
-    $if(host)$
-    dataConfig.host = '$host$';
-    activateHost(dataConfig.host);
-    $else$
-    dataConfig.host = '';
-    $endif$
-
-    function triggerFieldStats(event) {
-        event.preventDefault();
-        showFieldStats(dataConfig, getId(this.id), dataConfig.range);
-    }
-
-    function triggerFieldSave(event) {
-        event.preventDefault();
-        showFieldSave(dataConfig, getId(this.id));
-    }
-
-    $graphs:{graph |
-        jQuery('#fstats_$graph.field$').click(triggerFieldStats);
-        jQuery('#fsave_$graph.field$').click(triggerFieldSave);
-    }$
+    dataConfig.host = '$graph.key.host$';
 
     function render(data) {
         if(data.length > 0) {
             jQuery('#missing_graph').hide();
-            $graphs:{ graph |
-            loadGraph(data, $graph.asJSON$, dataConfig);
-            }$
-            showCheckedFields();
+            jQuery(dataConfig.target).show();
+            loadGraph(data, config, dataConfig);
+            //renderFieldStats(dataConfig, '$graph.key.field$', '#main_graph_stats');
         } else {
-            hideCheckedFields();
             jQuery('#missing_graph').show();
+            jQuery(dataConfig.target).hide();
         }
         jQuery('#gloading').hide();
     }
@@ -194,20 +156,11 @@ $topbar(index, indexList, zoneList, uid)$
         }
     });
 
-   $if(app.multiHost)$
-    if(dataConfig.host == '') activateHost('all');
-    jQuery('.host-nav').click(function(event) {
+    function triggerFieldSave(event) {
         event.preventDefault();
-        var host = jQuery(this).attr('name');
-        if(host == 'all') {
-            dataConfig.host = '';
-        } else {
-            dataConfig.host = host;
-        }
-        activateHost(host);
-        loadMetricData(dataConfig, render);
-    });
-   $endif$
+        showFieldSave(dataConfig, '$graph.key.field$');
+    }
+    jQuery('#graph-edit').click(triggerFieldSave);
 
    var currTimeField = jQuery('#curr-time');
    var currTimeFormat = 'YYYY-MM-DD HH:mm:ss Z';
@@ -227,13 +180,10 @@ $topbar(index, indexList, zoneList, uid)$
     });
    $endif$
 
-   currTimeField.text(moment().format(currTimeFormat));
+    currTimeField.text(moment().format(currTimeFormat));
 
-    /*
-     function update() {
-     loadMetricData('$app.name$','$metric.name$', render);
-     }
-     setInterval(update, 20000); */
+
+
 </script>
 $modals()$
 </body>
