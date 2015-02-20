@@ -360,8 +360,8 @@ function loadGraph(data, config, dataConfig) {
         hoverFormatter = d3.time.format('%Y-%m-%d %H:%M:%S ' + tzf);
     }
 
-    var left_margin = config.left_margin != null ? config.left_margin : 100;
-    var bottom_margin = config.bottom_margin != null ? config.bottom_margin : 55;
+    var left_margin = config.left_margin != null ? config.left_margin : 40;
+    var bottom_margin = config.bottom_margin != null ? config.bottom_margin : 40;
 
     MG.data_graphic({
         area: true,
@@ -373,6 +373,7 @@ function loadGraph(data, config, dataConfig) {
         height: dataConfig.height,
         left: left_margin,
         bottom: bottom_margin,
+        buffer: 0,
         show_years: false,
         xax_tick: 0,
         xax_count: 6,
@@ -384,10 +385,8 @@ function loadGraph(data, config, dataConfig) {
         y_accessor: config.field,
         min_y_from_data: false,
         inflator: 1.2, //Default: 10/9
-        x_label: "time",
-        y_label: config.y_label,
         mouseover: function(d, i) {
-            var content = d[config.field].toFixed(3)+' '+hoverFormatter(d.date)+' '+' ('+ samplePlural(d.samples)+')';
+            var content = d[config.field].toFixed(3)+' '+config.y_label+' '+hoverFormatter(d.date)+' '+' ('+ samplePlural(d.samples)+')';
             $(target+' svg .mg-active-datapoint').text(content);
         }
     });
@@ -415,8 +414,9 @@ function showFieldStats(config, field, range) {
 function renderFieldStats(config, field, target) {
     var url = '/console/' + config.index + '/fstats/' + config.app + '?name=' + config.name + '&field=' + field + '&range=' + config.range;
     if(config.host != null) url = url + '&host=' + config.host;
-    if(config.startTimestamp > 0) url = url + "&startTimestamp=" + config.startTimestamp;
-    if(config.endTimestamp > 0) url = url + "&endTimestamp=" + config.endTimestamp;
+    if(config.startTimestamp > 0) url = url + '&startTimestamp=' + config.startTimestamp;
+    if(config.endTimestamp > 0) url = url + '&endTimestamp=' + config.endTimestamp;
+    if(config.t != null) url = url + '&t=' + config.t;
 
     $.ajax({
         type: 'GET',

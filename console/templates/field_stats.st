@@ -11,19 +11,23 @@ field_stats(index, app, key, range, stats) ::= <<
         <br/><span id="fstats-range-detail"></span>
     </caption>
     $endif$
-    <tr>
+    <thead>
+     <tr>
         <th>Count</th>
         <th>Min</th>
         <th>Max</th>
         <th>Avg</th>
         <th>Std</th>
-    </tr>
-    <tr>
+     </tr>
+    </thead>
+    <tbody>
+     <tr>
         <td>$stats.count$</td>
         <td>$stats.formattedMin$</td>
         <td>$stats.formattedMax$</td>
         <td>$stats.formattedAvg$</td>
         <td>$stats.formattedStd$</td>
-    </tr>
+     </tr>
+    </tbody>
 </table>
 >>

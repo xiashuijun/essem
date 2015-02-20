@@ -45,6 +45,7 @@ $topbar(index, indexList, zoneList, uid)$
                     &nbsp;&nbsp;<a href="" title="JSON API" id="json-link"><i class="fi-cloud"></i></a>
                     &nbsp;&nbsp;<a title="Edit this graph" href="" id="graph-edit"><i class="fi-page-edit"></i></a>
                 </h6>
+                <h6 class="subheader">$graph.yLabel$</h6>
             </div>
         </div>
         <div class="row" id="missing_graph">
@@ -80,9 +81,9 @@ $topbar(index, indexList, zoneList, uid)$
 
     var config = {};
     config.field = '$graph.key.field$';
-    config.x_label = '$graph.xLabel$';
-    config.y_label = '$graph.yLabel$';
-    config.left_margin = 100;
+    config.x_label = '$graph.yLabel$';
+    config.y_label = '';
+    config.left_margin = 40;
     config.bottom_margin = 75;
 
     var dataConfig = {};
@@ -106,16 +107,19 @@ $topbar(index, indexList, zoneList, uid)$
     }
 
     dataConfig.host = '$graph.key.host$';
+    dataConfig.t = 'user_graph_stats';
 
     function render(data) {
         if(data.length > 0) {
             jQuery('#missing_graph').hide();
             jQuery(dataConfig.target).show();
+            jQuery('#main_graph_stats').show();
             loadGraph(data, config, dataConfig);
-            //renderFieldStats(dataConfig, '$graph.key.field$', '#main_graph_stats');
+            renderFieldStats(dataConfig, '$graph.key.field$', '#main_graph_stats');
         } else {
             jQuery('#missing_graph').show();
             jQuery(dataConfig.target).hide();
+            jQuery('#main_graph_stats').hide();
         }
         jQuery('#gloading').hide();
     }

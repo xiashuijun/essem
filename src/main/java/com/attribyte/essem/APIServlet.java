@@ -16,6 +16,7 @@
 package com.attribyte.essem;
 
 import com.attribyte.essem.es.SearchRequest;
+import com.attribyte.essem.model.graph.MetricKey;
 import com.attribyte.essem.query.GraphQuery;
 import com.attribyte.essem.query.NameQuery;
 import com.attribyte.essem.query.StatsQuery;
@@ -174,7 +175,9 @@ public class APIServlet extends HttpServlet implements MetricSet {
                try {
                   String range = Strings.nullToEmpty(request.getParameter("range")).trim();
                   if(range.length() == 0) range = "day";
-                  StatsQuery statsQuery = new StatsQuery(request, range);
+                  long startTimestamp = Util.getLongParameter(request, "startTimestamp", 0L);
+                  long endTimestamp = Util.getLongParameter(request, "endTimestamp", 0L);
+                  StatsQuery statsQuery = new StatsQuery(MetricKey.parseKey(request), range, startTimestamp, endTimestamp);
                   String esQuery = statsQuery.searchRequest.toJSON();
                   Request esRequest = esEndpoint.postRequestBuilder(esEndpoint.buildIndexURI(index),
                           esQuery.getBytes(Charsets.UTF_8)).create();

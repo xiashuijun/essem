@@ -6,6 +6,7 @@ $graphs:{graph |
             <a href="#" title="$graph.shortTitle$" id="fstats_$graph.field$"><i class="fi-info"></i></a>
             &nbsp;&nbsp;<a href="#" title="$graph.shortTitle$" id="fsave_$graph.field$"><i class="fi-paperclip"></i></a>
         </h6>
+        <h6 class="subheader">$graph.labels.y$</h6>
     </div>
 </div>
 <div class="row">

@@ -23,6 +23,7 @@ import com.attribyte.essem.model.MetricGraph;
 import com.attribyte.essem.model.Sort;
 import com.attribyte.essem.model.GraphRange;
 import com.attribyte.essem.model.StoredGraph;
+import com.attribyte.essem.model.graph.MetricKey;
 import com.attribyte.essem.model.graph.Stats;
 import com.attribyte.essem.model.index.IndexStats;
 import com.attribyte.essem.query.Fields;
@@ -664,12 +665,8 @@ public class ConsoleServlet extends HttpServlet {
 
          template.add("graph", graph);
 
-         final StatsQuery statsQuery;
-         if(graph.startTimestamp > 0 || graph.endTimestamp > 0) {
-            statsQuery = new StatsQuery(graph.key, graph.range, graph.startTimestamp, graph.endTimestamp);
-         } else {
-            statsQuery = new StatsQuery(graph.key, graph.range);
-         }
+         final StatsQuery statsQuery = new StatsQuery(graph.key, graph.range, graph.startTimestamp, graph.endTimestamp);
+
          String esStatsQuery = statsQuery.searchRequest.toJSON();
          Request esStatsRequest = esEndpoint.postRequestBuilder(esEndpoint.buildIndexURI(index),
                  esStatsQuery.getBytes(Charsets.UTF_8)).create();
@@ -799,7 +796,12 @@ public class ConsoleServlet extends HttpServlet {
                                final String app,
                                final HttpServletResponse response) throws IOException {
 
-      ST template = getTemplate(FIELD_STATS_TEMPLATE);
+      String templateName = request.getParameter("t");
+      if(Strings.nullToEmpty(templateName).trim().isEmpty()) {
+         templateName = FIELD_STATS_TEMPLATE;
+      }
+
+      ST template = getTemplate(templateName);
       if(template == null) {
          sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + INDEX_STATS_TEMPLATE + "' template");
          return;
@@ -823,7 +825,10 @@ public class ConsoleServlet extends HttpServlet {
 
       try {
 
-         StatsQuery query = new StatsQuery(request, app, range);
+         long startTimestamp = Util.getLongParameter(request, "startTimestamp", 0L);
+         long endTimestamp = Util.getLongParameter(request, "endTimestamp", 0L);
+
+         StatsQuery query = new StatsQuery(MetricKey.parseKey(request), range, startTimestamp, endTimestamp);
          template.add("index", index);
          template.add("app", app);
          template.add("key", query.key);

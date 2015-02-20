@@ -29,52 +29,9 @@ import javax.servlet.http.HttpServletRequest;
 public class StatsQuery extends QueryBase {
 
    /**
-    * Creates a query from request parameters.
-    * @param request The request.
-    * @param range The range.
-    */
-   public StatsQuery(final HttpServletRequest request, final String range) {
-      this(MetricKey.parseKey(request), range);
-   }
-
-   /**
-    * Creates a query from request parameters.
-    * @param request The request.
-    * @param app The application name.
-    * @param range The range.
-    */
-   public StatsQuery(final HttpServletRequest request, final String app, final String range) {
-      this(MetricKey.parseKey(request, app), range);
-   }
-
-   /**
-    * Creates a query that returns statistics for a field for a range.
-    * @param key The metric key. The 'field' must be defined.
-    * @param range The range expression.
-    */
-   public StatsQuery(final MetricKey key, final String range) {
-      this.key = key;
-
-      SearchRequest.Builder requestBuilder = SearchRequest.builder();
-      BooleanQuery.Builder queryBuilder = BooleanQuery.builder();
-      matchKey(key, queryBuilder);
-
-      IntRangeQuery rangeQuery = parseRange(range, "month");
-      queryBuilder.mustMatch(rangeQuery);
-
-      this.range = new Range(range, rangeQuery.minValue, rangeQuery.maxValue);
-
-      requestBuilder.setQuery(queryBuilder.build());
-      requestBuilder.addAggregation(new ExtendedStatsAggregation("stats", key.field));
-      requestBuilder.setStart(0).setLimit(0);
-
-      this.searchRequest = requestBuilder.build();
-   }
-
-   /**
     * Creates a query that returns statistics for a field for an exact range.
     * @param key The metric key. The 'field' must be defined.
-    * @param rangeExpression An expresion that describes the range.
+    * @param rangeExpression An expression that describes the range.
     * @param startTimestamp The range start.
     * @param endTimestamp The range end.
     */
@@ -86,7 +43,9 @@ public class StatsQuery extends QueryBase {
       SearchRequest.Builder requestBuilder = SearchRequest.builder();
       BooleanQuery.Builder queryBuilder = BooleanQuery.builder();
       matchKey(key, queryBuilder);
-      IntRangeQuery rangeQuery = new IntRangeQuery(Fields.TIMESTAMP_FIELD, startTimestamp, endTimestamp);
+
+      IntRangeQuery rangeQuery = (startTimestamp > 0L && endTimestamp > 0L) ?
+              new IntRangeQuery(Fields.TIMESTAMP_FIELD, startTimestamp, endTimestamp) : parseRange(rangeExpression, "month");
       queryBuilder.mustMatch(rangeQuery);
 
       this.range = new Range(rangeExpression, rangeQuery.minValue, rangeQuery.maxValue);

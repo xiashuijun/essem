@@ -435,7 +435,7 @@ class ApplicationCache implements MetricSet {
 
          try {
             final Request esRequest = esEndpoint.postRequestBuilder(esEndpoint.buildIndexURI(key.index),
-                    new StatsQuery(key.key, DEFAULT_ACTIVITY_RANGE).searchRequest.toJSON().getBytes(Charsets.UTF_8)).create();
+                    new StatsQuery(key.key, DEFAULT_ACTIVITY_RANGE, 0L, 0L).searchRequest.toJSON().getBytes(Charsets.UTF_8)).create();
             final Response esResponse = client.send(esRequest, requestOptions);
 
             switch(esResponse.getStatusCode()) {
