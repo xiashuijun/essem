@@ -17,6 +17,7 @@ package com.attribyte.essem.query;
 
 import com.attribyte.essem.es.BooleanQuery;
 import com.attribyte.essem.es.SearchRequest;
+import com.attribyte.essem.es.Sort;
 import com.attribyte.essem.es.StringTermQuery;
 
 /**
@@ -24,9 +25,13 @@ import com.attribyte.essem.es.StringTermQuery;
  */
 public class StoredGraphQuery {
 
+   private static final Sort CREATED_DESC = new Sort(new Sort.SingleFieldSort("created", Sort.Direction.DESC));
+
    /**
-    * Builds a search request for all user graphs.
+    * Builds a search request for all user graphs in descending order by create time.
     * @param uid The user id.
+    * @param start The start index.
+    * @param limit The maximum returned.
     */
    public static SearchRequest buildUserGraphsRequest(final String uid, final int start, final int limit) {
       SearchRequest.Builder requestBuilder = SearchRequest.builder();
@@ -34,6 +39,7 @@ public class StoredGraphQuery {
       queryBuilder.mustMatch(new StringTermQuery("uid", uid));
       requestBuilder.returnAllFields();
       requestBuilder.setQuery(queryBuilder.build());
+      requestBuilder.setSort(CREATED_DESC);
       requestBuilder.setStart(start).setLimit(limit);
       return requestBuilder.build();
    }
