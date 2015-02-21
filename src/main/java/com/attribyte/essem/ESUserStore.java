@@ -16,9 +16,15 @@
 package com.attribyte.essem;
 
 import com.attribyte.essem.model.StoredGraph;
+import com.attribyte.essem.model.graph.MetricKey;
 import com.attribyte.essem.query.StoredGraphQuery;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.protobuf.ByteString;
 import org.attribyte.api.Logger;
 import org.attribyte.api.http.AsyncClient;
@@ -28,7 +34,11 @@ import org.attribyte.api.http.Response;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 public class ESUserStore {
 
@@ -107,7 +117,11 @@ public class ESUserStore {
 
          Request esRequest = esEndpoint.putRequestBuilder(indexURI, graph.getAsJSON().getBytes(Charsets.UTF_8)).create();
          Response esResponse = httpClient.send(esRequest);
-         return esResponse.getStatusCode() / 100 == 2;
+         boolean stored = esResponse.getStatusCode() / 100 == 2;
+         if(stored) {
+            cacheGraph(graph);
+         }
+         return stored;
       } catch(URISyntaxException use) {
          throw new AssertionError();
       }
@@ -115,20 +129,21 @@ public class ESUserStore {
 
    /**
     * Deletes a graph.
-    * @param index The index.
-    * @param id The graph id.
+    * @param graph The graph.
     * @return Was the graph deleted?
     * @throws IOException on delete error.
     */
-   public boolean deleteGraph(final String index, final String id) throws IOException {
+   public boolean deleteGraph(final StoredGraph graph) throws IOException {
 
-      String indexName = index + SUFFIX;
+      removeGraph(graph);
+
+      String indexName = graph.index + SUFFIX;
 
       try {
          URI indexURI = new URI(esEndpoint.uri.getScheme(),
                  esEndpoint.uri.getUserInfo(),
                  esEndpoint.uri.getHost(),
-                 esEndpoint.uri.getPort(), "/" + indexName + "/" + STORED_KEY_TYPE + "/" + id, null, null);
+                 esEndpoint.uri.getPort(), "/" + indexName + "/" + STORED_KEY_TYPE + "/" + graph.id, null, null);
 
          Request esRequest = esEndpoint.deleteRequestBuilder(indexURI).create();
          Response esResponse = httpClient.send(esRequest);
@@ -146,6 +161,11 @@ public class ESUserStore {
     * @throws IOException on retrieve error.
     */
    public StoredGraph getGraph(final String index, final String id) throws IOException {
+
+      StoredGraph cachedGraph = recentGraphCache.getIfPresent(id);
+      if(cachedGraph != null) {
+         return cachedGraph;
+      }
 
       String indexName = index + SUFFIX;
 
@@ -172,6 +192,8 @@ public class ESUserStore {
     * Gets all graphs for a user.
     * @param index The index.
     * @param uid The user id.
+    * @param start The start index.
+    * @param limit The maximum returned.
     * @return The list of graphs.
     * @throws IOException on retrieve error.
     */
@@ -189,7 +211,17 @@ public class ESUserStore {
          switch(esResponse.getStatusCode()) {
             case 200:
                ObjectNode keysObject = Util.mapper.readTree(Util.parserFactory.createParser(esResponse.getBody().toByteArray()));
-               return StoredGraphParser.parseGraphs(keysObject);
+               List<StoredGraph> storedGraphs = StoredGraphParser.parseGraphs(keysObject);
+               Map<MetricKey, StoredGraph> recentUserGraphs = recentUserGraphCache.getIfPresent(uid);
+               if(start == 0 && recentUserGraphs != null && recentUserGraphs.size() > 0) {
+                  Set<StoredGraph> combinedGraphs = Sets.newHashSet(storedGraphs);
+                  combinedGraphs.addAll(recentUserGraphs.values());
+                  storedGraphs = Lists.newArrayList(combinedGraphs);
+                  Collections.sort(storedGraphs, Collections.reverseOrder(StoredGraph.createTimeComparator));
+                  return storedGraphs.size() < limit ? storedGraphs : storedGraphs.subList(0, limit);
+               } else {
+                  return storedGraphs;
+               }
             default:
                throw new IOException("Problem selecting user graphs (" + esResponse.getStatusCode() + ")");
          }
@@ -202,4 +234,51 @@ public class ESUserStore {
    private final AsyncClient httpClient;
    private final ByteString schema;
    private final Logger logger;
+
+   /**
+    * Caches a graph.
+    * @param graph The graph.
+    * @return The input graph.
+    */
+   private StoredGraph cacheGraph(StoredGraph graph) {
+      recentGraphCache.put(graph.id, graph);
+      Map<MetricKey, StoredGraph> userMap = recentUserGraphCache.getIfPresent(graph.uid);
+      if(userMap == null) {
+         userMap = Maps.newConcurrentMap();
+         recentUserGraphCache.put(graph.uid, userMap);
+      }
+      userMap.put(graph.key, graph);
+      return graph;
+   }
+
+   /**
+    * Removes a graph.
+    * @param graph The graph.
+    * @return The input graph.
+    */
+   private StoredGraph removeGraph(StoredGraph graph) {
+      recentGraphCache.invalidate(graph.id);
+      Map<MetricKey, StoredGraph> userMap = recentUserGraphCache.getIfPresent(graph.uid);
+      if(userMap != null) {
+         userMap.remove(graph.key);
+      }
+      return graph;
+   }
+
+   /**
+    * Cache recent graphs so that they are available immediately
+    * after save.
+    */
+   private final Cache<String, StoredGraph> recentGraphCache = CacheBuilder.newBuilder()
+           .concurrencyLevel(4)
+           .maximumSize(1000000)
+           .expireAfterWrite(60, TimeUnit.MINUTES).build();
+
+   /**
+    * Cache the most recent version of a user's graph.
+    */
+   private final Cache<String, Map<MetricKey, StoredGraph>> recentUserGraphCache = CacheBuilder.newBuilder()
+           .concurrencyLevel(4)
+           .maximumSize(5000)
+           .expireAfterWrite(60, TimeUnit.MINUTES).build();
 }
