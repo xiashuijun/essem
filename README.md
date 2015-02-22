@@ -39,8 +39,8 @@ Elasticsearch Considerations
 ----------------------------
 
 * Be aware that Elasticsearch (ES) has no built-in security. Unless you want your install open to the world, check the configuration
-to make sure the server does not bind to a public address. It may be a good idea to change the configuration to 
-bind only to localhost and use a proxy such as [nginx](http://nginx.org/) to forward to it and provide security.
+to make sure the server does not bind to a public address. It may be a good idea to change the configuration to
+bind only to localhost and use a proxy such as [nginx](http://nginx.org/) to allow authenticated access.
 
 * By default, ES is configured to automatically generate a schema for any JSON document. This is supposed to be
 a feature, but it can be a big headache if you need to change the mapping for a field later. You may want to set
@@ -50,8 +50,8 @@ this configuration: [`index.mapper.dynamic: false`](http://www.elasticsearch.org
 after install: [`action.destructive_requires_name: true`](http://www.elasticsearch.org/guide/en/elasticsearch/reference/current/indices-delete-index.html)
 or `action.disable_delete_all_indices: true`.
 
-* Sorting and aggregation (heavily used by Essem) use the Lucene field cache by default. This can consume _a lot_ of memory. Fortunately,
-the latest versions of Lucene (and ES) have added an option to use "doc values". This allows values to be stored on-disk
+* Sorting and aggregation (heavily used by Essem) use the Lucene field cache by default. This can consume _a lot_ of memory.
+The latest versions of Lucene (and ES) have added an option to use "doc values". This allows values to be stored on-disk
 in ["column-stride" format](http://www.elasticsearch.org/blog/disk-based-field-data-a-k-a-doc-values/), significantly reducing 
 the memory requirements. Essem is distributed with a schema that uses "doc values" and it is the default choice. 
 
@@ -65,6 +65,7 @@ Quick Start
 -----------
 
 * `git clone git@github.com:attribyte/essem.git`
+* If ivy is not installed with your ant distribution: `ant init-ivy`
 * `ant full-dist`
 * `ant dist-test`
 * Copy `config/example.properties` to `config/config.properties`
