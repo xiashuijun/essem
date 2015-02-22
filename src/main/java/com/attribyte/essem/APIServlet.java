@@ -20,6 +20,7 @@ import com.attribyte.essem.model.graph.MetricKey;
 import com.attribyte.essem.query.GraphQuery;
 import com.attribyte.essem.query.NameQuery;
 import com.attribyte.essem.query.StatsQuery;
+import com.attribyte.essem.util.Util;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
@@ -36,12 +37,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.net.URI;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.Map;
 
-import static com.attribyte.essem.Util.splitPath;
+import static com.attribyte.essem.util.Util.splitPath;
 
 /**
  * Accept and enqueue reports.

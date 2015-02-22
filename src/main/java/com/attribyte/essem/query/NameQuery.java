@@ -14,7 +14,7 @@
  */
 package com.attribyte.essem.query;
 
-import com.attribyte.essem.Util;
+import com.attribyte.essem.util.Util;
 import com.attribyte.essem.es.Aggregation;
 import com.attribyte.essem.es.BooleanQuery;
 import com.attribyte.essem.es.BucketAggregation;

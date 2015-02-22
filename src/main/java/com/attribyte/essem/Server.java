@@ -18,6 +18,7 @@ package com.attribyte.essem;
 import com.attribyte.essem.model.DisplayTZ;
 import com.attribyte.essem.model.MonitoredApplication;
 import com.attribyte.essem.model.MonitoredEndpoint;
+import com.attribyte.essem.util.Util;
 import org.attribyte.essem.reporter.EssemReporter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Splitter;

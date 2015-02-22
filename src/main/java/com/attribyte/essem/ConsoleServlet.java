@@ -30,6 +30,7 @@ import com.attribyte.essem.query.Fields;
 import com.attribyte.essem.query.GraphQuery;
 import com.attribyte.essem.query.QueryBase;
 import com.attribyte.essem.query.StatsQuery;
+import com.attribyte.essem.util.Util;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
@@ -37,6 +38,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.attribyte.api.Logger;
 import org.attribyte.api.http.AsyncClient;
 import org.attribyte.api.http.Request;
@@ -65,7 +67,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-import static com.attribyte.essem.Util.splitPath;
+import static com.attribyte.essem.util.Util.splitPath;
 
 public class ConsoleServlet extends HttpServlet {
 
@@ -899,6 +901,9 @@ public class ConsoleServlet extends HttpServlet {
             graphBuilder.setXLabel(currGraph.xLabel);
             graphBuilder.setYLabel(currGraph.yLabel);
             graphBuilder.setCreateTime(currGraph.createTime);
+            for(String tag : currGraph.tags) {
+               graphBuilder.addTag(tag);
+            }
          }
          template.add("graph", graphBuilder.build());
       } catch(Exception e) {

@@ -15,7 +15,6 @@
 
 package com.attribyte.essem;
 
-import com.attribyte.essem.es.SearchRequest;
 import com.attribyte.essem.model.graph.MetricKey;
 import com.attribyte.essem.query.GraphQuery;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -39,9 +38,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static com.attribyte.essem.Util.getStringField;
-import static com.attribyte.essem.Util.getFieldNode;
-import static com.attribyte.essem.Util.graphIgnoreProperties;
+import static com.attribyte.essem.util.Util.getStringField;
+import static com.attribyte.essem.util.Util.getFieldNode;
+import static com.attribyte.essem.util.Util.graphIgnoreProperties;
 
 public class DefaultResponseGenerator extends ESResponseGenerator {
 

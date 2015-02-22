@@ -37,8 +37,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import static com.attribyte.essem.Util.getStringField;
-import static com.attribyte.essem.Util.graphIgnoreProperties;
+import static com.attribyte.essem.util.Util.getStringField;
+import static com.attribyte.essem.util.Util.graphIgnoreProperties;
 
 public class MGraphResponseGenerator extends ESResponseGenerator {
 

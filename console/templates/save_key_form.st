@@ -19,11 +19,11 @@ save_key_form(graph) ::= <<
             <label><b>Description</b></label>
             <input id="skey-description" type="text" name="description" value="$graph.description$"/>
 
-            <label><b>X-Axis Label</b></label>
-            <input id="skey-xlabel" type="text" name="xLabel" value="$graph.xLabel$"/>
-
-            <label><b>Y-Axis Label</b></label>
+            <label><b>Label</b></label>
             <input id="skey-ylabel" type="text" name="yLabel" value="$graph.yLabel$"/>
+
+            <label><b>Tags</b></label>
+            <input id="skey-tags" type="text" name="tagString" value="$graph.tagString$"/>
 
         </div>
         <div class="small-2 columns">

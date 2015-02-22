@@ -53,8 +53,8 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static com.attribyte.essem.Util.parserFactory;
-import static com.attribyte.essem.Util.mapper;
+import static com.attribyte.essem.util.Util.parserFactory;
+import static com.attribyte.essem.util.Util.mapper;
 
 @SuppressWarnings("NullableProblems")
 /**

@@ -16,14 +16,18 @@
 package com.attribyte.essem.model;
 
 import com.attribyte.essem.model.graph.MetricKey;
-import static com.attribyte.essem.Util.getStringField;
-import static com.attribyte.essem.Util.getLongField;
+import static com.attribyte.essem.util.Util.getStringField;
+import static com.attribyte.essem.util.Util.getLongField;
 
+import com.attribyte.essem.util.Util;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
@@ -31,8 +35,11 @@ import com.google.common.hash.Hashing;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
+import java.util.Set;
 
 /**
  * A stored graph.
@@ -159,6 +166,16 @@ public class StoredGraph {
          return this;
       }
 
+      public Builder setTags(final Set<String> tags) {
+         this.tags.addAll(tags);
+         return this;
+      }
+
+      public Builder addTag(final String tag) {
+         this.tags.add(tag);
+         return this;
+      }
+
       /**
        * Does this builder have an absolute range specified?
        * @return Is the range absolute?
@@ -182,7 +199,7 @@ public class StoredGraph {
       public StoredGraph build() {
          MetricKey key = this.key != null ? this.key : new MetricKey(name, application, host, instance, field);
          return new StoredGraph(index, uid, key, range, startTimestamp, endTimestamp, downsampleFn,
-                 title, description, xLabel, yLabel, createTime);
+                 title, description, xLabel, yLabel, tags, createTime);
       }
 
       private String uid;
@@ -202,6 +219,7 @@ public class StoredGraph {
       private long startTimestamp;
       private long endTimestamp;
       private String downsampleFn;
+      private Set<String> tags = Sets.newHashSet();
    }
 
 
@@ -246,6 +264,16 @@ public class StoredGraph {
       graphBuilder.setDescription(request.getParameter("description"));
       graphBuilder.setXLabel(request.getParameter("xLabel"));
       graphBuilder.setYLabel(request.getParameter("yLabel"));
+
+      String[] tags = request.getParameterValues("tag");
+      if(tags != null && tags.length > 0) {
+         graphBuilder.setTags(ImmutableSet.copyOf(tags));
+      } else if(request.getParameter("tagString") != null) {
+         for(String tag : Util.csvSplitter.split(request.getParameter("tagString"))) {
+            graphBuilder.addTag(tag);
+         }
+      }
+
       return graphBuilder;
    }
 
@@ -272,6 +300,7 @@ public class StoredGraph {
                       final String downsampleFn,
                       final String title, final String description,
                       final String xLabel, final String yLabel,
+                      final Collection<String> tags,
                       final Date createTime) {
       this.index = Strings.nullToEmpty(index);
       this.uid = Strings.nullToEmpty(uid);
@@ -305,6 +334,31 @@ public class StoredGraph {
       this.description = Strings.nullToEmpty(description);
       this.xLabel = Strings.nullToEmpty(xLabel);
       this.yLabel = Strings.nullToEmpty(yLabel);
+      this.tags = tags != null ? ImmutableList.copyOf(cleanTags(tags)) : ImmutableList.<String>of();
+      this.tagString = buildTagString();
+   }
+
+   /**
+    * Cleans the list of tags.
+    * - Trims
+    * - Removes duplicates
+    * - Removes tags that are invalid identifiers.
+    * @param tags The colleciton of tags.
+    * @return The clean set of tags.
+    */
+   private Set<String> cleanTags(final Collection<String> tags) {
+      if(tags == null || tags.size() == 0) {
+         return ImmutableSet.of();
+      } else {
+         Set<String> cleanedTags = Sets.newHashSetWithExpectedSize(tags.size());
+         for(String tag : tags) {
+            tag = tag.trim();
+            if(Util.isValidIdentifier(tag)) {
+               cleanedTags.add(tag);
+            }
+         }
+         return cleanedTags;
+      }
    }
 
    /**
@@ -328,7 +382,6 @@ public class StoredGraph {
     * @throws IOException on parse error.
     */
    public static final StoredGraph fromJSON(final JsonNode obj) throws IOException {
-
       String uid = getStringField(obj, "uid");
       String index = getStringField(obj, "index");
       String application = getStringField(obj, "application");
@@ -348,11 +401,24 @@ public class StoredGraph {
       String xLabel = getStringField(obj, "xLabel");
       String yLabel = getStringField(obj, "yLabel");
 
+      Set<String> tags = null;
+      if(obj.has("tag")) {
+         tags = Sets.newHashSetWithExpectedSize(8);
+         JsonNode tagNode = obj.get("tag");
+         if(tagNode.isArray()) {
+            for(JsonNode arrNode : tagNode) {
+               tags.add(arrNode.textValue());
+            }
+         } else if(tagNode.isTextual()) {
+            tags.add(tagNode.textValue());
+         }
+      }
+
       String createdString = getStringField(obj, "created");
       Date createTime = Strings.isNullOrEmpty(createdString) ? new Date() : new Date(DateTime.fromStandardFormat(createdString));
 
       return new StoredGraph(index, uid, key, range, startTimestamp, endTimestamp, downsampleFn,
-              title, description, xLabel, yLabel, createTime);
+              title, description, xLabel, yLabel, tags, createTime);
    }
 
    /**
@@ -378,6 +444,13 @@ public class StoredGraph {
       generator.writeStringField("description", description);
       generator.writeStringField("xLabel", xLabel);
       generator.writeStringField("yLabel", yLabel);
+
+      generator.writeArrayFieldStart("tag");
+      for(String tag : tags) {
+         generator.writeString(tag);
+      }
+      generator.writeEndArray();
+
       generator.writeStringField("created", DateTime.standardFormat(this.createTime));
       generator.writeEndObject();
    }
@@ -395,6 +468,24 @@ public class StoredGraph {
    @Override
    public int hashCode() {
       return id.hashCode();
+   }
+
+   /**
+    * Gets a comma-separated list of tags, if any.
+    * @return The tag string.
+    */
+   private String buildTagString() {
+      if(tags.size() > 0) {
+         StringBuilder buf = new StringBuilder();
+         Iterator<String> iter = tags.iterator();
+         buf.append(iter.next());
+         while(iter.hasNext()) {
+            buf.append(", ").append(iter.next());
+         }
+         return buf.toString();
+      } else {
+         return "";
+      }
    }
 
    /**
@@ -461,4 +552,14 @@ public class StoredGraph {
     * An optional downsample function.
     */
    public final String downsampleFn;
+
+   /**
+    * Tags added to the graph.
+    */
+   public final ImmutableList<String> tags;
+
+   /**
+    * A comma-separated list of tags.
+    */
+   public final String tagString;
 }

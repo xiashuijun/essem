@@ -13,7 +13,7 @@
  *
  */
 
-package com.attribyte.essem;
+package com.attribyte.essem.util;
 
 import com.attribyte.essem.es.DateHistogramAggregation;
 import com.attribyte.essem.model.graph.MetricKey;
@@ -41,12 +41,12 @@ public class Util {
    /**
     * The single instance of object mapper.
     */
-   static final ObjectMapper mapper = new ObjectMapper();
+   public static final ObjectMapper mapper = new ObjectMapper();
 
    /**
     * The single instance of parser factory.
     */
-   static final JsonFactory parserFactory = new JsonFactory().enable(JsonParser.Feature.ALLOW_COMMENTS);
+   public static final JsonFactory parserFactory = new JsonFactory().enable(JsonParser.Feature.ALLOW_COMMENTS);
 
    /**
     * The content type sent with HTTP responses ('application/json').
@@ -61,14 +61,14 @@ public class Util {
    /**
     * The shared fork-join executor.
     */
-   static final Executor forkJoinPool = new ForkJoinPool(DEFAULT_FORK_JOIN_CONCURRENCY);
+   public static final Executor forkJoinPool = new ForkJoinPool(DEFAULT_FORK_JOIN_CONCURRENCY);
 
    /**
     * Splits the path into an iterable.
     * @param request The request.
     * @return The components, or empty iterable if none.
     */
-   static final Iterable<String> splitPath(final HttpServletRequest request) {
+   public static final Iterable<String> splitPath(final HttpServletRequest request) {
 
       String pathInfo = request.getPathInfo();
       if(pathInfo == null || pathInfo.length() == 0 || pathInfo.equals("/")) {
@@ -81,7 +81,12 @@ public class Util {
    /**
     * Split with '/'.
     */
-   static final Splitter pathSplitter = Splitter.on('/').omitEmptyStrings().trimResults();
+   public static final Splitter pathSplitter = Splitter.on('/').omitEmptyStrings().trimResults();
+
+   /**
+    * Split with ','.
+    */
+   public static final Splitter csvSplitter = Splitter.on(',').omitEmptyStrings().trimResults();
 
    /**
     * Gets an integer parameter from the request with a default value.
@@ -401,4 +406,43 @@ public class Util {
       }
    }
 
+
+   /**
+    * Determine if the string is a valid identifier.
+    * <p>
+    *    A valid identifier may contain any "java identifier" character plus...TODO...
+    * </p>
+    * @param str The string.
+    * @return Is the string a valid identifier?
+    */
+   public static boolean isValidIdentifier(final String str) { //TODO
+      for(char ch : str.toCharArray()) {
+         switch(ch) {
+            case '-':
+            case '+':
+            case '!':
+            case '.':
+            case '%':
+            case '#':
+            case '^':
+            case '{':
+            case '}':
+            case '[':
+            case ']':
+            case '(':
+            case ')':
+            case '@':
+            case '/':
+            case '\\':
+            case '~':
+            case '|':
+            case ' ':
+            case '\t':
+               break;
+            default:
+               if(!Character.isJavaIdentifierPart(ch)) return false;
+         }
+      }
+      return true;
+   }
 }

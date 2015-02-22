@@ -15,6 +15,7 @@
 
 package com.attribyte.essem;
 
+import com.attribyte.essem.util.Util;
 import com.codahale.metrics.ExponentiallyDecayingReservoir;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Metric;
@@ -33,7 +34,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Map;
 
-import static com.attribyte.essem.Util.splitPath;
+import static com.attribyte.essem.util.Util.splitPath;
 
 /**
  * Accept and enqueue reports.

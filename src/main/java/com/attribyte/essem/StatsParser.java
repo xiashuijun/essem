@@ -19,8 +19,8 @@ import com.attribyte.essem.model.graph.Stats;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import static com.attribyte.essem.Util.getIntField;
-import static com.attribyte.essem.Util.getDoubleField;
+import static com.attribyte.essem.util.Util.getIntField;
+import static com.attribyte.essem.util.Util.getDoubleField;
 
 /**
  * Parse stats from the ES response to a <code>StatsQuery</code>.

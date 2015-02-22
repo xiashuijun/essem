@@ -15,10 +15,10 @@ import org.joda.time.format.ISODateTimeFormat;
 import java.util.List;
 import java.util.Map;
 
-import static com.attribyte.essem.Util.getStringField;
-import static com.attribyte.essem.Util.getFieldNode;
-import static com.attribyte.essem.Util.graphIgnoreProperties;
-import static com.attribyte.essem.Util.integralNumberFields;
+import static com.attribyte.essem.util.Util.getStringField;
+import static com.attribyte.essem.util.Util.getFieldNode;
+import static com.attribyte.essem.util.Util.graphIgnoreProperties;
+import static com.attribyte.essem.util.Util.integralNumberFields;
 
 /**
  * Parse graphs from ES responses that result from <code>GraphQuery</code>.

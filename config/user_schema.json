@@ -98,6 +98,12 @@
           "store": true,
           "format": "basic_date_time",
           "doc_values": false
+        },
+        "tag": {
+          "type": "string",
+          "store": true,
+          "index": "analyzed",
+          "doc_values": false
         }
       }
     }

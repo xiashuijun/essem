@@ -10,7 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import static com.attribyte.essem.Util.parserFactory;
+import static com.attribyte.essem.util.Util.parserFactory;
 
 /**
  * Creates a report from JSON as output by:

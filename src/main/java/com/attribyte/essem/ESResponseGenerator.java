@@ -1,8 +1,8 @@
 package com.attribyte.essem;
 
-import com.attribyte.essem.es.SearchRequest;
 import com.attribyte.essem.query.NameQuery;
 import com.attribyte.essem.query.StatsQuery;
+import com.attribyte.essem.util.Util;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
