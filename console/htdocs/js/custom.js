@@ -74,6 +74,21 @@ function bindTopBar(index) {
             error: handleXHRError
         });
     });
+
+    $('#topbar_dash').click(function(event) {
+        event.preventDefault();
+        var url = '/console/' + index + '/usergraphs';
+        $.ajax({
+            type: 'GET',
+            url: url,
+            dataType: 'html',
+            success: function(html, textStatus) {
+                $('#top_modal_content').html(html);
+                $('#top_modal').foundation('reveal', 'open');
+            },
+            error: handleXHRError
+        });
+    });
 }
 
 function bindMetricsFilter(index, app) {

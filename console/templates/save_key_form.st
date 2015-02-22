@@ -3,11 +3,7 @@ save_key_form(graph) ::= <<
     <div class="row">
         <div class="small-12 colunms">
             <h6 class="subheader" id="save-key-form-title">
-                $if(graph.key.hasHost)$
-                <h5>$graph.key.application$&nbsp;&raquo;$graph.key.host$&nbsp;&raquo;&nbsp;$graph.key.name$&nbsp;&raquo;&nbsp;$graph.key.field$</h5>
-                $else$
-                <h5>$graph.key.application$&nbsp;&raquo;&nbsp;$graph.key.name$&nbsp;&raquo;&nbsp;$graph.key.field$</h5>
-                $endif$
+                <h5>$graph.key.captionWithField$</h5>
             </h6>
         </div>
     </div>

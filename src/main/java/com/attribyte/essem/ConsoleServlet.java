@@ -38,7 +38,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import org.attribyte.api.Logger;
 import org.attribyte.api.http.AsyncClient;
 import org.attribyte.api.http.Request;
@@ -176,7 +175,8 @@ public class ConsoleServlet extends HttpServlet {
       INDEX_STATS,
       FIELD_STATS,
       SAVEGRAPH,
-      USERGRAPH
+      USERGRAPH,
+      USERGRAPHS
    }
 
    /**
@@ -190,10 +190,11 @@ public class ConsoleServlet extends HttpServlet {
            .put("fstats", Op.FIELD_STATS)
            .put("savegraph", Op.SAVEGRAPH)
            .put("usergraph", Op.USERGRAPH)
+           .put("usergraphs", Op.USERGRAPHS)
            .put("stats", Op.INDEX_STATS).build();
 
    /**
-    * Valid PUT operations.
+    * Valid PUT/POST operations.
     */
    private static ImmutableMap<String, Op> putOps = ImmutableMap.of("savegraph", Op.SAVEGRAPH);
 
@@ -310,6 +311,9 @@ public class ConsoleServlet extends HttpServlet {
          case USERGRAPH:
             String id = path.hasNext() ? path.next() : null;
             doUserGraph(request, auth, index, id, response);
+            break;
+         case USERGRAPHS:
+            doUserGraphs(request, auth, index, response);
             break;
          case FIELD_STATS: {
             if(!path.hasNext()) {
@@ -703,6 +707,42 @@ public class ConsoleServlet extends HttpServlet {
       }
    }
 
+   /**
+    * Renders a list of user graphs.
+    * @param request The request.
+    * @param auth The authorization.
+    * @param index The index.
+    * @param response The response.
+    * @throws IOException on output error.
+    */
+   protected void doUserGraphs(final HttpServletRequest request,
+                               final IndexAuthorization.Auth auth,
+                               final String index,
+                               final HttpServletResponse response) throws IOException {
+
+      String templateName = GRAPH_LIST_TEMPLATE;
+      ST template = getTemplate(templateName);
+      if(template == null) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + GRAPH_LIST_TEMPLATE + "' template");
+         return;
+      }
+
+      try {
+         List<StoredGraph> graphs = userStore.getUserGraphs(index, auth.uid, 0, 100); //TODO...paging
+         template.add("index", index);
+         template.add("graphs", graphs);
+      } catch(Exception e) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         e.printStackTrace();
+         return;
+      }
+
+      response.setStatus(HttpServletResponse.SC_OK);
+      response.setContentType(HTML_CONTENT_TYPE);
+      response.getWriter().print(template.render());
+      response.getWriter().flush();
+   }
+
 
    /**
     * Renders stats for an index.
@@ -830,7 +870,7 @@ public class ConsoleServlet extends HttpServlet {
          long startTimestamp = Util.getLongParameter(request, "startTimestamp", 0L);
          long endTimestamp = Util.getLongParameter(request, "endTimestamp", 0L);
 
-         StatsQuery query = new StatsQuery(MetricKey.parseKey(request), range, startTimestamp, endTimestamp);
+         StatsQuery query = new StatsQuery(MetricKey.parseKey(request, app), range, startTimestamp, endTimestamp);
          template.add("index", index);
          template.add("app", app);
          template.add("key", query.key);
@@ -1079,6 +1119,11 @@ public class ConsoleServlet extends HttpServlet {
     * The template for rendering the save key form.
     */
    public static final String SAVE_KEY_TEMPLATE = "save_key_form";
+
+   /**
+    * The template for rendering a list of user graphs.
+    */
+   public static final String GRAPH_LIST_TEMPLATE = "dash_list";
 
    /**
     * Available downsample functions.

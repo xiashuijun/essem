@@ -207,6 +207,39 @@ public class MetricKey {
       }
    }
 
+   private static final String CAPTION_SEP = "&raquo;";
+   private static final String CAPTION_SPACE = "&nbsp;";
+   private static void addCaptionValue(final String field, final StringBuilder buf) {
+      if(!field.isEmpty()) {
+         buf.append(CAPTION_SPACE).append(CAPTION_SEP).append(CAPTION_SPACE).append(field);
+      }
+   }
+
+   /**
+    * Gets a caption as HTML.
+    * @return The caption.
+    */
+   public String getCaption() {
+      StringBuilder buf = new StringBuilder(application);
+      addCaptionValue(name, buf);
+      addCaptionValue(host, buf);
+      addCaptionValue(instance, buf);
+      return buf.toString();
+   }
+
+   /**
+    * Gets a caption as HTML with the field included.
+    * @return The caption.
+    */
+   public String getCaptionWithField() {
+      StringBuilder buf = new StringBuilder(application);
+      addCaptionValue(name, buf);
+      addCaptionValue(host, buf);
+      addCaptionValue(instance, buf);
+      addCaptionValue(field, buf);
+      return buf.toString();
+   }
+
    /**
     * Determine if two components are equal.
     * @param str0 The first string.
