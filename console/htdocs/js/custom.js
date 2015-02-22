@@ -375,7 +375,7 @@ function loadGraph(data, config, dataConfig) {
         hoverFormatter = d3.time.format('%Y-%m-%d %H:%M:%S ' + tzf);
     }
 
-    var left_margin = config.left_margin != null ? config.left_margin : 40;
+    var left_margin = config.left_margin != null ? config.left_margin : 60;
     var bottom_margin = config.bottom_margin != null ? config.bottom_margin : 40;
 
     MG.data_graphic({

@@ -83,7 +83,7 @@ $topbar(index, indexList, zoneList, uid)$
     config.field = '$graph.key.field$';
     config.x_label = '$graph.yLabel$';
     config.y_label = '';
-    config.left_margin = 40;
+    config.left_margin = 60;
     config.bottom_margin = 75;
 
     var dataConfig = {};
