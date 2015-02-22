@@ -162,7 +162,7 @@ $topbar(index, indexList, zoneList, uid)$
 
     function triggerFieldSave(event) {
         event.preventDefault();
-        showFieldSave(dataConfig, '$graph.key.field$');
+        showGraphSave(dataConfig, '$graph.key.field$');
     }
     jQuery('#graph-edit').click(triggerFieldSave);
 

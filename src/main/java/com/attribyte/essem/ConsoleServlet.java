@@ -175,6 +175,7 @@ public class ConsoleServlet extends HttpServlet {
       INDEX_STATS,
       FIELD_STATS,
       SAVEGRAPH,
+      DELETEGRAPH,
       USERGRAPH,
       USERGRAPHS
    }
@@ -196,12 +197,65 @@ public class ConsoleServlet extends HttpServlet {
    /**
     * Valid PUT/POST operations.
     */
-   private static ImmutableMap<String, Op> putOps = ImmutableMap.of("savegraph", Op.SAVEGRAPH);
+   private static ImmutableMap<String, Op> putOps = ImmutableMap.of(
+           "savegraph", Op.SAVEGRAPH);
+
+   /**
+    * Valid DELETE operations.
+    */
+   private static ImmutableMap<String, Op> deleteOps = ImmutableMap.of(
+           "deletegraph", Op.DELETEGRAPH);
 
    @Override
    protected void doPost(final HttpServletRequest request,
                          final HttpServletResponse response) throws IOException {
       doPut(request, response);
+   }
+
+   @Override
+   protected void doDelete(final HttpServletRequest request,
+                           final HttpServletResponse response) throws IOException {
+
+      Iterator<String> path = splitPath(request).iterator();
+      if(!path.hasNext()) {
+         sendError(request, response, HttpServletResponse.SC_BAD_REQUEST);
+         return;
+      }
+
+      final String index = path.next();
+      final IndexAuthorization.Auth auth;
+
+      if(indexAuthorization == null) {
+         auth = IndexAuthorization.Auth.SYSTEM;
+      } else {
+         auth = indexAuthorization.getAuth(index, request);
+         if(!auth.isAuthorized) {
+            indexAuthorization.sendUnauthorized(index, response);
+            return;
+         }
+      }
+
+      String opPath = path.hasNext() ? path.next().toLowerCase() : "";
+      Op op = deleteOps.get(opPath);
+      if(op == null) {
+         response.sendError(404, "Not Found");
+         return;
+      }
+
+      switch(op) {
+         case DELETEGRAPH:
+            if(!path.hasNext()) {
+               sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'id' must be specified");
+               return;
+            }
+            String id = path.hasNext() ? path.next() : null;
+            doUserGraphDelete(request, auth, index, id, response);
+            break;
+         default:
+            sendError(request, response, HttpServletResponse.SC_NOT_FOUND);
+
+      }
+
    }
 
    @Override
@@ -236,7 +290,6 @@ public class ConsoleServlet extends HttpServlet {
 
       switch(op) {
          case SAVEGRAPH:
-
             if(!path.hasNext()) {
                sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'application' must be specified");
                return;
@@ -700,6 +753,44 @@ public class ConsoleServlet extends HttpServlet {
          response.setStatus(HttpServletResponse.SC_OK);
          response.setContentType(HTML_CONTENT_TYPE);
          response.getWriter().print(template.render());
+         response.getWriter().flush();
+      } catch(Exception e) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         e.printStackTrace();
+      }
+   }
+
+   /**
+    * Deletes a saved user graph.
+    * @param request The request.
+    * @param auth The auth info.
+    * @param index The index.
+    * @param response The response.
+    * @throws IOException on output error.
+    */
+   protected void doUserGraphDelete(final HttpServletRequest request,
+                                    final IndexAuthorization.Auth auth,
+                                    final String index,
+                                    String id,
+                                    final HttpServletResponse response) throws IOException {
+
+      if(Strings.nullToEmpty(id).isEmpty()) {
+         id = Strings.nullToEmpty(request.getParameter("id")).trim();
+      }
+
+      if(id.length() == 0) {
+         sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'id' is required");
+         return;
+      }
+
+      try {
+         StoredGraph graph = userStore.getGraph(index, id);
+         if(graph != null) {
+            userStore.deleteGraph(graph);
+         }
+         response.setStatus(HttpServletResponse.SC_OK);
+         response.setContentType(HTML_CONTENT_TYPE);
+         response.getWriter().print("true");
          response.getWriter().flush();
       } catch(Exception e) {
          sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());

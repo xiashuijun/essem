@@ -444,7 +444,7 @@ function renderFieldStats(config, field, target) {
     });
 }
 
-function showFieldSave(config, field) {
+function showGraphSave(config, field) {
 
     var rangeComponent = '&range=' + config.range;
     if(config.startTimestamp > 0 && config.endTimestamp > 0) {
@@ -465,14 +465,14 @@ function showFieldSave(config, field) {
             scrollToTop();
             $('#save-key-form').submit(function(event) {
                 event.preventDefault();
-                saveField(config.index, config.app, jQuery(this).serialize());
+                saveGraph(config.index, config.app, jQuery(this).serialize());
             });
         },
         error: handleXHRError
     });
 }
 
-function saveField(index, app, data) {
+function saveGraph(index, app, data) {
     $.ajax({
         type: 'POST',
         url: '/console/' + index + '/savegraph/' + app,
@@ -480,6 +480,21 @@ function saveField(index, app, data) {
         success: function (html, textStatus) {
             if (textStatus == "success") {
                 window.location = '/console/' + index + '/usergraph/' + html.trim();
+            } else {
+                alert("Error: " + textStatus);
+            }
+        },
+        error: handleXHRError
+    });
+}
+
+function deleteGraph(index, id, hideId) {
+    $.ajax({
+        type: 'DELETE',
+        url: '/console/' + index + '/deletegraph/' + id,
+        success: function (html, textStatus) {
+            if (textStatus == "success") {
+                $('#' + hideId).fadeOut('slow');
             } else {
                 alert("Error: " + textStatus);
             }

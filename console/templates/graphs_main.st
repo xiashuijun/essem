@@ -136,7 +136,7 @@ $topbar(index, indexList, zoneList, uid)$
 
     function triggerFieldSave(event) {
         event.preventDefault();
-        showFieldSave(dataConfig, getId(this.id));
+        showGraphSave(dataConfig, getId(this.id));
     }
 
     $graphs:{graph |
