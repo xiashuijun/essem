@@ -723,28 +723,9 @@ public class ConsoleServlet extends HttpServlet {
          //if(!auth.uid.equals(graph.uid)) We'll let this slide. Any authorized user should be able to view a saved graph.
 
          template.add("graph", graph);
-
-         final StatsQuery statsQuery = new StatsQuery(graph.key, graph.range, graph.startTimestamp, graph.endTimestamp);
-
-         String esStatsQuery = statsQuery.searchRequest.toJSON();
-         Request esStatsRequest = esEndpoint.postRequestBuilder(esEndpoint.buildIndexURI(index),
-                 esStatsQuery.getBytes(Charsets.UTF_8)).create();
-         Response esStatsResponse = client.send(esStatsRequest, requestOptions);
-
-         if(esStatsResponse.getStatusCode() == 200) {
-            ObjectNode statsObject = Util.mapper.readTree(Util.parserFactory.createParser(esStatsResponse.getBody().toByteArray()));
-            Stats stats = StatsParser.parseStats(statsObject);
-            template.add("stats", stats);
-         } else {
-            sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Problem retrieving field stats");
-            logger.error("Field stats response error for '" + index + "' (" + esStatsResponse.getStatusCode() + ")");
-            return;
-         }
-
          if(!auth.isSystem) {
             template.add("uid", auth.uid);
          }
-
          template.add("downsampleList", buildDownsampleFunctionList(request));
          template.add("indexList", buildAllowedIndexList(request, index));
          template.add("zoneList", zones);

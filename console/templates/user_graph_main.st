@@ -1,4 +1,4 @@
-user_graph_main(uid, index, indexList, downsampleList, zoneList, graph, stats) ::= <<
+user_graph_main(uid, index, indexList, downsampleList, zoneList, graph) ::= <<
 <!doctype html>
 <html class="no-js" lang="en">
 $head()$
