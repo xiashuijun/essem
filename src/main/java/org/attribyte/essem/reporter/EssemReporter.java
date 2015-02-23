@@ -358,7 +358,12 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
 
       Timer.Context ctx = sendTimer.time();
       try {
-         send(uri, buildReport(gauges, counters, histograms, meters, timers));
+         int responseCode = send(uri, buildReport(gauges, counters, histograms, meters, timers));
+         if(responseCode / 100 != 2) {
+            LOGGER.warn("EssemReporter: Unable to report (" + responseCode + ")");
+         } else {
+            LOGGER.debug("EssemReporter: Reported (" + responseCode + ")");
+         }
       } catch(IOException ioe) {
          ioe.printStackTrace();
          LOGGER.warn("Unable to report to Essem", ioe);
