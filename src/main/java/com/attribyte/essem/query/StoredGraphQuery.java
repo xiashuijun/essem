@@ -20,6 +20,8 @@ import com.attribyte.essem.es.SearchRequest;
 import com.attribyte.essem.es.Sort;
 import com.attribyte.essem.es.StringTermQuery;
 
+import java.util.Collection;
+
 /**
  * Creates ES query for stored keys.
  */
@@ -28,15 +30,26 @@ public class StoredGraphQuery {
    private static final Sort CREATED_DESC = new Sort(new Sort.SingleFieldSort("created", Sort.Direction.DESC));
 
    /**
-    * Builds a search request for all user graphs in descending order by create time.
+    * Builds a search request for user graphs in descending order by create time.
     * @param uid The user id.
+    * @param tags A list of tags. May be <code>null</code> or empty.
     * @param start The start index.
     * @param limit The maximum returned.
     */
-   public static SearchRequest buildUserGraphsRequest(final String uid, final int start, final int limit) {
+   public static SearchRequest buildUserGraphsRequest(final String uid, final Collection<String> tags,
+                                                      final int start, final int limit) {
       SearchRequest.Builder requestBuilder = SearchRequest.builder();
       BooleanQuery.Builder queryBuilder = BooleanQuery.builder();
       queryBuilder.mustMatch(new StringTermQuery("uid", uid));
+
+      if(tags != null && !tags.isEmpty()) {
+         BooleanQuery.Builder tagQueryBuilder = BooleanQuery.builder();
+         for(String tag : tags) {
+            tagQueryBuilder.shouldMatch(new StringTermQuery("tag", tag));
+         }
+         queryBuilder.mustMatch(tagQueryBuilder.build());
+      }
+
       requestBuilder.returnAllFields();
       requestBuilder.setQuery(queryBuilder.build());
       requestBuilder.setSort(CREATED_DESC);
