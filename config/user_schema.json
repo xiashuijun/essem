@@ -102,7 +102,7 @@
         "tag": {
           "type": "string",
           "store": true,
-          "index": "analyzed",
+          "index": "not_analyzed",
           "doc_values": false
         }
       }
