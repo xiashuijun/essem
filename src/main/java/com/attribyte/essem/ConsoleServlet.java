@@ -67,6 +67,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import static com.attribyte.essem.util.Util.splitPath;
+import static com.attribyte.essem.util.Util.getParameter;
 
 public class ConsoleServlet extends HttpServlet {
 
@@ -177,7 +178,8 @@ public class ConsoleServlet extends HttpServlet {
       SAVEGRAPH,
       DELETEGRAPH,
       USERGRAPH,
-      USERGRAPHS
+      USERGRAPHS,
+      DASH
    }
 
    /**
@@ -192,6 +194,7 @@ public class ConsoleServlet extends HttpServlet {
            .put("savegraph", Op.SAVEGRAPH)
            .put("usergraph", Op.USERGRAPH)
            .put("usergraphs", Op.USERGRAPHS)
+           .put("dash", Op.DASH)
            .put("stats", Op.INDEX_STATS).build();
 
    /**
@@ -389,6 +392,9 @@ public class ConsoleServlet extends HttpServlet {
          case INDEX_STATS:
             doIndexStats(request, index, response);
             break;
+         case DASH:
+            doDashboard(request, index, auth, response);
+            break;
          default:
             response.sendError(404, "Not Found");
       }
@@ -521,7 +527,7 @@ public class ConsoleServlet extends HttpServlet {
             Metric.Type type = Metric.Type.fromString(metricType);
             String matchPrefix = Strings.nullToEmpty(request.getParameter("prefix")).trim();
 
-            if(matchPrefix.length() == 0) {
+            if(matchPrefix.isEmpty()) {
                List<Metric> metrics = type == Metric.Type.UNKNOWN ? app.getMetrics(sort) : app.getMetrics(type, sort);
                template.add("type", type == Metric.Type.UNKNOWN ? "all" : type.toString().toLowerCase());
                template.add("metrics", metrics);
@@ -647,7 +653,7 @@ public class ConsoleServlet extends HttpServlet {
          long rangeStart = Util.getLongParameter(request, QueryBase.START_TIMESTAMP_PARAMETER, 0L);
          long rangeEnd = Util.getLongParameter(request, QueryBase.END_TIMESTAMP_PARAMETER, 0L);
          String rangeName = Strings.nullToEmpty(request.getParameter(QueryBase.RANGE_PARAMETER)).trim();
-         if(rangeName.length() == 0) {
+         if(rangeName.isEmpty()) {
             rangeName = Util.nearestInterval(rangeEnd - rangeStart);
          }
 
@@ -660,7 +666,7 @@ public class ConsoleServlet extends HttpServlet {
          GraphRange range = new GraphRange(rangeName, rangeStart, rangeEnd);
 
          String host = Strings.nullToEmpty(request.getParameter("host")).trim();
-         if(host.length() > 0) {
+         if(host.isEmpty()) {
             template.add("host", host);
          }
 
@@ -707,7 +713,7 @@ public class ConsoleServlet extends HttpServlet {
          id = Strings.nullToEmpty(request.getParameter("id")).trim();
       }
 
-      if(id.length() == 0) {
+      if(id.isEmpty()) {
          sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'id' is required");
          return;
       }
@@ -759,7 +765,7 @@ public class ConsoleServlet extends HttpServlet {
          id = Strings.nullToEmpty(request.getParameter("id")).trim();
       }
 
-      if(id.length() == 0) {
+      if(id.isEmpty()) {
          sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'id' is required");
          return;
       }
@@ -1029,6 +1035,77 @@ public class ConsoleServlet extends HttpServlet {
       response.getWriter().flush();
    }
 
+   /**
+    * Renders a dashboard.
+    * @param request The request.
+    * @param auth The auth info.
+    * @param response The response.
+    * @throws IOException on output error.
+    */
+   protected void doDashboard(final HttpServletRequest request,
+                              final String index,
+                              final IndexAuthorization.Auth auth,
+                              final HttpServletResponse response) throws IOException {
+
+
+      ST template = getTemplate(DASHBOARD_TEMPLATE);
+      if(template == null) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + DASHBOARD_TEMPLATE + "' template");
+         return;
+      }
+
+      String[] tagArr = request.getParameterValues("tag");
+
+      if(tagArr == null || tagArr.length == 0) {
+         sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "At least one 'tag' is required");
+         return;
+      }
+
+      List<String> tags = Lists.newArrayList(tagArr);
+      template.add("tags", tags);
+
+      try {
+
+         List<StoredGraph> graphs = userStore.getUserGraphs(index, auth.uid, tags, 0, 50);
+
+         System.out.println("graphs size is " + graphs.size());
+
+         template.add("graphs", graphs);
+
+         if(!auth.isSystem) {
+            template.add("uid", auth.uid);
+         }
+
+         template.add("withTitles", Util.getParameter(request, "withTitles", false));
+         template.add("withStats", Util.getParameter(request, "withStats", false));
+
+         String tz = Strings.nullToEmpty(request.getParameter("tz")).trim();
+         if(!tz.isEmpty()) {
+            template.add("tz", tz);
+         }
+
+         String width = Strings.nullToEmpty(request.getParameter("width")).trim();
+         if(!width.isEmpty()) {
+            template.add("width", width);
+         }
+
+         String height = Strings.nullToEmpty(request.getParameter("height")).trim();
+         if(!height.isEmpty()) {
+            template.add("height", width);
+         }
+
+         template.add("index", index);
+
+         response.setStatus(HttpServletResponse.SC_OK);
+         response.setContentType(HTML_CONTENT_TYPE);
+         response.getWriter().print(template.render());
+         response.getWriter().flush();
+      } catch(Exception e) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         e.printStackTrace();
+      }
+   }
+
 
    protected void sendError(final HttpServletRequest request,
                             final HttpServletResponse response,
@@ -1079,7 +1156,7 @@ public class ConsoleServlet extends HttpServlet {
     */
    protected List<DownsampleFunction> buildDownsampleFunctionList(final HttpServletRequest request) {
       String fnName = Strings.nullToEmpty(request.getParameter(GraphQuery.DOWNSAMPLE_FN_PARAMETER)).trim();
-      if(fnName.length() == 0 || fnName.equals("avg")) {
+      if(fnName.isEmpty() || fnName.equals("avg")) {
          return downsampleFunctions;
       } else {
          List<DownsampleFunction> functionList = Lists.newArrayListWithCapacity(downsampleFunctions.size());
@@ -1196,6 +1273,11 @@ public class ConsoleServlet extends HttpServlet {
     * The template for rendering a list of user graphs.
     */
    public static final String GRAPH_LIST_TEMPLATE = "dash_list";
+
+   /**
+    * The template for rendering a dashboard.
+    */
+   public static final String DASHBOARD_TEMPLATE = "dashboard";
 
    /**
     * Available downsample functions.

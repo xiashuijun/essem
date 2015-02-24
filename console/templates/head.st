@@ -17,6 +17,5 @@ head() ::= <<
     <script type="application/javascript" src="$constants.jsBase$/moment.min.js"></script>
     <script type="application/javascript" src="$constants.jsBase$/moment-timezone.min.js"></script>
     <script type="application/javascript" src="$constants.jsBase$/custom.js"></script>
-
 </head>
 >>

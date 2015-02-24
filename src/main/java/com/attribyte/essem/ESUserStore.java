@@ -35,6 +35,7 @@ import org.attribyte.api.http.Response;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -198,7 +199,25 @@ public class ESUserStore {
     * @return The list of graphs.
     * @throws IOException on retrieve error.
     */
-   public List<StoredGraph> getUserGraphs(final String index, final String uid, final int start, final int limit) throws IOException {
+   public List<StoredGraph> getUserGraphs(final String index, final String uid,
+                                          final int start, final int limit) throws IOException {
+      return getUserGraphs(index, uid, null, start, limit);
+
+   }
+
+   /**
+    * Gets all tagged graphs for a user.
+    * @param index The index.
+    * @param uid The user id.
+    * @param tags A collection of tags.
+    * @param start The start index.
+    * @param limit The maximum returned.
+    * @return The list of graphs.
+    * @throws IOException on retrieve error.
+    */
+   public List<StoredGraph> getUserGraphs(final String index, final String uid,
+                                          final Collection<String> tags,
+                                          final int start, final int limit) throws IOException {
 
       String indexName = index + SUFFIX;
 
@@ -207,8 +226,10 @@ public class ESUserStore {
                  esEndpoint.uri.getUserInfo(),
                  esEndpoint.uri.getHost(),
                  esEndpoint.uri.getPort(), "/" + indexName + "/_search", null, null);
-         Request esRequest = esEndpoint.postRequestBuilder(indexURI, StoredGraphQuery.buildUserGraphsRequest(uid, start, limit).toJSON().getBytes(Charsets.UTF_8)).create();
+         Request esRequest = esEndpoint.postRequestBuilder(indexURI,
+                 StoredGraphQuery.buildUserGraphsRequest(uid, tags, start, limit).toJSON().getBytes(Charsets.UTF_8)).create();
          Response esResponse = httpClient.send(esRequest);
+
          switch(esResponse.getStatusCode()) {
             case 200:
                ObjectNode keysObject = Util.mapper.readTree(Util.parserFactory.createParser(esResponse.getBody().toByteArray()));
