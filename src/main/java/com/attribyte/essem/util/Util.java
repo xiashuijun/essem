@@ -122,6 +122,19 @@ public class Util {
       }
    }
 
+   /**
+    * Gets a boolean parameter from the request with a default value.
+    * @param request The request.
+    * @param name The parameter name.
+    * @param defaultValue The default value.
+    * @return The parameter or default value.
+    */
+   public static final boolean getParameter(final HttpServletRequest request,
+                                            final String name, final boolean defaultValue) {
+      String strVal = Strings.nullToEmpty(request.getParameter(name)).trim();
+      return strVal.isEmpty() ? defaultValue : strVal.equalsIgnoreCase("true");
+   }
+
 
    /**
     * Determine if a string can be parsed to an integer.
