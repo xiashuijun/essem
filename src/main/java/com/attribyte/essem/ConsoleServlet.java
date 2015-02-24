@@ -1058,19 +1058,29 @@ public class ConsoleServlet extends HttpServlet {
          return;
       }
 
+      String id = Util.getParameter(request, "id", "");
       String[] tagArr = request.getParameterValues("tag");
 
-      if(tagArr == null || tagArr.length == 0) {
+      if(id.isEmpty() && (tagArr == null || tagArr.length == 0)) {
          sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "At least one 'tag' is required");
          return;
       }
 
-      List<String> tags = Lists.newArrayList(tagArr);
+      List<String> tags = id.isEmpty() ? Lists.newArrayList(tagArr) : Collections.<String>emptyList();
       template.add("tags", tags);
 
       try {
 
-         List<StoredGraph> graphs = userStore.getUserGraphs(index, auth.uid, tags, 0, 50);
+         final List<StoredGraph> graphs;
+         if(id.isEmpty()) {
+            int start = Util.getParameter(request, "start", 0);
+            int limit = Util.getParameter(request, "limit", 50);
+            graphs = userStore.getUserGraphs(index, auth.uid, tags, start, limit);
+         } else {
+            StoredGraph graph = userStore.getGraph(index, id);
+            graphs = graph != null ? Lists.newArrayList(graph) : Collections.<StoredGraph>emptyList();
+         }
+
          template.add("graphs", graphs);
 
          if(!auth.isSystem) {

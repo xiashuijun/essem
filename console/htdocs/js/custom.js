@@ -377,6 +377,19 @@ function loadGraph(data, config, dataConfig) {
 
     var left_margin = config.left_margin != null ? config.left_margin : 60;
     var bottom_margin = config.bottom_margin != null ? config.bottom_margin : 40;
+    var full_width = config.full_width != null ? config.full_width : false;
+    var full_height = config.full_height != null ? config.full_height : false;
+    var x_label = "";
+    var y_label = "";
+
+    if(config.with_labels) {
+        x_label = config.x_label != null ? config.x_label : "";
+        y_label = config.y_label != null ? config.y_label : "";
+    }
+    var title = "";
+    if(config.with_title) {
+        title = config.title != null ? config.title : "";
+    }
 
     MG.data_graphic({
         area: true,
@@ -385,6 +398,8 @@ function loadGraph(data, config, dataConfig) {
         animate_on_load: true,
         data: data,
         width: dataConfig.width,
+        full_width: full_width,
+        full_height: full_height,
         height: dataConfig.height,
         left: left_margin,
         bottom: bottom_margin,
@@ -399,6 +414,9 @@ function loadGraph(data, config, dataConfig) {
         xax_format: xAxisFormatter,
         y_accessor: config.field,
         min_y_from_data: false,
+        title: title,
+        x_label: x_label,
+        y_label: y_label,
         inflator: 1.2, //Default: 10/9
         mouseover: function(d, i) {
             var content = d[config.field].toFixed(3)+' '+config.y_label+' '+hoverFormatter(d.date)+' '+' ('+ samplePlural(d.samples)+')';

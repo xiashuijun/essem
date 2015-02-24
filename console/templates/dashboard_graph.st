@@ -1,12 +1,17 @@
 dashboard_graph(index, graph, tz, width, height) ::= <<
 var config_$graph.id$ = {};
 config_$graph.id$.field = '$graph.key.field$';
-config_$graph.id$x_label = '$graph.yLabel$';
+config_$graph.id$.with_labels = true;
+config_$graph.id$.with_title = true;
+config_$graph.id$.title = '$graph.title$';
+config_$graph.id$.x_label = '$graph.yLabel$';
 config_$graph.id$.y_label = '';
 
 config_$graph.id$.left_margin = 60;
 config_$graph.id$.bottom_margin = 75;
 config_$graph.id$.right_margin = 75;
+config_$graph.id$.full_width = true;
+config_$graph.id$.full_height = true;
 
 var dataConfig_$graph.id$ = {};
 dataConfig_$graph.id$.target = '#gd_$graph.id$';

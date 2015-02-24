@@ -30,3 +30,10 @@
 #range-back, #range-forward, #range-permalin, #json-link {
     font-size: 14pt;
 }
+
+.mg-chart-title {
+    cursor: default;
+    font-size: 1.2rem;
+    padding-top: 8px;
+    text-align: center;
+}
