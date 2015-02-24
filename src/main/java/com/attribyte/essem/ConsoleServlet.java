@@ -1035,6 +1035,10 @@ public class ConsoleServlet extends HttpServlet {
       response.getWriter().flush();
    }
 
+   private void addIfSet(final ST template, final String name, final String val) {
+      if(val != null && !val.isEmpty()) template.add(name, val);
+   }
+
    /**
     * Renders a dashboard.
     * @param request The request.
@@ -1067,9 +1071,6 @@ public class ConsoleServlet extends HttpServlet {
       try {
 
          List<StoredGraph> graphs = userStore.getUserGraphs(index, auth.uid, tags, 0, 50);
-
-         System.out.println("graphs size is " + graphs.size());
-
          template.add("graphs", graphs);
 
          if(!auth.isSystem) {
@@ -1078,21 +1079,14 @@ public class ConsoleServlet extends HttpServlet {
 
          template.add("withTitles", Util.getParameter(request, "withTitles", false));
          template.add("withStats", Util.getParameter(request, "withStats", false));
+         addIfSet(template, "tz", Util.getParameter(request, "tz", ""));
+         addIfSet(template, "width", Util.getParameter(request, "width", ""));
+         addIfSet(template, "height", Util.getParameter(request, "height", ""));
 
-         String tz = Strings.nullToEmpty(request.getParameter("tz")).trim();
-         if(!tz.isEmpty()) {
-            template.add("tz", tz);
-         }
-
-         String width = Strings.nullToEmpty(request.getParameter("width")).trim();
-         if(!width.isEmpty()) {
-            template.add("width", width);
-         }
-
-         String height = Strings.nullToEmpty(request.getParameter("height")).trim();
-         if(!height.isEmpty()) {
-            template.add("height", width);
-         }
+         template.add("sbg", Util.getParameter(request, "sbg", 2));
+         template.add("mbg", Util.getParameter(request, "mbg", 3));
+         template.add("lbg", Util.getParameter(request, "lbg", 4));
+         template.add("grid", Util.getParameter(request, "grid", false));
 
          template.add("index", index);
 

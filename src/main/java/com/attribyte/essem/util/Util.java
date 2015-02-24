@@ -135,6 +135,18 @@ public class Util {
       return strVal.isEmpty() ? defaultValue : strVal.equalsIgnoreCase("true");
    }
 
+   /**
+    * Gets a string parameter from the request with a default value.
+    * @param request The request.
+    * @param name The parameter name.
+    * @param defaultValue The default value.
+    * @return The parameter or default value.
+    */
+   public static final String getParameter(final HttpServletRequest request,
+                                           final String name, final String defaultValue) {
+      String strVal = Strings.nullToEmpty(request.getParameter(name)).trim();
+      return strVal.isEmpty() ? defaultValue : strVal;
+   }
 
    /**
     * Determine if a string can be parsed to an integer.
