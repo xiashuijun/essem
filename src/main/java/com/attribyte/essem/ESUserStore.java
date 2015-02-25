@@ -191,6 +191,27 @@ public class ESUserStore {
    }
 
    /**
+    * Gets a list of recent user tags.
+    * @param index The index.
+    * @param uid The user id.
+    * @return The list of tags.
+    */
+   public List<String> getUserTags(final String index, final String uid) throws IOException {
+      List<StoredGraph> graphs = getUserGraphs(index, uid, 0, 100);
+      List<String> tags = Lists.newArrayListWithExpectedSize(16);
+      Set<String> tagSet = Sets.newHashSetWithExpectedSize(16);
+      for(StoredGraph graph : graphs) {
+         for(String tag : graph.tags) {
+            if(!tagSet.contains(tag)) {
+               tagSet.add(tag);
+               tags.add(tag);
+            }
+         }
+      }
+      return tags;
+   }
+
+   /**
     * Gets all graphs for a user.
     * @param index The index.
     * @param uid The user id.
