@@ -16,6 +16,7 @@
 package com.attribyte.essem.model;
 
 import com.attribyte.essem.util.Util;
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -186,7 +187,23 @@ public class Dashboard {
       return buf.toString();
    }
 
+   private static Joiner tagJoiner = Joiner.on(',').skipNulls();
 
+   /**
+    * Gets tags as a comma-separated string.
+    * @return The tag string.
+    */
+   public String getTagString() {
+      if(tags.size() > 0) {
+         return tagJoiner.join(tags);
+      } else {
+         return "Dashboard";
+      }
+   }
+
+   /**
+    * A query string that generates this dashboard.
+    */
    public final String queryString;
 
    /**

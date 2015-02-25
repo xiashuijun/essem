@@ -1096,9 +1096,23 @@ public class ConsoleServlet extends HttpServlet {
             zoneDashboards.add(new Dashboard.Builder(dash).setTz(zone).build());
          }
 
+         List<String> userTags = userStore.getUserTags(index, auth.uid);
+         List<Dashboard> tagDashboards = Lists.newArrayListWithExpectedSize(userTags.size());
+         for(String tag : userTags) {
+            tagDashboards.add(new Dashboard.Builder(dash).setTags(Collections.singletonList(tag)).build());
+         }
+
+         if(dash.isAutoUpdate()) {
+            template.add("toggleAuto", new Dashboard.Builder(dash).setAutoUpdateSeconds(0).build().queryString);
+         } else {
+            template.add("toggleAuto", new Dashboard.Builder(dash).setAutoUpdateSeconds(60).build().queryString);
+         }
+
          template.add("dash", dash);
          template.add("zoneList", zones);
          template.add("zoneDashboards", zoneDashboards);
+         template.add("tagDashboards", tagDashboards);
+
          template.add("index", index);
 
          response.setStatus(HttpServletResponse.SC_OK);

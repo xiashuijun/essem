@@ -1,4 +1,4 @@
-dashboard_topbar(index, uid, zoneList, zoneDashboards) ::= <<
+dashboard_topbar(index, uid, zoneList, zoneDashboards, tagDashboards, toggleAuto) ::= <<
 <nav class="top-bar" data-topbar data-options="is_hover: false">
     <ul class="title-area">
         <li class="name">
@@ -14,7 +14,9 @@ dashboard_topbar(index, uid, zoneList, zoneDashboards) ::= <<
             <li class="has-dropdown">
                 <a href="#">Dashboards</a>
                 <ul class="dropdown">
-                    <li><a id="topbar_dash" href="#">Recent</a></li>
+                    $tagDashboards:{dash |
+                    <li><a href="$dash.queryString$">$dash.tagString$</a></li>
+                    }$
                 </ul>
             </li>
             <li class="divider"></li>
@@ -39,6 +41,8 @@ dashboard_topbar(index, uid, zoneList, zoneDashboards) ::= <<
             </li>
             <li class="divider"></li>
             $endif$
+            <li id="auto_update_button"><a href="$toggleAuto$">Auto-Update: <span id="next_auto_update"></span></a></li>
+            <li class="divider"></li>
         </ul>
     </section>
 </nav>

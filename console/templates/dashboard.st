@@ -1,9 +1,9 @@
-dashboard(uid, index, graphs, dash, zoneList, zoneDashboards) ::= <<
+dashboard(uid, index, graphs, dash, zoneList, zoneDashboards, tagDashboards, toggleAuto) ::= <<
 <!doctype html>
 <html class="no-js" lang="en">
 $head()$
 <body>
-$dashboard_topbar(index, uid, zoneList, zoneDashboards)$
+$dashboard_topbar(index, uid, zoneList, zoneDashboards, tagDashboards, toggleAuto)$
 <div class="row" $if(dash.displayGrid)$style="min-width:95% !important;"$endif$>
     <div id="content" class="large-12 columns">
         $if(dash.displayGrid)$
@@ -31,26 +31,40 @@ $dashboard_topbar(index, uid, zoneList, zoneDashboards)$
      }$
     }
 
-    function renderUpdate() {
-     if(autoUpdate) {
-      $graphs:{graph |
-       render_$graph.sid$();
-      }$
-     }
-    }
-
     renderAll();
-
-    $if(dash.autoUpdate)$
-    var autoUpdate = true;
-    setInterval(renderUpdate, $dash.autoUpdateSeconds$ * 1000);
-    $endif$
-
-    setCurrentTimezone('$dash.displayTZ.display$');
 
     var currTimeField = jQuery('#curr-time');
     var currTimeFormat = 'YYYY-MM-DD HH:mm:ss Z';
     currTimeField.text(moment().format(currTimeFormat));
+
+    $if(dash.autoUpdate)$
+
+    var checkSeconds = 5;
+    var secondsLeft = $dash.autoUpdateSeconds$;
+
+    function renderUpdate() {
+        if(secondsLeft <= 0) {
+            $graphs:{graph |
+             render_$graph.sid$();
+            }$
+            secondsLeft = $dash.autoUpdateSeconds$;
+            jQuery('#next_auto_update').html("Now");
+            currTimeField.text(moment().format(currTimeFormat));
+        } else {
+            jQuery('#next_auto_update').html(secondsLeft + "s");
+            secondsLeft = secondsLeft - checkSeconds;
+        }
+    }
+
+    jQuery('#auto_update_button').addClass("active");
+    jQuery('#next_auto_update').html($dash.autoUpdateSeconds$ + "s");
+
+    setInterval(renderUpdate, checkSeconds * 1000);
+    $else$
+    jQuery('#next_auto_update').html("Off");
+    $endif$
+
+    setCurrentTimezone('$dash.displayTZ.display$');
 
 </script>
 </body>
