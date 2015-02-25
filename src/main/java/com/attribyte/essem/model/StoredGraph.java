@@ -329,6 +329,7 @@ public class StoredGraph {
       }
 
       this.id = hasher.hash().toString();
+      this.sid = this.id.substring(0, 8);
 
       this.title = Strings.nullToEmpty(title);
       this.description = Strings.nullToEmpty(description);
@@ -502,6 +503,11 @@ public class StoredGraph {
     * The unique key id.
     */
    public final String id;
+
+   /**
+    * A "short" id that should be OK most of the time.
+    */
+   public final String sid;
 
    /**
     * The metric key.

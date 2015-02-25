@@ -16,6 +16,7 @@
 package com.attribyte.essem;
 
 import com.attribyte.essem.model.Application;
+import com.attribyte.essem.model.Dashboard;
 import com.attribyte.essem.model.DisplayTZ;
 import com.attribyte.essem.model.DownsampleFunction;
 import com.attribyte.essem.model.Metric;
@@ -1058,26 +1059,22 @@ public class ConsoleServlet extends HttpServlet {
          return;
       }
 
-      String id = Util.getParameter(request, "id", "");
-      String[] tagArr = request.getParameterValues("tag");
+      Dashboard dash = new Dashboard(request);
 
-      if(id.isEmpty() && (tagArr == null || tagArr.length == 0)) {
+      if(dash.id.isEmpty() && dash.tags.isEmpty()) {
          sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "At least one 'tag' is required");
          return;
       }
 
-      List<String> tags = id.isEmpty() ? Lists.newArrayList(tagArr) : Collections.<String>emptyList();
-      template.add("tags", tags);
-
       try {
 
          final List<StoredGraph> graphs;
-         if(id.isEmpty()) {
+         if(dash.id.isEmpty()) {
             int start = Util.getParameter(request, "start", 0);
             int limit = Util.getParameter(request, "limit", 50);
-            graphs = userStore.getUserGraphs(index, auth.uid, tags, start, limit);
+            graphs = userStore.getUserGraphs(index, auth.uid, dash.tags, start, limit);
          } else {
-            StoredGraph graph = userStore.getGraph(index, id);
+            StoredGraph graph = userStore.getGraph(index, dash.id);
             graphs = graph != null ? Lists.newArrayList(graph) : Collections.<StoredGraph>emptyList();
          }
 
@@ -1087,17 +1084,8 @@ public class ConsoleServlet extends HttpServlet {
             template.add("uid", auth.uid);
          }
 
-         template.add("withTitles", Util.getParameter(request, "withTitles", false));
-         template.add("withStats", Util.getParameter(request, "withStats", false));
-         addIfSet(template, "tz", Util.getParameter(request, "tz", ""));
-         addIfSet(template, "width", Util.getParameter(request, "width", ""));
-         addIfSet(template, "height", Util.getParameter(request, "height", ""));
-
-         template.add("sbg", Util.getParameter(request, "sbg", 2));
-         template.add("mbg", Util.getParameter(request, "mbg", 3));
-         template.add("lbg", Util.getParameter(request, "lbg", 4));
-         template.add("grid", Util.getParameter(request, "grid", false));
-
+         template.add("dash", dash);
+         template.add("zoneList", zones);
          template.add("index", index);
 
          response.setStatus(HttpServletResponse.SC_OK);

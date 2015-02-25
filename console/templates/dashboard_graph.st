@@ -1,65 +1,66 @@
-dashboard_graph(index, graph, tz, width, height) ::= <<
-var config_$graph.id$ = {};
-config_$graph.id$.field = '$graph.key.field$';
-config_$graph.id$.with_labels = true;
-config_$graph.id$.with_title = true;
-config_$graph.id$.title = '$graph.title$';
-config_$graph.id$.x_label = '$graph.yLabel$';
-config_$graph.id$.y_label = '';
+dashboard_graph(index, graph, dash) ::= <<
+function render_$graph.sid$() {
+ var config_$graph.sid$ = {};
+ config_$graph.sid$.field = '$graph.key.field$';
+ config_$graph.sid$.with_labels = true;
+ config_$graph.sid$.with_title = $dash.withTitles$;
+ config_$graph.sid$.title = '$graph.title$';
+ config_$graph.sid$.x_label = '$graph.yLabel$';
+ config_$graph.sid$.y_label = '';
 
-config_$graph.id$.left_margin = 60;
-config_$graph.id$.bottom_margin = 75;
-config_$graph.id$.right_margin = 75;
-config_$graph.id$.full_width = true;
-config_$graph.id$.full_height = true;
+ config_$graph.sid$.left_margin = 60;
+ config_$graph.sid$.bottom_margin = 75;
+ config_$graph.sid$.right_margin = 75;
+ config_$graph.sid$.full_width = true;
+ config_$graph.sid$.full_height = true;
 
-var dataConfig_$graph.id$ = {};
-dataConfig_$graph.id$.target = '#gd_$graph.id$';
+ var dataConfig_$graph.sid$ = {};
+ dataConfig_$graph.sid$.target = '#gd_$graph.sid$';
 
-$if(width)$
-dataConfig_$graph.id$.width = $width$;
-$else$
-dataConfig_$graph.id$.width = 950;
-$endif$
+ $if(dash.customWidth)$
+ dataConfig_$graph.sid$.width = $dash.width$;
+ $else$
+ dataConfig_$graph.sid$.width = 950;
+ $endif$
 
-$if(height)$
-dataConfig_$graph.id$.height = $height$;
-$else$
-dataConfig_$graph.id$.height = 450;
-$endif$
+ $if(dash.customHeight)$
+ dataConfig_$graph.sid$.height = $dash.height$;
+ $else$
+ dataConfig_$graph.sid$.height = 450;
+ $endif$
 
-dataConfig_$graph.id$.index = '$index$';
+ dataConfig_$graph.sid$.index = '$index$';
 
-dataConfig_$graph.id$.app = '$graph.key.application$';
-dataConfig_$graph.id$.name = '$graph.key.name$';
-dataConfig_$graph.id$.downsampleFn = '$graph.downsampleFn$';
+ dataConfig_$graph.sid$.app = '$graph.key.application$';
+ dataConfig_$graph.sid$.name = '$graph.key.name$';
+ dataConfig_$graph.sid$.downsampleFn = '$graph.downsampleFn$';
 
-$if(tz)$
-dataConfig_$graph.id$.tz = '$tz$';
-$else$
-dataConfig_$graph.id$.tz = '';
-$endif$
+ $if(tz)$
+ dataConfig_$graph.sid$.tz = '$dash.tz$';
+ $else$
+ dataConfig_$graph.sid$.tz = '';
+ $endif$
 
-dataConfig_$graph.id$.range = '$graph.range$';
-dataConfig_$graph.id$.downsampleInterval = downsampleInterval(dataConfig_$graph.id$.range);
+ dataConfig_$graph.sid$.range = '$graph.range$';
+ dataConfig_$graph.sid$.downsampleInterval = downsampleInterval(dataConfig_$graph.sid$.range);
 
-dataConfig_$graph.id$.startTimestamp = $graph.startTimestamp$;
-dataConfig_$graph.id$.endTimestamp = $graph.endTimestamp$;
-if(dataConfig_$graph.id$.startTimestamp == 0 || dataConfig_$graph.id$.endTimestamp == 0) {
- dataConfig_$graph.id$.endTimestamp = new Date().getTime();
- dataConfig_$graph.id$.startTimestamp = dataConfig_$graph.id$.endTimestamp - rangeMillis(dataConfig_$graph.id$.range);
+ dataConfig_$graph.sid$.startTimestamp = $graph.startTimestamp$;
+ dataConfig_$graph.sid$.endTimestamp = $graph.endTimestamp$;
+ if(dataConfig_$graph.sid$.startTimestamp == 0 || dataConfig_$graph.sid$.endTimestamp == 0) {
+  dataConfig_$graph.sid$.endTimestamp = new Date().getTime();
+  dataConfig_$graph.sid$.startTimestamp = dataConfig_$graph.sid$.endTimestamp - rangeMillis(dataConfig_$graph.sid$.range);
+ }
+
+ dataConfig_$graph.sid$.host = '$graph.key.host$';
+
+ function render_$graph.sid$(data) {
+     if(data.length > 0) {
+         loadGraph(data, config_$graph.sid$, dataConfig_$graph.sid$);
+     } else {
+         //TODO
+     }
+     //jQuery('#gloading').hide();
+ }
+ loadMetricData(dataConfig_$graph.sid$, render_$graph.sid$);
 }
-
-dataConfig_$graph.id$.host = '$graph.key.host$';
-
-function render_$graph.id$(data) {
-    if(data.length > 0) {
-        loadGraph(data, config_$graph.id$, dataConfig_$graph.id$);
-    } else {
-        //TODO
-    }
-    //jQuery('#gloading').hide();
-}
-
-loadMetricData(dataConfig_$graph.id$, render_$graph.id$);
 >>
