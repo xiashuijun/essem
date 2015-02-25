@@ -35,7 +35,7 @@ function render_$graph.sid$() {
  dataConfig_$graph.sid$.name = '$graph.key.name$';
  dataConfig_$graph.sid$.downsampleFn = '$graph.downsampleFn$';
 
- $if(tz)$
+ $if(dash.tz)$
  dataConfig_$graph.sid$.tz = '$dash.tz$';
  $else$
  dataConfig_$graph.sid$.tz = '';

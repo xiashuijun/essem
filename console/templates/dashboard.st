@@ -1,9 +1,9 @@
-dashboard(uid, index, graphs, dash, zoneList) ::= <<
+dashboard(uid, index, graphs, dash, zoneList, zoneDashboards) ::= <<
 <!doctype html>
 <html class="no-js" lang="en">
 $head()$
 <body>
-$dashboard_topbar(index, uid, zoneList)$
+$dashboard_topbar(index, uid, zoneList, zoneDashboards)$
 <div class="row" $if(dash.displayGrid)$style="min-width:95% !important;"$endif$>
     <div id="content" class="large-12 columns">
         $if(dash.displayGrid)$
@@ -46,11 +46,7 @@ $dashboard_topbar(index, uid, zoneList)$
     setInterval(renderUpdate, $dash.autoUpdateSeconds$ * 1000);
     $endif$
 
-    $if(zoneList)$
-     $zoneList:{zone |
-        if(offsetMatchesLocal('$zone.id$')) setCurrentTimezone('$zone.display$');
-     }$
-    $endif$
+    setCurrentTimezone('$dash.displayTZ.display$');
 
     var currTimeField = jQuery('#curr-time');
     var currTimeFormat = 'YYYY-MM-DD HH:mm:ss Z';

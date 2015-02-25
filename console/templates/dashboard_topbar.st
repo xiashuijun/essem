@@ -1,4 +1,4 @@
-dashboard_topbar(index, uid, zoneList) ::= <<
+dashboard_topbar(index, uid, zoneList, zoneDashboards) ::= <<
 <nav class="top-bar" data-topbar data-options="is_hover: false">
     <ul class="title-area">
         <li class="name">
@@ -32,8 +32,8 @@ dashboard_topbar(index, uid, zoneList) ::= <<
             <li class="has-dropdown">
                 <a id="set_tz" href="#"></a>
                 <ul class="dropdown">
-                    $zoneList:{zone |
-                    <li id="tzs_$i$" class="zone-select"><a id="tzn_$i$" class="zone-nav" name="$zone.id$" href="#">$zone.display$</a></li>
+                    $zoneDashboards:{dash |
+                    <li id="tzs_$i$" class="zone-select"><a class="zone-nav" name="$dash.displayTZ.id$" href="$dash.queryString$">$dash.displayTZ.display$</a></li>
                     }$
                 </ul>
             </li>

@@ -92,6 +92,13 @@ public class ConsoleServlet extends HttpServlet {
       this.templateDirectory = templateDirectory;
       this.allowedIndexes = ImmutableList.copyOf(allowedIndexes);
       this.zones = ImmutableList.copyOf(zones);
+
+      ImmutableMap.Builder<String, DisplayTZ> zoneMapBuilder = ImmutableMap.builder();
+      for(DisplayTZ tz : zones) {
+         zoneMapBuilder.put(tz.id, tz);
+      }
+      this.zoneMap = zoneMapBuilder.build();
+
       this.client = client;
       this.requestOptions = requestOptions;
       this.logger = logger;
@@ -1059,7 +1066,7 @@ public class ConsoleServlet extends HttpServlet {
          return;
       }
 
-      Dashboard dash = new Dashboard(request);
+      Dashboard dash = new Dashboard(request, zoneMap);
 
       if(dash.id.isEmpty() && dash.tags.isEmpty()) {
          sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "At least one 'tag' is required");
@@ -1084,8 +1091,14 @@ public class ConsoleServlet extends HttpServlet {
             template.add("uid", auth.uid);
          }
 
+         List<Dashboard> zoneDashboards = Lists.newArrayListWithCapacity(zones.size());
+         for(DisplayTZ zone : zones) {
+            zoneDashboards.add(new Dashboard.Builder(dash).setTz(zone).build());
+         }
+
          template.add("dash", dash);
          template.add("zoneList", zones);
+         template.add("zoneDashboards", zoneDashboards);
          template.add("index", index);
 
          response.setStatus(HttpServletResponse.SC_OK);
@@ -1297,6 +1310,7 @@ public class ConsoleServlet extends HttpServlet {
    private final ESUserStore userStore;
    private final ImmutableList<String> allowedIndexes;
    private final ImmutableList<DisplayTZ> zones;
+   private final ImmutableMap<String, DisplayTZ> zoneMap;
 
    final ApplicationCache applicationCache;
 }
