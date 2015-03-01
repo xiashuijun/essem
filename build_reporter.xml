@@ -11,7 +11,7 @@
 
     <property name="groupId" value="org.attribyte" />
     <property name="artifactId" value="essem-reporter" />
-    <property name="version" value="1.0.0" />
+    <property name="version" value="1.0.1" />
 
     <property name="jar" value="${dist}/lib/${artifactId}-${version}.jar" />
     <property name="javadoc-jar" value="${dist}/lib/${artifactId}-${version}-javadoc.jar" />
@@ -51,7 +51,7 @@
     </target>
 
     <target name="compile" depends="deps" description="Compiles the source for the reporter">
-        <javac includes="org/attribyte/essem/reporter/EssemReporter.java,org/attribyte/essem/ReportProtos.java"
+        <javac source="${jdkVersion}" target="${jdkVersion}" includes="org/attribyte/essem/**"
                includeantruntime="false" srcdir="${src}/main/java" destdir="${build}" debug="on">
             <classpath refid="classpath"/>
         </javac>
@@ -97,8 +97,7 @@
                 windowtitle="org.attribyte"
                 >
             <fileset dir="${src}/main/java" defaultexcludes="yes">
-                <include name="org/attribyte/essem/reporter/EssemReporter.java"/>
-                <include name="org/attribyte/essem/ReportProtos.java"/>
+                <include name="org/attribyte/essem/**"/>
             </fileset>
         </javadoc>
         <jar jarfile="${javadoc-jar}">
@@ -106,8 +105,7 @@
         </jar>
         <jar jarfile="${sources-jar}">
             <fileset dir="${src}/main/java" defaultexcludes="yes">
-                <include name="org/attribyte/essem/reporter/EssemReporter.java"/>
-                <include name="org/attribyte/essem/ReportProtos.java"/>
+                <include name="org/attribyte/essem/**"/>
             </fileset>
         </jar>
     </target>
