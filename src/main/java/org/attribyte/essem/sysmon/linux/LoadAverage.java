@@ -36,8 +36,12 @@ import java.util.Map;
  *    waiting for disk I/O (state D) averaged over 1, 5, and 15
  *    minutes." - http://man7.org/linux/man-pages/man5/proc.5.html
  * </p>
+ * <p>
+ *    Schedule an instance to run periodically to gather statistics.
+ * </p>
+ * @see <a href="http://man7.org/linux/man-pages/man5/proc.5.html">proc.5</a>
  */
-public class LoadAverage implements MetricSet {
+public class LoadAverage implements MetricSet, Runnable {
 
     /*
      /proc/loadavg
@@ -60,9 +64,9 @@ public class LoadAverage implements MetricSet {
          File pathFile = new File(PATH);
          if(pathFile.exists()) {
 
-            double _oneMinuteAverage = 0.0;
-            double _fiveMinuteAverage = 0.0;
-            double _fifteenMinuteAverage = 0.0;
+            double _oneMinuteAverage;
+            double _fiveMinuteAverage;
+            double _fifteenMinuteAverage;
 
             try {
                Iterator<String> strValues = tokenSplitter.split(Files.toString(pathFile, Charsets.US_ASCII)).iterator();
@@ -111,11 +115,16 @@ public class LoadAverage implements MetricSet {
       private static final Splitter tokenSplitter = Splitter.on(CharMatcher.WHITESPACE).trimResults().omitEmptyStrings();
    }
 
+   @Override
+   public void run() {
+      currValues = new CurrentLoadValues();
+   }
+
    /**
     * Gets the current load values.
     * @return The load values.
     */
-   public CurrentLoadValues getCurrentValues() {
+   public CurrentLoadValues values() {
       return new CurrentLoadValues();
    }
 
@@ -124,47 +133,32 @@ public class LoadAverage implements MetricSet {
       return metrics;
    }
 
-   private static final Gauge<Double> oneMinuteAverage = new Gauge<Double>() {
+   private final Gauge<Double> oneMinuteAverage = new Gauge<Double>() {
       @Override
       public Double getValue() {
-         return gaugeLoad().oneMinuteAverage;
+         return currValues.oneMinuteAverage;
       }
    };
 
-   private static final Gauge<Double> fiveMinuteAverage = new Gauge<Double>() {
+   private final Gauge<Double> fiveMinuteAverage = new Gauge<Double>() {
       @Override
       public Double getValue() {
-         return gaugeLoad().fiveMinuteAverage;
+         return currValues.fiveMinuteAverage;
       }
    };
 
-   private static final Gauge<Double> fifteenMinuteAverage = new Gauge<Double>() {
+   private final Gauge<Double> fifteenMinuteAverage = new Gauge<Double>() {
       @Override
       public Double getValue() {
-         return gaugeLoad().fifteenMinuteAverage;
+         return currValues.fifteenMinuteAverage;
       }
    };
 
-   private static final ImmutableMap<String, Metric> metrics = ImmutableMap.of(
-           "one-minute-load-avg", (Metric)oneMinuteAverage,
-           "five-minute-load-avg", (Metric)fiveMinuteAverage,
-           "fifteen-minute-load-avg", (Metric)fifteenMinuteAverage
+   private final ImmutableMap<String, Metric> metrics = ImmutableMap.of(
+           "load-avg-1m", (Metric)oneMinuteAverage,
+           "load-avg-5m", (Metric)fiveMinuteAverage,
+           "load-avg-15m", (Metric)fifteenMinuteAverage
    );
 
-   private static CurrentLoadValues gaugeLoad() {
-      long currTime = System.currentTimeMillis();
-      synchronized(loadLock) {
-         if(lastValues == null || currTime - lastUpdateMillis > MIN_AGE_MILLIS) {
-            lastUpdateMillis = currTime;
-            lastValues = new CurrentLoadValues();
-         }
-         return lastValues;
-      }
-   }
-
-   private static long lastUpdateMillis = 0L;
-   private static CurrentLoadValues lastValues;
-
-   private static final Object loadLock = new Object();
-   private static final long MIN_AGE_MILLIS = 10000L;
+   private static volatile CurrentLoadValues currValues = new CurrentLoadValues();
 }

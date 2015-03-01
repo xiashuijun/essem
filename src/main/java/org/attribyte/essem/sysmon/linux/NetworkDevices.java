@@ -17,7 +17,6 @@ package org.attribyte.essem.sysmon.linux;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metric;
-import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
@@ -35,10 +34,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Parses <code>/proc/net/dev</code> to enumerate and gather statistics
- * for all network interfaces. Schedule an instance to run periodically
- * to gather statistics for each interface.
- *
+ * Establish metrics for all network interfaces by parsing <code>/proc/net/dev</code>.
+ * <p>
+ *    Schedule an instance to run periodically to gather statistics for each interface.
+ * </p>
+ * @see <a href="http://man7.org/linux/man-pages/man5/proc.5.html">proc.5</a>
  */
 public class NetworkDevices implements Runnable {
 
@@ -47,7 +47,7 @@ public class NetworkDevices implements Runnable {
     */
    public static class Interface implements MetricSet {
 
-      Interface(final String name, final Iterable<String> keys, Iterator<String> lastRecordedValues) {
+      private Interface(final String name, final Iterable<String> keys, Iterator<String> lastRecordedValues) {
          this.name = name;
          ImmutableList.Builder<Meter> metersBuilder = ImmutableList.builder();
          ImmutableMap.Builder<String, Metric> mapBuilder = ImmutableMap.builder();
@@ -110,6 +110,10 @@ public class NetworkDevices implements Runnable {
      eth0: 33000242   44804    0    0    0     0          0      1111  5700898   26543    0    0    0     0       0          0
     */
 
+   /**
+    * Enumerate all network devices.
+    * @throws IOException on system read error.
+    */
    public NetworkDevices() throws IOException {
 
       List<String> lines = Files.asCharSource(new File(PATH), Charsets.US_ASCII).readLines();
@@ -167,14 +171,9 @@ public class NetworkDevices implements Runnable {
    }
 
    /**
-    * Registers metrics for all interfaces.
-    * @param registry The registry to add metrics to.
+    * An immutable map of all interfaces (vs name).
     */
-   public void registerAll(final MetricRegistry registry) {
-      for(Interface iface : interfaces.values()) {
-         registry.register(iface.name, iface);
-      }
-   }
+   public final ImmutableMap<String, Interface> interfaces;
 
    private String cleanName(final String name) {
       if(name.endsWith(":")) {
@@ -183,11 +182,6 @@ public class NetworkDevices implements Runnable {
          return name.replace(':', '.');
       }
    }
-
-   /**
-    * An immutable map of all interfaces.
-    */
-   public final ImmutableMap<String, Interface> interfaces;
 
    private static final Splitter sectionSplitter = Splitter.on('|').trimResults();
    private static final Splitter tokenSplitter = Splitter.on(CharMatcher.WHITESPACE).trimResults().omitEmptyStrings();

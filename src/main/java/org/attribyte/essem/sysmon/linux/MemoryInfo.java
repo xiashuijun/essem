@@ -21,7 +21,6 @@ import com.codahale.metrics.MetricSet;
 import com.google.common.base.CharMatcher;
 import com.google.common.base.Charsets;
 import com.google.common.base.Splitter;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 
@@ -33,10 +32,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Expose selected values supplied by <code>/proc/meminfo</code> as gauges.
- * @link http://man7.org/linux/man-pages/man5/proc.5.html
+ * Expose values supplied by <code>/proc/meminfo</code> as gauges.
+ * <p>
+ *    Schedule an instance to run periodically to gather statistics.
+ * </p>
+ * @see <a href="http://man7.org/linux/man-pages/man5/proc.5.html"></a>
  */
-public class MemoryInfo implements MetricSet {
+public class MemoryInfo implements MetricSet, Runnable {
 
     /*
      /proc/meminfo
@@ -85,14 +87,6 @@ public class MemoryInfo implements MetricSet {
    }
 
    /**
-    * Creates memory information default keys:
-    * <code>MemTotal, MemFree, Buffers, Cached, SwapCached, Active, Inactive</code>.
-    */
-   public MemoryInfo() {
-      this(ImmutableList.of("MemTotal", "MemFree", "Buffers", "Cached", "SwapCached", "Active", "Inactive"));
-   }
-
-   /**
     * Creates memory information with arbitrary keys.
     * @param registerKeys The names of the keys for which gauges are created.
     */
@@ -100,9 +94,9 @@ public class MemoryInfo implements MetricSet {
 
       ImmutableMap.Builder<String, Metric> builder = ImmutableMap.builder();
       for(final String key : registerKeys) {
-         builder.put(key, new Gauge<Long>() {
+         builder.put(filterKey(key), new Gauge<Long>() {
             public Long getValue() {
-               Long val = gaugeLoad().fields.get(key);
+               Long val = currValues.fields.get(key);
                return val != null ? val : 0L;
             }
          });
@@ -110,19 +104,21 @@ public class MemoryInfo implements MetricSet {
       this.metrics = builder.build();
    }
 
-   public CurrentMemValues getCurrentValues() {
-      return new CurrentMemValues();
+   private String filterKey(final String key) {
+      return key.toLowerCase();
    }
 
-   private static CurrentMemValues gaugeLoad() {
-      long currTime = System.currentTimeMillis();
-      synchronized(loadLock) {
-         if(lastValues == null || currTime - lastUpdateMillis > MIN_AGE_MILLIS) {
-            lastUpdateMillis = currTime;
-            lastValues = new CurrentMemValues();
-         }
-         return lastValues;
-      }
+   @Override
+   public void run() {
+      this.currValues = new CurrentMemValues();
+   }
+
+   /**
+    * Gets the current values.
+    * @return The values.
+    */
+   public CurrentMemValues values() {
+      return new CurrentMemValues();
    }
 
    @Override
@@ -132,10 +128,7 @@ public class MemoryInfo implements MetricSet {
 
    private final ImmutableMap<String, Metric> metrics;
 
-   private static long lastUpdateMillis = 0L;
-   private static CurrentMemValues lastValues;
-   private static final Object loadLock = new Object();
-   private static final long MIN_AGE_MILLIS = 10000L;
+   private volatile CurrentMemValues currValues = new CurrentMemValues();
 
 
 }
