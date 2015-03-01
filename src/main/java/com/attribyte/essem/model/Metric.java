@@ -81,6 +81,24 @@ public class Metric {
    };
 
    /**
+    * Compares metrics by name.
+    */
+   public static final Comparator<Metric> systemLastAlphaComparator = new Comparator<Metric>() {
+      @Override
+      public int compare(final Metric o1, final Metric o2) {
+         boolean firstIsSystem = o1.name.startsWith("system.") || o1.name.startsWith("jvm.");
+         boolean secondIsSystem = o2.name.startsWith("system.") || o2.name.startsWith("jvm.");
+
+         if(firstIsSystem == secondIsSystem) {
+            return o1.name.compareTo(o2.name);
+         } else {
+            return firstIsSystem ? 1 : -1;
+         }
+      }
+   };
+
+
+   /**
     * Metric types.
     */
    public static enum Type {

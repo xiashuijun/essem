@@ -262,10 +262,10 @@ public class Application {
       List<Metric> sorted = Lists.newArrayList(metrics);
       switch(sort) {
          case ASC:
-            Collections.sort(sorted, Metric.alphaComparator);
+            Collections.sort(sorted, Metric.systemLastAlphaComparator);
             break;
          default:
-            Collections.sort(sorted, Collections.reverseOrder(Metric.alphaComparator));
+            Collections.sort(sorted, Collections.reverseOrder(Metric.systemLastAlphaComparator));
             break;
       }
 

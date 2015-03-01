@@ -10,12 +10,11 @@ $topbar(index, indexList, zoneList, uid)$
         $apps(index, appList)$
     </div>
     <div id="content" class="large-9 columns">
-        <div class="row collapse">
+        <div class="row">
             <h5 class="subheader">Metrics</h5>
-            <div class="large-11 columns">
+            <div class="large-6 columns end">
                 <input id="mf" type="text" placeholder="Just type &trade;"/>
             </div>
-            <div class="large-1 column" id="mf-clear" ><span class="postfix"><i id="mf-clear-x" class="fi-x-circle"></i></span></div>
         </div>
         <div class="row">
             <div class="large-12 columns">

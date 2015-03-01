@@ -263,11 +263,6 @@ function bindMetricSearchBox(index, app) {
 
     var mf = $('#mf');
 
-    $('#mf-clear').click(function(event) {
-        mf.val('');
-        loadMetrics(index, app);
-    });
-
     var athread = null;
     function displayMatches(prefix) {
         $.ajax({
@@ -284,6 +279,12 @@ function bindMetricSearchBox(index, app) {
     mf.keyup(function() {
         clearTimeout(athread);
         var $this = $(this); athread = setTimeout(function(){displayMatches($this.val())}, KEYUP_REFRESH_MILLIS);
+    });
+    mf.keydown(function(event) {
+        if (event.which == 27 ) {
+            event.preventDefault();
+            mf.val('');
+        }
     });
 }
 
