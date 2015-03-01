@@ -44,7 +44,7 @@ public class SystemMonitor implements MetricSet {
     * @param pollFrequencySeconds The poll frequency in seconds.
     */
    public SystemMonitor(final int pollFrequencySeconds) {
-      this(pollFrequencySeconds, DEFAULT_MEMINFO_KEYS, DEFAULT_INCLUDE_STORAGE_TYPES, null);
+      this(pollFrequencySeconds, DEFAULT_MEMINFO_KEYS, DEFAULT_STORAGE_TYPES, defaultInterfaceFilter, null);
    }
 
    /**
@@ -54,19 +54,21 @@ public class SystemMonitor implements MetricSet {
     */
    public SystemMonitor(final int pollFrequencySeconds,
                         final Logger logger) {
-      this(pollFrequencySeconds, DEFAULT_MEMINFO_KEYS, DEFAULT_INCLUDE_STORAGE_TYPES, logger);
+      this(pollFrequencySeconds, DEFAULT_MEMINFO_KEYS, DEFAULT_STORAGE_TYPES, defaultInterfaceFilter, logger);
    }
 
    /**
     * Creates a system monitor.
     * @param pollFrequencySeconds The poll frequency in seconds.
     * @param meminfoKeys The instrumented keys for memory info.
-    * @param includeStorageTypes The storage types to instrument for filesystem info.
+    * @param storageTypeFilter Filters only instrumented storage types.
+    * @param networkDeviceFilter Filters only instrumented network devices.
     * @param logger A logger. May be <code>null</code>
     */
    public SystemMonitor(final int pollFrequencySeconds,
                         final Collection<String> meminfoKeys,
-                        final Set<String> includeStorageTypes,
+                        final KeyFilter storageTypeFilter,
+                        final KeyFilter networkDeviceFilter,
                         final Logger logger) {
 
       ImmutableMap.Builder<String, Metric> builder = ImmutableMap.builder();
@@ -76,18 +78,20 @@ public class SystemMonitor implements MetricSet {
       scheduler.scheduleAtFixedRate(loadAverage, 0, pollFrequencySeconds, TimeUnit.SECONDS);
 
       MemoryInfo meminfo = new MemoryInfo(meminfoKeys);
-      builder.putAll(meminfo.getMetrics());
+      builder.put("memory", meminfo);
       scheduler.scheduleAtFixedRate(meminfo, 0, pollFrequencySeconds, TimeUnit.SECONDS);
 
       try {
          NetworkDevices networkDevices = new NetworkDevices();
          Set<String> names = Sets.newHashSet();
          for(NetworkDevices.Interface iface : networkDevices.interfaces.values()) {
-            if(!names.contains(iface.name)) {
-               builder.put(iface.name, iface);
-               names.add(iface.name);
-            } else if(logger != null) {
-               logger.warn("Duplicate interface name: '" + iface.name + "'");
+            if(networkDeviceFilter.accept(iface.name)) {
+               if(!names.contains(iface.name)) {
+                  builder.put(iface.name, iface);
+                  names.add(iface.name);
+               } else if(logger != null) {
+                  logger.warn("Duplicate interface name: '" + iface.name + "'");
+               }
             }
          }
          scheduler.scheduleAtFixedRate(networkDevices, 0, pollFrequencySeconds, TimeUnit.SECONDS);
@@ -99,7 +103,7 @@ public class SystemMonitor implements MetricSet {
          Storage storage = new Storage();
          Set<String> names = Sets.newHashSet();
          for(Storage.Filesystem filesystem : storage.filesystems) {
-            if(includeStorageTypes.contains(filesystem.type)) {
+            if(storageTypeFilter.accept(filesystem.type)) {
                if(!names.contains(filesystem.name)) {
                   builder.put(filesystem.name, filesystem);
                   names.add(filesystem.name);
@@ -144,8 +148,32 @@ public class SystemMonitor implements MetricSet {
    /**
     * The filesystem storage types instrumented by default.
     */
-   public static final ImmutableSet<String> DEFAULT_INCLUDE_STORAGE_TYPES =
-           ImmutableSet.of("minix", "ext", "ext2", "ext3", "ext4",
+   public static final KeyFilter DEFAULT_STORAGE_TYPES =
+           new KeyFilter.AcceptSet(
+                   ImmutableSet.of("minix", "ext", "ext2", "ext3", "ext4",
                    "Reiserfs", "XFS", "JFS",  "xia",  "msdos",  "umsdos",  "vfat",  "ntfs",  "nfs",
-                   "iso9660", "hpfs", "sysv", "smb", "ncpfs");
+                   "iso9660", "hpfs", "sysv", "smb", "ncpfs")
+           );
+
+   /**
+    * The default interface filter.
+    * <p>
+    *    Includes 'eth*', 'lo', 'bond*', 'wlan*'
+    * </p>
+    */
+   static final KeyFilter defaultInterfaceFilter = new KeyFilter() {
+      @Override
+      public boolean accept(final String str) {
+
+         if(str.equals("lo")) {
+            return true;
+         } else if(str.startsWith("eth") ||
+                 str.startsWith("bond") ||
+                 str.startsWith("wlan")) {
+            return true;
+         } else {
+            return false;
+         }
+      }
+   };
 }
