@@ -54,12 +54,11 @@ $topbar(index, indexList, zoneList, uid)$
                 <img src="$constants.imageBase$/missing-data.png"/>
             </div>
         </div>
-        <div class="row" id="gr_$graph.field$">
+        <div class="row" id="gr_$graph.key.field$">
             <div class="large-12 columns" id="main_graph">
             </div>
         </div>
-
-        <div class="row" id="grfs_$graph.field$">
+        <div class="row" id="grfs_$graph.key.field$">
             <div class="large-12 columns" id="main_graph_stats">
             </div>
         </div>
