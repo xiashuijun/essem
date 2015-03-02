@@ -24,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import javax.servlet.http.HttpServletRequest;
@@ -146,6 +147,17 @@ public class Util {
                                            final String name, final String defaultValue) {
       String strVal = Strings.nullToEmpty(request.getParameter(name)).trim();
       return strVal.isEmpty() ? defaultValue : strVal;
+   }
+
+   /**
+    * Gets all parameter values.
+    * @param request The request.
+    * @param name The parameter name.
+    * @return The values as an immutable list.
+    */
+   public static final ImmutableList<String> getParameterValues(final HttpServletRequest request, final String name) {
+      String[] vals = request.getParameterValues(name);
+      return (vals != null && vals.length > 0) ? ImmutableList.copyOf(vals) : ImmutableList.<String>of();
    }
 
    /**

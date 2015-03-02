@@ -146,8 +146,7 @@ public class Dashboard {
 
    public Dashboard(final HttpServletRequest request, final Map<String, DisplayTZ> zoneMap) {
       this.id = Util.getParameter(request, "id", "");
-      String[] tagArr = request.getParameterValues("tag");
-      this.tags = id.isEmpty() ? ImmutableList.copyOf(tagArr) : ImmutableList.<String>of();
+      this.tags = this.id.isEmpty() ? Util.getParameterValues(request, "tag") : ImmutableList.<String>of();
 
       this.withTitles = Util.getParameter(request, "withTitles", true);
       this.tz = Util.getParameter(request, "tz", "");
