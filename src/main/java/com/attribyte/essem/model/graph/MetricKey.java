@@ -15,6 +15,7 @@
 
 package com.attribyte.essem.model.graph;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 
 import javax.servlet.http.HttpServletRequest;
@@ -189,6 +190,13 @@ public class MetricKey {
       this.hasHost = this.host.length() > 0;
       this.hasInstance = this.instance.length() > 0;
       this.hasField = this.instance.length() > 0;
+   }
+
+   private static final Joiner keyComponentJoiner = Joiner.on('.').skipNulls();
+
+   @Override
+   public String toString() {
+      return keyComponentJoiner.join(application, host, instance, name, field);
    }
 
    @Override
