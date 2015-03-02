@@ -17,8 +17,10 @@ package com.attribyte.essem.model.graph;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
+import com.google.common.collect.Lists;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -192,11 +194,17 @@ public class MetricKey {
       this.hasField = this.instance.length() > 0;
    }
 
-   private static final Joiner keyComponentJoiner = Joiner.on('.').skipNulls();
+   private static final Joiner keyComponentJoiner = Joiner.on('-').skipNulls();
 
    @Override
    public String toString() {
-      return keyComponentJoiner.join(application, host, instance, name, field);
+      List<String> components = Lists.newArrayListWithCapacity(5);
+      if(!application.isEmpty()) components.add(application);
+      if(!host.isEmpty()) components.add(host);
+      if(!instance.isEmpty()) components.add(instance);
+      if(!name.isEmpty()) components.add(name);
+      if(!field.isEmpty()) components.add(field);
+      return keyComponentJoiner.join(components);
    }
 
    @Override
