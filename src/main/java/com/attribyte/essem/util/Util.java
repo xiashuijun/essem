@@ -443,17 +443,64 @@ public class Util {
       }
    }
 
+   /**
+    * Creates a string that is a valid "Java identifier" by
+    * replacing invalid characters with underscore ('_').
+    * @param str The input string.
+    * @return The valid java identifier.
+    */
+   public static String toJavaIdentifier(final String str) {
+
+      StringBuilder buf = new StringBuilder();
+      char[] chars = str.toCharArray();
+      if(Character.isJavaIdentifierStart(chars[0])) {
+         buf.append(chars[0]);
+      } else if(Character.isJavaIdentifierPart(chars[0])) {
+         buf.append("_").append(chars[0]);
+      } else {
+         buf.append("_");
+      }
+
+      for(int pos = 1; pos < chars.length; pos++) {
+         if(Character.isJavaIdentifierPart(chars[pos])) {
+            buf.append(chars[pos]);
+         } else {
+            buf.append("_");
+         }
+      }
+
+      return buf.toString();
+   }
 
    /**
-    * Determine if the string is a valid identifier.
-    * <p>
-    *    A valid identifier may contain any "java identifier" character plus...TODO...
-    * </p>
-    * @param str The string.
-    * @return Is the string a valid identifier?
+    * Creates a string that is a valid (safe) "identifier" by
+    * replacing invalid characters with underscore ('_').
+    * @param str The input string.
+    * @return The valid identifier.
     */
-   public static boolean isValidIdentifier(final String str) { //TODO
+   public static String toValidIdentifier(final String str) {  //TODO
+      if(Strings.isNullOrEmpty(str)) {
+         return str;
+      }
+
+      StringBuilder buf = new StringBuilder();
       for(char ch : str.toCharArray()) {
+         if(Character.isSpaceChar(ch)) ch = ' ';
+         if(isValidIdentifier(ch)) {
+            buf.append(ch);
+         } else {
+            buf.append("_");
+         }
+      }
+      return buf.toString();
+   }
+
+   /**
+    * Determine if the character is a valid identifier.
+    * @param ch The character.
+    * @return Is the character a valid identifier?
+    */
+   public static boolean isValidIdentifier(char ch) { //TODO
          switch(ch) {
             case '-':
             case '+':
@@ -474,12 +521,10 @@ public class Util {
             case '~':
             case '|':
             case ' ':
-            case '\t':
                break;
             default:
                if(!Character.isJavaIdentifierPart(ch)) return false;
          }
-      }
       return true;
    }
 }
