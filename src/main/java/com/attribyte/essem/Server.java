@@ -330,13 +330,14 @@ public class Server {
          internalRegistry.register("passthrough", passthroughServlet);
 
          if(props.getProperty("console.enabled", "false").equalsIgnoreCase("true")) {
-            String assetDir = props.getProperty("console.assetDirectory", "");
             File assetDirFile = getSystemFile("console.assetDirectory", props, true);
             if(!assetDirFile.isDirectory()) throw new Exception("The 'console.assetDirectory' must be a directory");
 
-            String templateDir = props.getProperty("console.templateDirectory", "");
             File templateDirFile = getSystemFile("console.templateDirectory", props, true);
-            if(!templateDirFile.isDirectory()) throw new Exception("The 'console.assetDirectory' must be a directory");
+            if(!templateDirFile.isDirectory()) throw new Exception("The 'console.templateDirectory' must be a directory");
+
+            File dashboardTemplateDirFile = getSystemFile("console.dashboardTemplateDirectory", props, true);
+            if(!dashboardTemplateDirFile.isDirectory()) throw new Exception("The 'console.dashboardTemplateDirectory' must be a directory");
 
             List<String> allowedAssetPaths = Lists.newArrayList(
                     Splitter.on(',').omitEmptyStrings().trimResults().split(props.getProperty("console.assetPaths", ""))
@@ -358,7 +359,8 @@ public class Server {
             }
 
             ConsoleServlet consoleServlet = new ConsoleServlet(esEndpoint, userStore, rootContext, authorization,
-                    templateDirFile.getAbsolutePath(), assetDirFile.getAbsolutePath(), allowedAssetPaths, allowedIndexes,
+                    templateDirFile.getAbsolutePath(), dashboardTemplateDirFile.getAbsolutePath(),
+                    assetDirFile.getAbsolutePath(), allowedAssetPaths, allowedIndexes,
                     consoleZones, httpClient, requestOptions, logger, consoleDebugMode);
             rootContext.addServlet(new ServletHolder(consoleServlet), "/console/*");
             internalRegistry.register("console-application-cache", consoleServlet.applicationCache);

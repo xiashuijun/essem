@@ -39,6 +39,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.attribyte.api.Logger;
 import org.attribyte.api.http.AsyncClient;
 import org.attribyte.api.http.Request;
@@ -66,9 +67,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import static com.attribyte.essem.util.Util.splitPath;
-import static com.attribyte.essem.util.Util.getParameter;
 
 public class ConsoleServlet extends HttpServlet {
 
@@ -77,6 +78,7 @@ public class ConsoleServlet extends HttpServlet {
                          final ServletContextHandler rootContext,
                          final IndexAuthorization indexAuthorization,
                          final String templateDirectory,
+                         final String dashboardTemplateDirectory,
                          String assetDirectory,
                          final Collection<String> allowedAssetPaths,
                          final Collection<String> allowedIndexes,
@@ -90,6 +92,7 @@ public class ConsoleServlet extends HttpServlet {
       this.userStore = userStore;
       this.indexAuthorization = indexAuthorization;
       this.templateDirectory = templateDirectory;
+      this.dashboardTemplateDirectory = dashboardTemplateDirectory;
       this.allowedIndexes = ImmutableList.copyOf(allowedIndexes);
       this.zones = ImmutableList.copyOf(zones);
 
@@ -104,6 +107,7 @@ public class ConsoleServlet extends HttpServlet {
       this.logger = logger;
       this.debug = debug;
       this.templateGroup = debug ? null : loadTemplates();
+      this.dashboardTemplateGroup = debug ? null : loadDashboardTemplates();
 
       if(!assetDirectory.endsWith("/")) {
          assetDirectory = assetDirectory + "/";
@@ -1087,6 +1091,22 @@ public class ConsoleServlet extends HttpServlet {
 
          template.add("graphs", graphs);
 
+         String customTemplateName = Util.getParameter(request, "template", "");
+         if(!customTemplateName.isEmpty()) {
+            ST customTemplate = getDashboardTemplate(customTemplateName);
+            if(customTemplate == null) {
+               sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + customTemplateName + "' template");
+               return;
+            }
+            Map<String, String> idMap = Maps.newHashMap();
+            for(StoredGraph graph : graphs) {
+               idMap.put(graph.sid, graph.sid);
+               idMap.put(graph.key.toString().replace('-', '_'), graph.sid);
+            }
+            customTemplate.add("graphs", idMap);
+            template.add("custom", customTemplate.render());
+         }
+
          if(!auth.isSystem) {
             template.add("uid", auth.uid);
          }
@@ -1209,6 +1229,24 @@ public class ConsoleServlet extends HttpServlet {
    }
 
    /**
+    * Load (or reload) dashboard templates.
+    */
+   private STGroup loadDashboardTemplates() {
+
+      STGroup group = new STGroupDir(dashboardTemplateDirectory, '$', '$');
+
+      File globalConstantsFile = new File(dashboardTemplateDirectory, "constants.stg");
+      if(globalConstantsFile.exists()) {
+         STGroupFile globalConstants = new STGroupFile(globalConstantsFile.getAbsolutePath());
+         group.importTemplates(globalConstants);
+      }
+
+      group.setListener(new ErrorListener(logger));
+      group.registerRenderer(java.util.Date.class, new DateRenderer());
+      return group;
+   }
+
+   /**
     * Gets a template instance.
     * <p>
     * If debug mode is configured, templates are reloaded from disk
@@ -1231,6 +1269,31 @@ public class ConsoleServlet extends HttpServlet {
       } else {
          try {
             return templateGroup.getInstanceOf(name);
+         } catch(Exception e) {
+            e.printStackTrace();
+            return null;
+         }
+      }
+   }
+
+   /**
+    * Gets a dashboard template instance.
+    * @param name The template name.
+    * @return The instance or <code>null</code> if template not found.
+    */
+   protected ST getDashboardTemplate(final String name) {
+
+      if(this.dashboardTemplateGroup == null) {
+         STGroup debugTemplateGroup = loadDashboardTemplates();
+         try {
+            return debugTemplateGroup.getInstanceOf(name);
+         } catch(Exception e) {
+            e.printStackTrace();
+            return null;
+         }
+      } else {
+         try {
+            return dashboardTemplateGroup.getInstanceOf(name);
          } catch(Exception e) {
             e.printStackTrace();
             return null;
@@ -1310,11 +1373,13 @@ public class ConsoleServlet extends HttpServlet {
            );
 
    /*
-    * This template group may be null if debug mode is configured.
+    * These template groups may be null if debug mode is configured.
     */
    private final STGroup templateGroup;
+   private final STGroup dashboardTemplateGroup;
 
    private final String templateDirectory;
+   private final String dashboardTemplateDirectory;
    private final Logger logger;
    private final AsyncClient client;
    private final RequestOptions requestOptions;

@@ -27,10 +27,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hasher;
 import com.google.common.hash.Hashing;
+import org.attribyte.util.URIEncoder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -39,6 +41,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -486,6 +489,22 @@ public class StoredGraph {
          return buf.toString();
       } else {
          return "";
+      }
+   }
+
+   /**
+    * Gets the tags appropriately encoded for a query string.
+    * @return The list of tags.
+    */
+   public List<String> getTagsForQuery() {
+      if(tags.size() > 0) {
+         List<String> escapedTags = Lists.newArrayListWithCapacity(tags.size());
+         for(String tag : tags) {
+            escapedTags.add(URIEncoder.encodeQueryString(tag));
+         }
+         return escapedTags;
+      } else {
+         return ImmutableList.of();
       }
    }
 

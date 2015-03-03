@@ -1,9 +1,12 @@
-dashboard(uid, index, graphs, dash, zoneList, zoneDashboards, tagDashboards, toggleAuto) ::= <<
+dashboard(uid, index, graphs, dash, custom, zoneList, zoneDashboards, tagDashboards, toggleAuto) ::= <<
 <!doctype html>
 <html class="no-js" lang="en">
 $head()$
 <body>
 $dashboard_topbar(index, uid, zoneList, zoneDashboards, tagDashboards, toggleAuto)$
+$if(custom)$
+$custom$
+$else$
 <div class="row" $if(dash.displayGrid)$style="min-width:95% !important;"$endif$>
     <div id="content" class="large-12 columns">
         $if(dash.displayGrid)$
@@ -19,6 +22,7 @@ $dashboard_topbar(index, uid, zoneList, zoneDashboards, tagDashboards, toggleAut
         $endif$
     </div>
 </div>
+$endif$
 <script type="application/javascript">
     jQuery(document).foundation();
     $graphs:{graph |
