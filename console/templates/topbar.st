@@ -14,13 +14,6 @@ topbar(index, indexList, zoneList, uid) ::= <<
         <ul class="right">
             <li class="divider"></li>
             <li class="has-dropdown">
-                <a href="#">Dashboards</a>
-                <ul class="dropdown">
-                    <li><a id="topbar_dash" href="#">Recent</a></li>
-                </ul>
-            </li>
-            <li class="divider"></li>
-            <li class="has-dropdown">
                 <a href="#">System</a>
                 <ul class="dropdown">
                     <li><a id="topbar_status" href="#">Status</a></li>
@@ -67,7 +60,8 @@ topbar(index, indexList, zoneList, uid) ::= <<
             </li>
             <li class="divider"></li>
             $endif$
-
+            <li id="topbar_dash"><a href="#">Graphs</a></li>
+            <li class="divider"></li>
         </ul>
     </section>
 </nav>

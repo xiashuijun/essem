@@ -1,4 +1,4 @@
-main(uid, index, indexList, appList, defaultApp, zoneList, time, content) ::= <<
+main(uid, index, indexList, appList, dashList, defaultApp, zoneList, time, content) ::= <<
 <!doctype html>
 <html class="no-js" lang="en">
 $head()$
@@ -8,6 +8,10 @@ $topbar(index, indexList, zoneList, uid)$
     <div id="sidebar" class="large-3 columns">
         <h5 class="subheader">Applications</h5>
         $apps(index, appList)$
+       $if(dashList)$
+        <h5 class="subheader">Dashboards</h5>
+        $side_dash(index, dashList)$
+       $endif$
     </div>
     <div id="content" class="large-9 columns">
         <div class="row">

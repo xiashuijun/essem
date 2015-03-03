@@ -68,7 +68,14 @@ $endif$
     jQuery('#next_auto_update').html("Off");
     $endif$
 
-    setCurrentTimezone('$dash.displayTZ.display$');
+    $if(dash.displayTZ.display)$
+        setCurrentTimezone('$dash.displayTZ.display$');
+    $elseif(zoneList)$
+    $zoneList:{zone |
+        if(offsetMatchesLocal('$zone.id$')) setCurrentTimezone('$zone.display$');
+    }$
+    $endif$
+
 
 </script>
 </body>
