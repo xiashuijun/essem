@@ -194,7 +194,7 @@ public class MetricKey {
       this.hasField = this.instance.length() > 0;
    }
 
-   private static final Joiner keyComponentJoiner = Joiner.on('-').skipNulls();
+   private static final Joiner keyComponentJoiner = Joiner.on('_').skipNulls();
 
    @Override
    public String toString() {
