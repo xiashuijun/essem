@@ -15,6 +15,7 @@
 
 package com.attribyte.essem.model.graph;
 
+import com.attribyte.essem.util.Util;
 import com.google.common.base.Joiner;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
@@ -207,6 +208,15 @@ public class MetricKey {
       return keyComponentJoiner.join(components);
    }
 
+   /**
+    * Gets this key as a valid "Java identifier."
+    * @return The key as an identifier.
+    */
+   public String getIdentifier() {
+      String ident = toString();
+      return Util.toJavaIdentifier(ident);
+   }
+
    @Override
    public int hashCode() {
       return hashCode;
@@ -254,6 +264,19 @@ public class MetricKey {
       addCaptionValue(instance, buf);
       addCaptionValue(field, buf);
       return buf.toString();
+   }
+
+   /**
+    * Determine if this key, as a whole, represents a valid identifier.
+    * @return Is this key a valid identifier?
+    */
+   public boolean isValidIdentifier() {
+      return Util.isValidIdentifier(name) &&
+              Util.isValidIdentifier(application) &&
+              Util.isValidIdentifier(host) &&
+              Util.isValidIdentifier(instance) &&
+              Util.isValidIdentifier(field);
+
    }
 
    /**
