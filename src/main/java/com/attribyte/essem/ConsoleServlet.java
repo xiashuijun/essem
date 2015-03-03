@@ -1101,7 +1101,7 @@ public class ConsoleServlet extends HttpServlet {
             Map<String, String> idMap = Maps.newHashMap();
             for(StoredGraph graph : graphs) {
                idMap.put(graph.sid, graph.sid);
-               idMap.put(graph.key.toString().replace('-', '_'), graph.sid);
+               idMap.put(graph.key.getIdentifier(), graph.sid);
             }
             customTemplate.add("graphs", idMap);
             template.add("custom", customTemplate.render());
