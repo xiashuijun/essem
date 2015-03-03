@@ -18,6 +18,7 @@ package com.attribyte.essem.model;
 import com.attribyte.essem.model.graph.MetricKey;
 import static com.attribyte.essem.util.Util.getStringField;
 import static com.attribyte.essem.util.Util.getLongField;
+import static com.attribyte.essem.util.Util.toValidIdentifier;
 
 import com.attribyte.essem.util.Util;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -263,17 +264,17 @@ public class StoredGraph {
       }
 
       graphBuilder.setDownsampleFn(request.getParameter("downsampleFn"));
-      graphBuilder.setTitle(request.getParameter("title"));
-      graphBuilder.setDescription(request.getParameter("description"));
-      graphBuilder.setXLabel(request.getParameter("xLabel"));
-      graphBuilder.setYLabel(request.getParameter("yLabel"));
+      graphBuilder.setTitle(toValidIdentifier(request.getParameter("title")));
+      graphBuilder.setDescription(toValidIdentifier(request.getParameter("description")));
+      graphBuilder.setXLabel(toValidIdentifier(request.getParameter("xLabel")));
+      graphBuilder.setYLabel(toValidIdentifier(request.getParameter("yLabel")));
 
       String[] tags = request.getParameterValues("tag");
       if(tags != null && tags.length > 0) {
          graphBuilder.setTags(ImmutableSet.copyOf(tags));
       } else if(request.getParameter("tagString") != null) {
          for(String tag : Util.csvSplitter.split(request.getParameter("tagString"))) {
-            graphBuilder.addTag(tag);
+            graphBuilder.addTag(toValidIdentifier(tag));
          }
       }
 
@@ -357,9 +358,7 @@ public class StoredGraph {
          Set<String> cleanedTags = Sets.newHashSetWithExpectedSize(tags.size());
          for(String tag : tags) {
             tag = tag.trim();
-            if(Util.isValidIdentifier(tag)) {
-               cleanedTags.add(tag);
-            }
+            cleanedTags.add(toValidIdentifier(tag));
          }
          return cleanedTags;
       }
