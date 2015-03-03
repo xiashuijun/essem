@@ -434,6 +434,7 @@ public class ConsoleServlet extends HttpServlet {
 
       if(!auth.isSystem) {
          template.add("uid", auth.uid);
+         template.add("dashList", userStore.getUserTags(index, auth.uid));
       }
 
       List<String> indexList = buildAllowedIndexList(request, index);
@@ -456,7 +457,6 @@ public class ConsoleServlet extends HttpServlet {
          response.sendError(404, "No application found");
          return;
       }
-
 
       template.add("index", index);
       template.add("content", "");
@@ -895,6 +895,11 @@ public class ConsoleServlet extends HttpServlet {
                                  final HttpServletResponse response) throws IOException {
 
       StoredGraph.Builder graphBuilder = StoredGraph.parseGraph(request, app);
+      if(graphBuilder == null) {
+         sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "The graph key is invalid");
+         return;
+      }
+
       if(graphBuilder.hasAbsoluteRange()) {
          graphBuilder.setRangeName(Util.nearestInterval(graphBuilder.getRangeMillis()));
       }
@@ -1021,6 +1026,11 @@ public class ConsoleServlet extends HttpServlet {
 
       try {
          StoredGraph.Builder graphBuilder = StoredGraph.parseGraph(request, app);
+         if(graphBuilder == null) {
+            sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "The graph key is invalid");
+            return;
+         }
+
          graphBuilder.setUserId(auth.uid);
          graphBuilder.setIndex(index);
          String gid = graphBuilder.build().id;
@@ -1066,7 +1076,7 @@ public class ConsoleServlet extends HttpServlet {
 
       ST template = getTemplate(DASHBOARD_TEMPLATE);
       if(template == null) {
-         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + DASHBOARD_TEMPLATE + "' template");
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing/Invalid '" + DASHBOARD_TEMPLATE + "' template");
          return;
       }
 
@@ -1091,13 +1101,22 @@ public class ConsoleServlet extends HttpServlet {
 
          template.add("graphs", graphs);
 
+         final ST customTemplate;
+
          String customTemplateName = Util.getParameter(request, "template", "");
          if(!customTemplateName.isEmpty()) {
-            ST customTemplate = getDashboardTemplate(customTemplateName);
+            customTemplate = getDashboardTemplate(customTemplateName);
             if(customTemplate == null) {
-               sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Missing '" + customTemplateName + "' template");
+               sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "Missing/Invalid '" + customTemplateName + "' template");
                return;
             }
+         } else if(dash.tags.size() == 1) {
+            customTemplate = getDashboardTemplate(dash.tags.get(0).toLowerCase());
+         } else {
+            customTemplate = null;
+         }
+
+         if(customTemplate != null) {
             Map<String, String> idMap = Maps.newHashMap();
             for(StoredGraph graph : graphs) {
                idMap.put(graph.sid, graph.sid);
