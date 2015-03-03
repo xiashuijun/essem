@@ -241,7 +241,7 @@ public class StoredGraph {
     * Parses the components of a graph from request parameters.
     * @param request The request.
     * @param app The application name to use (overrides any parameter).
-    * @return A parsed graph builder with all parameters set.
+    * @return A parsed graph builder with all parameters set, or null if key is invalid.
     */
    public static StoredGraph.Builder parseGraph(final HttpServletRequest request, String app) {
       if(app == null) {
@@ -249,6 +249,10 @@ public class StoredGraph {
          if(app == null) app = request.getParameter("application");
       }
       MetricKey key = MetricKey.parseKey(request, app);
+      if(!key.isValidIdentifier()) {
+         return null;
+      }
+
       StoredGraph.Builder graphBuilder = new StoredGraph.Builder();
       graphBuilder.setMetricKey(key);
       graphBuilder.setRangeName(request.getParameter("range"));
