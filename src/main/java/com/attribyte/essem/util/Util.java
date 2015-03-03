@@ -496,6 +496,17 @@ public class Util {
    }
 
    /**
+    * Determine if the string is a valid identifier.
+    * @param str The string.
+    * @return Is the string a valid identifier?
+    */
+   public static boolean isValidIdentifier(final String str) {
+      if(str == null || str.isEmpty()) return true;
+      for(char ch : str.toCharArray()) if(!isValidIdentifier(ch)) return false;
+      return true;
+   }
+
+   /**
     * Determine if the character is a valid identifier.
     * @param ch The character.
     * @return Is the character a valid identifier?
