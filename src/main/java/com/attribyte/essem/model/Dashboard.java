@@ -25,6 +25,7 @@ import org.attribyte.util.URIEncoder;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 public class Dashboard {
 
@@ -149,7 +150,7 @@ public class Dashboard {
       this.tags = this.id.isEmpty() ? Util.getParameterValues(request, "tag") : ImmutableList.<String>of();
 
       this.withTitles = Util.getParameter(request, "withTitles", true);
-      this.tz = Util.getParameter(request, "tz", "");
+      this.tz = Util.getParameter(request, "tz", TimeZone.getDefault().getID());
 
       DisplayTZ dtz = zoneMap.get(this.tz);
       this.displayTZ = dtz != null ? dtz : new DisplayTZ(this.tz, this.tz);
