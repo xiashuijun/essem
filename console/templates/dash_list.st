@@ -21,7 +21,7 @@ dash_list(index, graphs) ::= <<
         <!-- $graph.createTime; format="yyyy-MM-dd HH:mm:ss.SSS"$ -->
         <td>
             $graph.tagsForQuery:{tag |
-            <a target="_blank" href="/console/attribyte/dash?tag=$tag$">$tag$</a>&nbsp;
+            <a target="_blank" href="/console/$index$/dash?tag=$tag$">$tag$</a>&nbsp;
             }$
         </td>
         <td>
