@@ -87,7 +87,7 @@ public class SystemMonitor implements MetricSet {
          for(NetworkDevices.Interface iface : networkDevices.interfaces.values()) {
             if(networkDeviceFilter.accept(iface.name)) {
                if(!names.contains(iface.name)) {
-                  builder.put(iface.name, iface);
+                  builder.put("iface." + iface.name, iface);
                   names.add(iface.name);
                } else if(logger != null) {
                   logger.warn("Duplicate interface name: '" + iface.name + "'");
@@ -99,6 +99,8 @@ public class SystemMonitor implements MetricSet {
          if(logger != null) logger.error("Unable to instrument network devices", ioe);
       }
 
+      Set<String> acceptedDevices = Sets.newHashSet();
+
       try {
          Storage storage = new Storage();
          Set<String> names = Sets.newHashSet();
@@ -107,6 +109,12 @@ public class SystemMonitor implements MetricSet {
                if(!names.contains(filesystem.name)) {
                   builder.put(filesystem.name, filesystem);
                   names.add(filesystem.name);
+                  String[] dev_name = filesystem.name.split("/");
+                  if(dev_name.length == 2) {
+                     acceptedDevices.add(dev_name[1]);
+                  } else {
+                     acceptedDevices.add(filesystem.name);
+                  }
                } else if(logger != null) {
                   logger.warn("Duplicate filesystem name: '" + filesystem.name+"'");
                }
@@ -114,6 +122,18 @@ public class SystemMonitor implements MetricSet {
          }
       } catch(IOException ioe) {
          if(logger != null) logger.error("Unable to instrument storage devices", ioe);
+      }
+
+      try {
+         BlockDevices blockDevices = new BlockDevices();
+         scheduler.scheduleAtFixedRate(blockDevices, 0, pollFrequencySeconds, TimeUnit.SECONDS);
+         for(BlockDevices.BlockDevice device : blockDevices.devices) {
+            if(acceptedDevices.contains(device.name)) {
+               builder.put("blockdev."+device.name, device);
+            }
+         }
+      } catch(IOException ioe) {
+         if(logger != null) logger.error("Unable to instrument block devices", ioe);
       }
 
       this.metrics = builder.build();
