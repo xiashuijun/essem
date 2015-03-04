@@ -99,7 +99,7 @@ public class Storage {
 
    /**
     * Enumerate all filesystems.
-    * @throws IOException
+    * @throws IOException if filesystem metrics are unavailable.
     */
    public Storage() throws IOException {
 

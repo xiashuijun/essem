@@ -63,7 +63,7 @@ public class SystemMonitor implements MetricSet {
     * @param meminfoKeys The instrumented keys for memory info.
     * @param storageTypeFilter Filters only instrumented storage types.
     * @param networkDeviceFilter Filters only instrumented network devices.
-    * @param logger A logger. May be <code>null</code>
+    * @param logger A logger. May be <code>null</code>.
     */
    public SystemMonitor(final int pollFrequencySeconds,
                         final Collection<String> meminfoKeys,
@@ -73,13 +73,21 @@ public class SystemMonitor implements MetricSet {
 
       ImmutableMap.Builder<String, Metric> builder = ImmutableMap.builder();
 
-      LoadAverage loadAverage = new LoadAverage();
-      builder.putAll(loadAverage.getMetrics());
-      scheduler.scheduleAtFixedRate(loadAverage, 0, pollFrequencySeconds, TimeUnit.SECONDS);
+      try {
+         LoadAverage loadAverage = new LoadAverage();
+         builder.putAll(loadAverage.getMetrics());
+         scheduler.scheduleAtFixedRate(loadAverage, 0, pollFrequencySeconds, TimeUnit.SECONDS);
+      } catch(IOException ioe) {
+         if(logger != null) logger.error("Unable to instrument load averages", ioe);
+      }
 
-      MemoryInfo meminfo = new MemoryInfo(meminfoKeys);
-      builder.put("memory", meminfo);
-      scheduler.scheduleAtFixedRate(meminfo, 0, pollFrequencySeconds, TimeUnit.SECONDS);
+      try {
+         MemoryInfo meminfo = new MemoryInfo(meminfoKeys);
+         builder.put("memory", meminfo);
+         scheduler.scheduleAtFixedRate(meminfo, 0, pollFrequencySeconds, TimeUnit.SECONDS);
+      } catch(IOException ioe) {
+         if(logger != null) logger.error("Unable to instrument memory", ioe);
+      }
 
       try {
          NetworkDevices networkDevices = new NetworkDevices();

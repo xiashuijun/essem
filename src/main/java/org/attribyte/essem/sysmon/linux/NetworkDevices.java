@@ -112,7 +112,7 @@ public class NetworkDevices implements Runnable {
 
    /**
     * Enumerate all network devices.
-    * @throws IOException on system read error.
+    * @throws IOException if network device metrics are unavailable.
     */
    public NetworkDevices() throws IOException {
 

@@ -115,6 +115,17 @@ public class LoadAverage implements MetricSet, Runnable {
       private static final Splitter tokenSplitter = Splitter.on(CharMatcher.WHITESPACE).trimResults().omitEmptyStrings();
    }
 
+   /**
+    * Creates load average metrics.
+    * @throws IOException If load average metrics are unavailable.
+    */
+   public LoadAverage() throws IOException {
+      File pathFile = new File(CurrentLoadValues.PATH);
+      if(!pathFile.exists()) {
+         throw new IOException("The '" + CurrentLoadValues.PATH + "' does not exist");
+      }
+   }
+
    @Override
    public void run() {
       currValues = new CurrentLoadValues();

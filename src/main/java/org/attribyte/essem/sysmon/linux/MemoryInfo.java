@@ -89,8 +89,14 @@ public class MemoryInfo implements MetricSet, Runnable {
    /**
     * Creates memory information with arbitrary keys.
     * @param registerKeys The names of the keys for which gauges are created.
+    * @throws IOException If memory information is unavailable.
     */
-   public MemoryInfo(final Collection<String> registerKeys) {
+   public MemoryInfo(final Collection<String> registerKeys) throws IOException {
+
+      File meminfoFile = new File(CurrentMemValues.PATH);
+      if(!meminfoFile.exists()) {
+         throw new IOException("The '" + CurrentMemValues.PATH + "' does not exist");
+      }
 
       ImmutableMap.Builder<String, Metric> builder = ImmutableMap.builder();
       for(final String key : registerKeys) {
@@ -129,6 +135,4 @@ public class MemoryInfo implements MetricSet, Runnable {
    private final ImmutableMap<String, Metric> metrics;
 
    private volatile CurrentMemValues currValues = new CurrentMemValues();
-
-
 }
