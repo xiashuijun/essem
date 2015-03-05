@@ -517,7 +517,9 @@ public class Util {
             case '+':
             case '!':
             case '.':
+            case ',':
             case '%':
+            case ':':
             case '#':
             case '^':
             case '{':
