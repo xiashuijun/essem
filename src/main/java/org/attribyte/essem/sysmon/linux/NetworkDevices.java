@@ -82,8 +82,8 @@ public class NetworkDevices implements Runnable {
       private void mark(final Iterator<String> newValues) {
          List<BigInteger> nextRecordedValues = Lists.newArrayListWithCapacity(lastRecordedValues.size());
          Iterator<BigInteger> oldValIter = lastRecordedValues.iterator();
+         Iterator<Meter> meterIter = meters.iterator();
          while(newValues.hasNext()) {
-            Iterator<Meter> meterIter = meters.iterator();
             BigInteger oldVal = oldValIter.next();
             BigInteger newVal = new BigInteger(newValues.next());
             nextRecordedValues.add(newVal);
@@ -101,6 +101,12 @@ public class NetworkDevices implements Runnable {
       private final ImmutableList<Meter> meters;
       private List<BigInteger> lastRecordedValues;
    }
+
+   /*
+Inter-|   Receive                                                |  Transmit
+ face |bytes    packets errs drop fifo frame compressed multicast|bytes    packets errs drop fifo colls carrier compressed
+
+    */
 
    /*
    Inter-|   Receive                                                |  Transmit
