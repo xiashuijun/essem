@@ -26,7 +26,7 @@ dash_list(index, graphs) ::= <<
         </td>
         <td>
             <a href="/console/$index$/usergraph/$graph.id$" title="View" id="dl_permalink"><i class="fi-link"></i></a>
-            &nbsp;&nbsp;<a href="#" title="Delete" id="dg_$graph.id$"><i class="fi-page-delete"></i></a>
+            &nbsp;&nbsp;<a href="#" title="Delete" id="dg_$graph.id$"><i class="fi-x"></i></a>
         </td>
     </tr>
     }$
