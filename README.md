@@ -90,7 +90,6 @@ TODO
 * Create "shaded" build for standard reporter to avoid potential client protocol buffer incompatibility.
 * Create JSON-based `ScheduledReporter`.
 * Allow CORS headers to be configured for API access.
-* Auto-refresh
 
 Possible Enhancements
 ----------------------
