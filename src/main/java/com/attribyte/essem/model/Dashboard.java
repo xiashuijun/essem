@@ -170,6 +170,8 @@ public class Dashboard {
 
       if(!Strings.isNullOrEmpty(id)) {
          buf.append("id=").append(id);
+      } else {
+         buf.append("id=");
       }
 
       for(String tag : tags) {

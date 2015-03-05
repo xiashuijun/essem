@@ -1,8 +1,8 @@
-side_dash(index, dashList) ::= <<
+side_dash(index, tagDashboards) ::= <<
 <ul class="side-nav">
-$dashList:{dash |
+$tagDashboards:{dash |
     <li class="app-select">
-        <a target="_blank" href="/console/$index$/dash?tag=$dash$">$dash$</a>
+    <a target="_blank" href="/console/$index$/dash$dash.queryString$">xxx $dash.tagString$</a>
     </li>
 }$
 </ul>

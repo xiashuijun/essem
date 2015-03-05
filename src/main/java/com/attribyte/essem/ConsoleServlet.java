@@ -68,6 +68,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import static com.attribyte.essem.util.Util.splitPath;
 
@@ -97,10 +98,20 @@ public class ConsoleServlet extends HttpServlet {
       this.zones = ImmutableList.copyOf(zones);
 
       ImmutableMap.Builder<String, DisplayTZ> zoneMapBuilder = ImmutableMap.builder();
+
       for(DisplayTZ tz : zones) {
          zoneMapBuilder.put(tz.id, tz);
       }
       this.zoneMap = zoneMapBuilder.build();
+
+      DisplayTZ _defaultDisplayTz = this.zoneMap.get(TimeZone.getDefault().getID());
+      if(_defaultDisplayTz == null && zones.size() > 0) {
+         _defaultDisplayTz = zones.get(0);
+      } else {
+         _defaultDisplayTz = new DisplayTZ(TimeZone.getDefault().getID(), TimeZone.getDefault().getDisplayName());
+      }
+
+      this.defaultDisplayTZ = _defaultDisplayTz;
 
       this.client = client;
       this.requestOptions = requestOptions;
@@ -149,6 +160,17 @@ public class ConsoleServlet extends HttpServlet {
             logger.error("Problem getting applications", ioe);
          }
       }
+
+      this.defaultDashboard = new Dashboard.Builder()
+              .setDisplayGrid(true)
+              .setAutoUpdateSeconds(0)
+              .setWithTitles(true)
+              .setWidth(300)
+              .setHeight(220)
+              .setLargeBlockGridColumns(4)
+              .setSmallBlockGridColumns(2)
+              .setTz(defaultDisplayTZ)
+              .build();
    }
 
    static final class ErrorListener implements STErrorListener {
@@ -434,7 +456,12 @@ public class ConsoleServlet extends HttpServlet {
 
       if(!auth.isSystem) {
          template.add("uid", auth.uid);
-         template.add("dashList", userStore.getUserTags(index, auth.uid));
+         List<String> userTags = userStore.getUserTags(index, auth.uid);
+         List<Dashboard> tagDashboards = Lists.newArrayListWithExpectedSize(userTags.size());
+         for(String tag : userTags) {
+            tagDashboards.add(new Dashboard.Builder(defaultDashboard).setTags(Collections.singletonList(tag)).build());
+         }
+         template.add("tagDashboards", tagDashboards);
       }
 
       List<String> indexList = buildAllowedIndexList(request, index);
@@ -1407,8 +1434,12 @@ public class ConsoleServlet extends HttpServlet {
    private final ESEndpoint esEndpoint;
    private final ESUserStore userStore;
    private final ImmutableList<String> allowedIndexes;
+
    private final ImmutableList<DisplayTZ> zones;
    private final ImmutableMap<String, DisplayTZ> zoneMap;
+   private final DisplayTZ defaultDisplayTZ;
+
+   private final Dashboard defaultDashboard;
 
    final ApplicationCache applicationCache;
 }
