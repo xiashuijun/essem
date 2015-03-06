@@ -30,6 +30,7 @@ import com.attribyte.essem.model.index.IndexStats;
 import com.attribyte.essem.query.Fields;
 import com.attribyte.essem.query.GraphQuery;
 import com.attribyte.essem.query.QueryBase;
+import com.attribyte.essem.query.SelectForDeleteQuery;
 import com.attribyte.essem.query.StatsQuery;
 import com.attribyte.essem.util.Util;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -62,6 +63,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -211,6 +213,7 @@ public class ConsoleServlet extends HttpServlet {
       FIELD_STATS,
       SAVEGRAPH,
       DELETEGRAPH,
+      DELETEKEY,
       USERGRAPH,
       USERGRAPHS,
       DASH
@@ -241,7 +244,7 @@ public class ConsoleServlet extends HttpServlet {
     * Valid DELETE operations.
     */
    private static ImmutableMap<String, Op> deleteOps = ImmutableMap.of(
-           "deletegraph", Op.DELETEGRAPH);
+           "deletegraph", Op.DELETEGRAPH, "deletekey", Op.DELETEKEY);
 
    @Override
    protected void doPost(final HttpServletRequest request,
@@ -288,11 +291,17 @@ public class ConsoleServlet extends HttpServlet {
             String id = path.hasNext() ? path.next() : null;
             doUserGraphDelete(request, auth, index, id, response);
             break;
+         case DELETEKEY:
+            if(!path.hasNext()) {
+               sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'application' must be specified");
+               return;
+            }
+            String appName = path.next();
+            doKeyDelete(request, index, appName, response);
+            break;
          default:
             sendError(request, response, HttpServletResponse.SC_NOT_FOUND);
-
       }
-
    }
 
    @Override
@@ -817,6 +826,74 @@ public class ConsoleServlet extends HttpServlet {
          response.setStatus(HttpServletResponse.SC_OK);
          response.setContentType(HTML_CONTENT_TYPE);
          response.getWriter().print("true");
+         response.getWriter().flush();
+      } catch(Exception e) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         e.printStackTrace();
+      }
+   }
+
+   /**
+    * Deletes keys with a specified prefix older than N days.
+    * @param request The request.
+    * @param index The index.
+    * @param app The application name.
+    * @param response The response.
+    * @throws IOException on output error.
+    */
+   protected void doKeyDelete(final HttpServletRequest request,
+                              final String index,
+                              final String app,
+                              final HttpServletResponse response) throws IOException {
+
+      String prefix = Strings.nullToEmpty(request.getParameter("prefix")).trim();
+      if(prefix.isEmpty()) {
+         sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "A 'prefix' is required");
+         return;
+      }
+
+      String host = request.getParameter("host");
+      String instance = request.getParameter("instance");
+
+      int retainDays = Util.getParameter(request, "retainDays", 0);
+      boolean test = Util.getParameter(request, "test", true);
+
+      try {
+
+         MetricKey key = new MetricKey(prefix + "*" , app, host, instance);
+
+         URI searchURI = esEndpoint.buildIndexURI(index);
+         SelectForDeleteQuery deleteQuery = new SelectForDeleteQuery(key, retainDays);
+         Request esRequest = esEndpoint.postRequestBuilder(searchURI, deleteQuery.searchRequest.toJSON().getBytes(org.apache.commons.codec.Charsets.UTF_8)).create();
+         Response esResponse = client.send(esRequest);
+         final long maxDeleted;
+         int status = esResponse.getStatusCode();
+         if(status == 200) {
+            ObjectNode indexObject = Util.mapper.readTree(Util.parserFactory.createParser(esResponse.getBody().toByteArray()));
+            JsonNode hits = indexObject.path("hits").path("total");
+            if(!hits.isMissingNode()) {
+               maxDeleted = hits.longValue();
+            } else {
+               maxDeleted = 0L;
+            }
+         } else {
+            maxDeleted = 0L;
+         }
+
+         if(status == 200 && !test) {
+            URI deleteURI = esEndpoint.buildDeleteByQueryURI(index, deleteQuery.searchRequest.toJSON());
+            Request esDeleteRequest = esEndpoint.deleteRequestBuilder(deleteURI).create();
+            Response esDeleteResponse = client.send(esDeleteRequest);
+            status = esDeleteResponse.getStatusCode();
+         }
+
+         response.setStatus(status);
+         response.setContentType("text/plain");
+         if(test) {
+            response.getWriter().print("Would delete: " + Long.toString(maxDeleted));
+         } else {
+            response.getWriter().print("Deleted: " + Long.toString(maxDeleted));
+         }
          response.getWriter().flush();
       } catch(Exception e) {
          sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
