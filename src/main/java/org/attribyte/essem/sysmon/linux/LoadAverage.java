@@ -30,7 +30,7 @@ import java.util.Iterator;
 import java.util.Map;
 
 /**
- * Expose values supplied by <code>/proc/loadavg</code> as gauges.
+ * Expose values supplied by <code>/proc/loadavg</code> and <code>/proc/uptime</code> as gauges.
  * <p>
  *    Load averages are, "the number of jobs in the run queue (state R) or
  *    waiting for disk I/O (state D) averaged over 1, 5, and 15
@@ -56,20 +56,25 @@ public class LoadAverage implements MetricSet, Runnable {
               of kernel scheduling entities that currently exist on the
               system.  The fifth field is the PID of the process that was
               most recently created on the system.
+
+     /proc/uptime
+              This file contains two numbers: the uptime of the system
+              (seconds), and the amount of time spent in idle process
+              (seconds).
     */
 
    public static class CurrentLoadValues {
 
       private CurrentLoadValues() {
-         File pathFile = new File(PATH);
-         if(pathFile.exists()) {
+         File loadAvgFile = new File(LOADAVG_PATH);
+         if(loadAvgFile.exists()) {
 
             double _oneMinuteAverage;
             double _fiveMinuteAverage;
             double _fifteenMinuteAverage;
 
             try {
-               Iterator<String> strValues = tokenSplitter.split(Files.toString(pathFile, Charsets.US_ASCII)).iterator();
+               Iterator<String> strValues = tokenSplitter.split(Files.toString(loadAvgFile, Charsets.US_ASCII)).iterator();
                _oneMinuteAverage = strValues.hasNext() ? Double.parseDouble(strValues.next()) : 0.0;
                _fiveMinuteAverage = strValues.hasNext() ? Double.parseDouble(strValues.next()) : 0.0;
                _fifteenMinuteAverage = strValues.hasNext() ? Double.parseDouble(strValues.next()) : 0.0;
@@ -86,11 +91,33 @@ public class LoadAverage implements MetricSet, Runnable {
             this.fiveMinuteAverage = 0.0;
             this.fifteenMinuteAverage = 0.0;
          }
+
+         File uptimeFile = new File(UPTIME_PATH);
+         if(uptimeFile.exists()) {
+
+            double _uptime;
+            double _idleTime;
+
+            try {
+               Iterator<String> strValues = tokenSplitter.split(Files.toString(uptimeFile, Charsets.US_ASCII)).iterator();
+               _uptime = strValues.hasNext() ? Double.parseDouble(strValues.next()) : 0.0;
+               _idleTime = strValues.hasNext() ? Double.parseDouble(strValues.next()) : 0.0;
+            } catch(IOException|NumberFormatException e) {
+               _uptime = 0.0;
+               _idleTime = 0.0;
+            }
+            this.uptimeSeconds = _uptime;
+            this.idleSeconds = _idleTime;
+         } else {
+            this.uptimeSeconds = 0.0;
+            this.idleSeconds = 0.0;
+         }
       }
 
       @Override
       public String toString() {
-         return oneMinuteAverage + ", " + fiveMinuteAverage + ", " + fifteenMinuteAverage;
+         return uptimeSeconds + " " + idleSeconds + " - " +
+                 oneMinuteAverage + ", " + fiveMinuteAverage + ", " + fifteenMinuteAverage;
       }
 
       /**
@@ -111,18 +138,36 @@ public class LoadAverage implements MetricSet, Runnable {
        */
       public final double fifteenMinuteAverage;
 
-      private static final String PATH = "/proc/loadavg";
+      /**
+       * The system uptime in seconds.
+       */
+      public final double uptimeSeconds;
+
+      /**
+       * The cumulative per-processor idle time in seconds.
+       */
+      public final double idleSeconds;
+
+      private static final String LOADAVG_PATH = "/proc/loadavg";
+
+      private static final String UPTIME_PATH = "/proc/uptime";
+
       private static final Splitter tokenSplitter = Splitter.on(CharMatcher.WHITESPACE).trimResults().omitEmptyStrings();
    }
 
    /**
     * Creates load average metrics.
-    * @throws IOException If load average metrics are unavailable.
+    * @throws IOException If load average or uptime metrics are unavailable.
     */
    public LoadAverage() throws IOException {
-      File pathFile = new File(CurrentLoadValues.PATH);
-      if(!pathFile.exists()) {
-         throw new IOException("The '" + CurrentLoadValues.PATH + "' does not exist");
+      File loadPathFile = new File(CurrentLoadValues.LOADAVG_PATH);
+      if(!loadPathFile.exists()) {
+         throw new IOException("The '" + CurrentLoadValues.LOADAVG_PATH + "' does not exist");
+      }
+
+      File uptimePathFile = new File(CurrentLoadValues.UPTIME_PATH);
+      if(!uptimePathFile.exists()) {
+         throw new IOException("The '" + CurrentLoadValues.UPTIME_PATH + "' does not exist");
       }
    }
 
@@ -165,10 +210,26 @@ public class LoadAverage implements MetricSet, Runnable {
       }
    };
 
+   private final Gauge<Double> uptime = new Gauge<Double>() {
+      @Override
+      public Double getValue() {
+         return currValues.uptimeSeconds;
+      }
+   };
+
+   private final Gauge<Double> idleTime = new Gauge<Double>() {
+      @Override
+      public Double getValue() {
+         return currValues.idleSeconds;
+      }
+   };
+
    private final ImmutableMap<String, Metric> metrics = ImmutableMap.of(
            "load-avg-1m", (Metric)oneMinuteAverage,
            "load-avg-5m", (Metric)fiveMinuteAverage,
-           "load-avg-15m", (Metric)fifteenMinuteAverage
+           "load-avg-15m", (Metric)fifteenMinuteAverage,
+           "system-uptime", (Metric)uptime,
+           "processor-idle-time", (Metric)idleTime
    );
 
    private static volatile CurrentLoadValues currValues = new CurrentLoadValues();
