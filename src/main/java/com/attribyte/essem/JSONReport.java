@@ -175,7 +175,12 @@ public class JSONReport {
             String propertyName = parser.getCurrentName();
             JsonToken tok = parser.nextToken();
             if(tok.isStructStart()) {
-               throw new IOException("Unexpected object while processing '" + gaugeName + "'");
+               if(tok == JsonToken.START_ARRAY) {
+                  parser.skipChildren();
+                  continue;
+               } else {
+                  throw new IOException("Unexpected object while processing '" + gaugeName + "'");
+               }
             }
             switch(propertyName) {
                case "value":
