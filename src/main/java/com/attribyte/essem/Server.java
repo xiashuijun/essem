@@ -284,6 +284,10 @@ public class Server {
 
          Properties reportAuthProps = new InitUtil("reportAuth.", props, false).getProperties();
          final IndexAuthorization reportAuthorization = buildAuth(reportAuthProps, reporter);
+         for(String index : reportAuthorization.authorizedIndexes()) {
+            logInfo(logger, "Creating user store for " + index);
+            userStore.createStore(index);
+         }
 
          //Enable monitoring for endpoints...if any
 
