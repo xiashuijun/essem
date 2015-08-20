@@ -207,9 +207,9 @@ function downsampleInterval(range) {
 
 function xFormatForRange(range) {
     switch(range.toLowerCase()) {
-        case 'minute': return '%X';
-        case 'hour': return '%X';
-        case 'day': return '%X';
+        case 'minute': return '%H:%M';
+        case 'hour': return '%H:%M';
+        case 'day': return '%H:%M';
         case 'week': return '%x';
         case 'month': return '%x';
         case 'year': return '%x';
@@ -368,7 +368,8 @@ function loadGraph(data, config, dataConfig) {
         target = '#m_' + config.name_hash + '_' + config.field;
     }
 
-    var xAxisFormatter = d3.time.format(xFormatForRange(dataConfig.range));
+    var xFormat = xFormatForRange(dataConfig.range);
+    var xAxisFormatter = d3.time.format(xFormat);
 
     var hoverFormatter = d3.time.format('%Y-%m-%d %H:%M:%S');
     if(dataConfig.tz != null && dataConfig.tz != '') {
@@ -380,6 +381,7 @@ function loadGraph(data, config, dataConfig) {
     var bottom_margin = config.bottom_margin != null ? config.bottom_margin : 40;
     var full_width = config.full_width != null ? config.full_width : false;
     var full_height = config.full_height != null ? config.full_height : false;
+
     var x_label = "";
     var y_label = "";
 
@@ -392,9 +394,12 @@ function loadGraph(data, config, dataConfig) {
         title = config.title != null ? config.title : "";
     }
 
+    var small_text = config.small_text != null ? config.small_text : false;
+
     MG.data_graphic({
         area: true,
         missing_is_zero: false,
+        missin_is_hidden: true,
         interpolate: 'linear', //linear
         animate_on_load: true,
         data: data,
@@ -405,10 +410,10 @@ function loadGraph(data, config, dataConfig) {
         left: left_margin,
         bottom: bottom_margin,
         buffer: 0,
-        show_years: false,
+        show_secondary_x_label: false,
         xax_tick: 0,
         xax_count: 6,
-        small_text: false,
+        small_text: small_text,
         y_extended_ticks: true,
         target: target,
         x_accessor: 'date',

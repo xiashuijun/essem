@@ -12,7 +12,8 @@ function render_$graph.sid$() {
  config_$graph.sid$.bottom_margin = 75;
  config_$graph.sid$.right_margin = 75;
  config_$graph.sid$.full_width = true;
- config_$graph.sid$.full_height = true;
+ config_$graph.sid$.full_height = false;
+ config_$graph.sid$.small_text = true;
 
  var dataConfig_$graph.sid$ = {};
  dataConfig_$graph.sid$.target = '#gd_$graph.sid$';
