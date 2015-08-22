@@ -27,6 +27,22 @@ public class Stats {
       this.std = std;
    }
 
+   /**
+    * Scale the stats by a multiplier.
+    * @param mult The multiplier.
+    * @return The new stats.
+    */
+   public final Stats scale(final double mult) {
+      return new Stats(count,
+              min * mult,
+              max * mult,
+              avg * mult,
+              sum * mult,
+              sumOfSquares * mult * mult,
+              variance * mult * mult,
+              std * mult);
+   }
+
    @Override
    public String toString() {
       return Objects.toStringHelper(this)

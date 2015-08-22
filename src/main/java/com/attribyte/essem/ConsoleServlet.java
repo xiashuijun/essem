@@ -1075,6 +1075,13 @@ public class ConsoleServlet extends HttpServlet {
          template.add("key", query.key);
          template.add("range", query.range);
 
+         final RateUnit rateUnit;
+         if(query.key.field.endsWith("Rate")) {
+            rateUnit = RateUnit.fromString(request.getParameter("rateUnit"));
+         } else {
+            rateUnit = null;
+         }
+
          String esQuery = query.searchRequest.toJSON();
          Request esRequest = esEndpoint.postRequestBuilder(esEndpoint.buildIndexURI(index),
                  esQuery.getBytes(Charsets.UTF_8)).create();
@@ -1082,7 +1089,7 @@ public class ConsoleServlet extends HttpServlet {
 
          if(esResponse.getStatusCode() == 200) {
             ObjectNode statsObject = Util.mapper.readTree(Util.parserFactory.createParser(esResponse.getBody().toByteArray()));
-            Stats stats = StatsParser.parseStats(statsObject);
+            Stats stats = StatsParser.parseStats(statsObject, rateUnit);
             template.add("stats", stats);
          } else {
             logger.error("Field stats response error for '" + index + "' (" + esResponse.getStatusCode() + ")");

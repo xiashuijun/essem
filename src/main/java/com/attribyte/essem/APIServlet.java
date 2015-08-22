@@ -145,7 +145,7 @@ public class APIServlet extends HttpServlet implements MetricSet {
                   Response esResponse = httpClient.send(esRequest, requestOptions);
 
                   if(esResponse.getStatusCode() == HttpServletResponse.SC_OK) {
-                     ResponseGenerator.RateUnit rateUnit = ResponseGenerator.RateUnit.fromString(request.getParameter(RATE_UNIT_PARAM));
+                     RateUnit rateUnit = RateUnit.fromString(request.getParameter(RATE_UNIT_PARAM));
                      responseGenerated = responseGenerator.generateGraph(graphQuery, esResponse, responseOptions(request), rateUnit, response);
                   } else {
                      reportBackendError(esResponse, response);

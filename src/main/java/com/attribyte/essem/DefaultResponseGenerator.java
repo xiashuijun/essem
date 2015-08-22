@@ -16,7 +16,6 @@
 package com.attribyte.essem;
 
 import com.attribyte.essem.model.graph.MetricKey;
-import com.attribyte.essem.query.Fields;
 import com.attribyte.essem.query.GraphQuery;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;

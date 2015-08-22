@@ -32,7 +32,7 @@ public class StatsParser {
     * @param esObject The ES response object.
     * @return The parsed stats.
     */
-   public static Stats parseStats(ObjectNode esObject) {
+   public static Stats parseStats(ObjectNode esObject, RateUnit rateUnit) {
 
       //This assumes the "extended stats" aggregation.
 
@@ -40,7 +40,7 @@ public class StatsParser {
       if(aggregations != null) {
          JsonNode stats = aggregations.get("stats");
          if(stats != null) {
-            return new Stats(
+            Stats newStats = new Stats(
                     getIntField(stats, "count", 0),
                     getDoubleField(stats, "min", 0.0),
                     getDoubleField(stats, "max", 0.0),
@@ -50,6 +50,8 @@ public class StatsParser {
                     getDoubleField(stats, "variance", 0.0),
                     getDoubleField(stats, "std_deviation", 0.0)
             );
+
+            return rateUnit != null ? newStats.scale(rateUnit.mult) : newStats;
          } else {
             return Stats.EMPTY_STATS;
          }

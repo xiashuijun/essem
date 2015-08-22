@@ -479,6 +479,8 @@ function loadGraph(data, config, dataConfig) {
 function showFieldStats(config, field, range) {
     var url = '/console/' + config.index + '/fstats/' + config.app + '?name=' + config.name + '&field=' + field + '&range=' + range;
     if(config.host != null) url = url + '&host=' + config.host;
+    if(config.rateUnit != null) url = url + '&rateUnit=' + config.rateUnit;
+
     $.ajax({
         type: 'GET',
         url: url,
@@ -501,6 +503,7 @@ function renderFieldStats(config, field, target) {
     if(config.startTimestamp > 0) url = url + '&startTimestamp=' + config.startTimestamp;
     if(config.endTimestamp > 0) url = url + '&endTimestamp=' + config.endTimestamp;
     if(config.t != null) url = url + '&t=' + config.t;
+    if(config.rateUnit != null) url = url + '&rateUnit=' + config.rateUnit;
 
     $.ajax({
         type: 'GET',

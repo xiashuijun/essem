@@ -441,7 +441,7 @@ class ApplicationCache implements MetricSet {
             switch(esResponse.getStatusCode()) {
                case 200:
                   final ObjectNode jsonObject = mapper.readTree(parserFactory.createParser(esResponse.getBody().toByteArray()));
-                  statsMap.put(metric.name, StatsParser.parseStats(jsonObject));
+                  statsMap.put(metric.name, StatsParser.parseStats(jsonObject, null));
                   break;
                default:
                   logger.error("Unable to query stats for " + key.key.application + " (" + esResponse.getStatusCode() + ")");
