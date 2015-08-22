@@ -1135,6 +1135,7 @@ public class ConsoleServlet extends HttpServlet {
             return;
          }
 
+
          graphBuilder.setUserId(auth.uid);
          graphBuilder.setIndex(index);
          String gid = graphBuilder.build().id;

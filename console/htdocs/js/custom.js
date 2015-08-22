@@ -426,16 +426,18 @@ function loadGraph(data, config, dataConfig) {
     var small_text = config.small_text != null ? config.small_text : false;
 
     var hover_label = config.y_label;
-    if(config.mtype == "METER" || config.mtype == "TIMER") {
-        if(dataConfig.rateUnit != null) {
-            switch(dataConfig.rateUnit.toLowerCase()) {
-                case "perminute":
-                    hover_label = "Per Minute";
-                    break;
-                case "perhour":
-                    hover_label = "Per Hour";
-                    break;
-            }
+
+    if(config.field.endsWith("Rate") && dataConfig.rateUnit != null) {
+        switch(dataConfig.rateUnit.toLowerCase()) {
+            case "perminute":
+                hover_label = "Per Minute";
+                break;
+            case "perhour":
+                hover_label = "Per Hour";
+                break;
+            case "persecond":
+                hover_label = "Per Second";
+                break;
         }
     }
 
@@ -522,6 +524,8 @@ function showGraphSave(config, field) {
             '&host=' + config.host + '&downsampleFn=' + config.downsampleFn + rangeComponent;
 
     if(config.host != null) url = url + '&host=' + config.host;
+    if(config.rateUnit != null) url = url + '&rateUnit=' + config.rateUnit;
+
     $.ajax({
         type: 'GET',
         url: url,

@@ -77,7 +77,7 @@ public class StoredGraph {
          this.startTimestamp = graph.startTimestamp;
          this.endTimestamp = graph.endTimestamp;
          this.downsampleFn = graph.downsampleFn;
-
+         this.rateUnit = graph.rateUnit;
          this.createTime = graph.createTime;
          this.title = graph.title;
          this.description = graph.description;
@@ -165,6 +165,11 @@ public class StoredGraph {
          return this;
       }
 
+      public Builder setRateUnit(final String rateUnit) {
+         this.rateUnit = rateUnit;
+         return this;
+      }
+
       public Builder setMetricKey(final MetricKey key) {
          this.key = key;
          return this;
@@ -202,7 +207,7 @@ public class StoredGraph {
        */
       public StoredGraph build() {
          MetricKey key = this.key != null ? this.key : new MetricKey(name, application, host, instance, field);
-         return new StoredGraph(index, uid, key, range, startTimestamp, endTimestamp, downsampleFn,
+         return new StoredGraph(index, uid, key, range, startTimestamp, endTimestamp, downsampleFn, rateUnit,
                  title, description, xLabel, yLabel, tags, createTime);
       }
 
@@ -223,9 +228,9 @@ public class StoredGraph {
       private long startTimestamp;
       private long endTimestamp;
       private String downsampleFn;
+      private String rateUnit;
       private Set<String> tags = Sets.newHashSet();
    }
-
 
    /**
     * A comparator that sorts by create time (ascending).
@@ -268,6 +273,7 @@ public class StoredGraph {
       }
 
       graphBuilder.setDownsampleFn(request.getParameter("downsampleFn"));
+      graphBuilder.setRateUnit(request.getParameter("rateUnit"));
       graphBuilder.setTitle(toValidIdentifier(request.getParameter("title")));
       graphBuilder.setDescription(toValidIdentifier(request.getParameter("description")));
       graphBuilder.setXLabel(toValidIdentifier(request.getParameter("xLabel")));
@@ -306,6 +312,7 @@ public class StoredGraph {
                       final String rangeName,
                       final long startTimestamp, final long endTimestamp,
                       final String downsampleFn,
+                      final String rateUnit,
                       final String title, final String description,
                       final String xLabel, final String yLabel,
                       final Collection<String> tags,
@@ -316,6 +323,7 @@ public class StoredGraph {
       this.createTime = createTime != null ? createTime : new Date();
       this.range = Strings.nullToEmpty(rangeName);
       this.downsampleFn = Strings.nullToEmpty(downsampleFn);
+      this.rateUnit = Strings.nullToEmpty(rateUnit);
       this.startTimestamp = startTimestamp;
       this.endTimestamp = endTimestamp;
 
@@ -327,7 +335,8 @@ public class StoredGraph {
               .putString(key.instance)
               .putString(key.name)
               .putString(key.field)
-              .putString(this.downsampleFn);
+              .putString(this.downsampleFn)
+              .putString(this.rateUnit);
 
       if(startTimestamp > 0L && endTimestamp > 0L) {
          hasher.putLong(startTimestamp);
@@ -398,7 +407,8 @@ public class StoredGraph {
       String field = getStringField(obj, "field");
       MetricKey key = new MetricKey(name, application, host, instance, field);
 
-      String downsampleFn = getStringField(obj, "downsampleFn");;
+      String downsampleFn = getStringField(obj, "downsampleFn");
+      String rateUnit = getStringField(obj, "rateUnit");
       String range = getStringField(obj, "range");
       long startTimestamp = getLongField(obj, "startTimestamp", 0);
       long endTimestamp = getLongField(obj, "endTimestamp", 0);
@@ -425,7 +435,7 @@ public class StoredGraph {
       Date createTime = Strings.isNullOrEmpty(createdString) ? new Date() : new Date(DateTime.fromStandardFormat(createdString));
 
       return new StoredGraph(index, uid, key, range, startTimestamp, endTimestamp, downsampleFn,
-              title, description, xLabel, yLabel, tags, createTime);
+              rateUnit, title, description, xLabel, yLabel, tags, createTime);
    }
 
    /**
@@ -447,6 +457,7 @@ public class StoredGraph {
       generator.writeNumberField("startTimestamp", startTimestamp);
       generator.writeNumberField("endTimestamp", endTimestamp);
       generator.writeStringField("downsampleFn", downsampleFn);
+      if(rateUnit != null) generator.writeStringField("rateUnit", rateUnit);
       generator.writeStringField("title", title);
       generator.writeStringField("description", description);
       generator.writeStringField("xLabel", xLabel);
@@ -509,6 +520,14 @@ public class StoredGraph {
       } else {
          return ImmutableList.of();
       }
+   }
+
+   /**
+    * Does this graph show a rate field?
+    * @return Does the graph show a rate?
+    */
+   public boolean isRate() {
+      return key.field.endsWith("Rate");
    }
 
    /**
@@ -580,6 +599,11 @@ public class StoredGraph {
     * An optional downsample function.
     */
    public final String downsampleFn;
+
+   /**
+    * An optional unit for rates.
+    */
+   public final String rateUnit;
 
    /**
     * Tags added to the graph.

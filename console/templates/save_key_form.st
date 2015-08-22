@@ -32,6 +32,7 @@ save_key_form(graph) ::= <<
     <input type="hidden" name="name" value="$graph.key.name$"/>
     <input type="hidden" name="field" value="$graph.key.field$"/>
     <input type="hidden" name="downsampleFn" value="$graph.downsampleFn$"/>
+    <input type="hidden" name="rateUnit" value="$graph.rateUnit$"/>
     <input type="hidden" name="id" value="$graph.id$"/>
     <input type="hidden" name="range" value="$graph.range$"/>
     <input type="hidden" name="startTimestamp" value="$graph.startTimestamp$"/>
