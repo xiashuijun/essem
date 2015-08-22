@@ -27,6 +27,15 @@ $topbar(index, indexList, zoneList, uid)$
         </div>
         $endif$
 
+        $if(metric.metered)$
+        <h5 class="subheader">Rate Unit</h5>
+        <div class="gfselect">
+            <span class="nowrap"><input class="rselect" name="rselectfield" value="perSecond" id="rselect_sec" type="radio" checked="checked"><label for="rselect_sec">Per Second</label></span>
+            <span class="nowrap"><input class="rselect" name="rselectfield" value="perMinute" id="rselect_min" type="radio"><label for="rselect_min">Per Minute</label></span>
+            <span class="nowrap"><input class="rselect" name="rselectfield" value="perHour" id="rselect_hour" type="radio"><label for="rselect_hour">Per Hour</label></span>
+        </div>
+        $endif$
+
         <h5 class="subheader">Downsample With</h5>
         <div class="gfselect">
         $downsampleList:{downsampleFn |
@@ -112,6 +121,7 @@ $topbar(index, indexList, zoneList, uid)$
     dataConfig.app = '$app.name$';
     dataConfig.name = '$metric.name$';
     dataConfig.downsampleFn = downsampleFn;
+    dataConfig.rateUnit = 'perSecond';
     dataConfig.tz = '';
     dataConfig.range = '$range.name$'; //Range always has the "closest" name...even if only an interval was specified.
     dataConfig.downsampleInterval = downsampleInterval(dataConfig.range);
@@ -172,10 +182,16 @@ $topbar(index, indexList, zoneList, uid)$
     });
 
     jQuery('.dfs').click(function(event) {
-        var fn = jQuery('input[name=dsfield]:checked').val();
-        dataConfig.downsampleFn = fn;
+        dataConfig.downsampleFn = jQuery('input[name=dsfield]:checked').val();
         loadMetricData(dataConfig, render);
     });
+
+    $if(metric.metered)$
+    jQuery('.rselect').click(function(event) {
+        dataConfig.rateUnit = jQuery('input[name=rselectfield]:checked').val();
+        loadMetricData(dataConfig, render);
+    });
+    $endif$
 
     jQuery('#range-back').click(function(event){
         event.preventDefault();

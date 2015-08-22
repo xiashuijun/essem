@@ -223,6 +223,15 @@ public class Metric {
       return type == Type.TIMER;
    }
 
+
+   /**
+    * Is this metric metered (a meter or timer).
+    * @return Is it metered?
+    */
+   public boolean isMetered() {
+      return type == Type.METER || type == Type.TIMER;
+   }
+
    /**
     * Is this metric multi-field.
     * @return Is the metric a meter, timer or histogram?

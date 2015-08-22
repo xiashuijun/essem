@@ -301,7 +301,7 @@ function loadMetricData(config, renderFn) {
     var graphURL =
         "/mgraph/"+config.index+"/graph?emptyBins=false&aggregateOn=name&downsampleTo="+config.downsampleInterval+
         "&downsampleFn="+config.downsampleFn+rangeComponent+"&limit=5000&name="+encodeURIComponent(config.name)+
-        "&app="+config.app+"&host="+config.host;
+        "&app="+config.app+"&host="+config.host+"&rateUnit="+config.rateUnit;
 
     $('#json-link').attr('href', graphURL);
 
@@ -349,6 +349,35 @@ function setDynamicTitles(config) {
         "&rangeStart="+config.startTimestamp+"&rangeEnd="+config.endTimestamp;
 
     $('#range-permalink').attr('href', permalinkURL);
+    setDynamicLabels(config);
+}
+
+function setDynamicLabels(config) {
+
+    var rateUnit = "perSecond";
+    if(config.rateUnit != null) {
+        rateUnit = config.rateUnit;
+    }
+
+    switch(rateUnit.toLowerCase()) {
+        case "perminute":
+            $('#yl_m1Rate').text("Per Minute");
+            $('#yl_m5Rate').text("Per Minute");
+            $('#yl_m15Rate').text("Per Minute");
+            $('#yl_meanRate').text("Per Minute");
+            break;
+        case "perhour":
+            $('#yl_m1Rate').text("Per Hour");
+            $('#yl_m5Rate').text("Per Hour");
+            $('#yl_m15Rate').text("Per Hour");
+            $('#yl_meanRate').text("Per Hour");
+            break;
+        default:
+            $('#yl_m1Rate').text("Per Second");
+            $('#yl_m5Rate').text("Per Second");
+            $('#yl_m15Rate').text("Per Second");
+            $('#yl_meanRate').text("Per Second");
+    }
 }
 
 function samplePlural(samples) {
