@@ -425,10 +425,24 @@ function loadGraph(data, config, dataConfig) {
 
     var small_text = config.small_text != null ? config.small_text : false;
 
+    var hover_label = config.y_label;
+    if(config.mtype == "METER" || config.mtype == "TIMER") {
+        if(dataConfig.rateUnit != null) {
+            switch(dataConfig.rateUnit.toLowerCase()) {
+                case "perminute":
+                    hover_label = "Per Minute";
+                    break;
+                case "perhour":
+                    hover_label = "Per Hour";
+                    break;
+            }
+        }
+    }
+
     MG.data_graphic({
         area: true,
         missing_is_zero: false,
-        missin_is_hidden: true,
+        missing_is_hidden: true,
         interpolate: 'linear', //linear
         animate_on_load: true,
         data: data,
@@ -454,7 +468,7 @@ function loadGraph(data, config, dataConfig) {
         y_label: y_label,
         inflator: 1.2, //Default: 10/9
         mouseover: function(d, i) {
-            var content = d[config.field].toFixed(3)+' '+config.y_label+' '+hoverFormatter(d.date)+' '+' ('+ samplePlural(d.samples)+')';
+            var content = d[config.field].toFixed(3)+' '+hover_label+' '+hoverFormatter(d.date)+' '+' ('+ samplePlural(d.samples)+')';
             $(target+' svg .mg-active-datapoint').text(content);
         }
     });
