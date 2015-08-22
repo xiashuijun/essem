@@ -1,5 +1,7 @@
 package com.attribyte.essem.query;
 
+import com.google.common.collect.ImmutableSet;
+
 /**
  * Constants that define the name of fields stored in ES.
  */
@@ -28,6 +30,13 @@ public class Fields {
    public static final String FIVE_MINUTE_RATE_FIELD = "m5Rate";
    public static final String FIFTEEN_MINUTE_RATE_FIELD = "m15Rate";
    public static final String MEAN_RATE_FIELD = "meanRate";
+
+   /**
+    * A set of fields the hold rates (per second, by default).
+    */
+   public static final ImmutableSet<String> rateFields =
+           ImmutableSet.of(ONE_MINUTE_RATE_FIELD, FIVE_MINUTE_RATE_FIELD,
+                   FIFTEEN_MINUTE_RATE_FIELD, MEAN_RATE_FIELD);
 
    public static final String MAX_FIELD = "max";
    public static final String MIN_FIELD = "min";

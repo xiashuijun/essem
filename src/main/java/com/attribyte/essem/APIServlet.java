@@ -48,7 +48,15 @@ import static com.attribyte.essem.util.Util.splitPath;
  */
 public class APIServlet extends HttpServlet implements MetricSet {
 
+   /**
+    * The default range ('day').
+    */
    public static final String DEFAULT_RANGE = "day";
+
+   /**
+    * The rate unit parameter ('rateUnit').
+    */
+   public static final String RATE_UNIT_PARAM = "rateUnit";
 
    /**
     * Creates the servlet.
@@ -135,8 +143,10 @@ public class APIServlet extends HttpServlet implements MetricSet {
                   Request esRequest = esEndpoint.postRequestBuilder(esEndpoint.buildIndexURI(index),
                           esQuery.getBytes(Charsets.UTF_8)).create();
                   Response esResponse = httpClient.send(esRequest, requestOptions);
+
                   if(esResponse.getStatusCode() == HttpServletResponse.SC_OK) {
-                     responseGenerated = responseGenerator.generateGraph(graphQuery, esResponse, responseOptions(request), response);
+                     ResponseGenerator.RateUnit rateUnit = ResponseGenerator.RateUnit.fromString(request.getParameter(RATE_UNIT_PARAM));
+                     responseGenerated = responseGenerator.generateGraph(graphQuery, esResponse, responseOptions(request), rateUnit, response);
                   } else {
                      reportBackendError(esResponse, response);
                      responseGenerated = false;

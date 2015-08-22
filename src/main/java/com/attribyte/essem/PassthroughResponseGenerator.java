@@ -33,6 +33,7 @@ public class PassthroughResponseGenerator implements ResponseGenerator {
    public boolean generateGraph(final GraphQuery graphQuery,
                                 final Response esResponse,
                                 final EnumSet<Option> options,
+                                final RateUnit rateUnit,
                                 final HttpServletResponse response) throws IOException {
       response.setContentType("application/json");
       response.setStatus(esResponse.getStatusCode());

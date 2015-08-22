@@ -18,6 +18,8 @@ package com.attribyte.essem;
 import com.attribyte.essem.query.GraphQuery;
 import com.attribyte.essem.query.NameQuery;
 import com.attribyte.essem.query.StatsQuery;
+import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
 import org.attribyte.api.http.Response;
 
 import javax.servlet.http.HttpServletResponse;
@@ -48,10 +50,66 @@ public interface ResponseGenerator {
    }
 
    /**
+    * Rate unit for conversion.
+    */
+   public static enum RateUnit {
+
+      /**
+       * Per second (default).
+       */
+      PER_SECOND(1.0),
+
+      /**
+       * Per minute.
+       */
+      PER_MINUTE(60.0),
+
+      /**
+       * Per hour.
+       */
+      PER_HOUR(3600.0);
+
+      RateUnit(final double mult) {
+         this.mult = mult;
+      }
+
+      /**
+       * The multiplier for conversion from the default unit.
+       */
+      public final double mult;
+
+      /**
+       * Map strings to rate units.
+       */
+      private static ImmutableMap<String, RateUnit> unitMap = ImmutableMap.of(
+              "", PER_SECOND,
+              "persecond", PER_SECOND,
+              "perminute", PER_MINUTE,
+              "perhour", PER_HOUR
+      );
+
+      /**
+       * Gets a rate unit from a string.
+       * @param str The string.
+       * @return The rate unit or the default if string is not recognized.
+       */
+      public static RateUnit fromString(final String str) {
+         RateUnit unit = unitMap.get(Strings.nullToEmpty(str).trim().toLowerCase());
+         return unit != null ? unit : RAW_RATE_UNIT;
+      }
+   }
+
+   /**
+    * The rate unit in which raw data is expressed (per second).
+    */
+   public static final RateUnit RAW_RATE_UNIT = RateUnit.PER_SECOND;
+
+   /**
     * Generates a graph response.
     * @param graphQuery The query.
     * @param esResponse The response from ES.
     * @param options Response options.
+    * @param rateUnit The rate unit.
     * @param response The target HTTP response.
     * @return Was the resposne an error?
     * @throws IOException on write error.
@@ -59,6 +117,7 @@ public interface ResponseGenerator {
    public boolean generateGraph(GraphQuery graphQuery,
                                 Response esResponse,
                                 EnumSet<Option> options,
+                                RateUnit rateUnit,
                                 HttpServletResponse response) throws IOException;
 
    /**

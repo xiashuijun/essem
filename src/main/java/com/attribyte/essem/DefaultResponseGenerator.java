@@ -16,6 +16,7 @@
 package com.attribyte.essem;
 
 import com.attribyte.essem.model.graph.MetricKey;
+import com.attribyte.essem.query.Fields;
 import com.attribyte.essem.query.GraphQuery;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -41,6 +42,7 @@ import java.util.Map;
 import static com.attribyte.essem.util.Util.getStringField;
 import static com.attribyte.essem.util.Util.getFieldNode;
 import static com.attribyte.essem.util.Util.graphIgnoreProperties;
+import static com.attribyte.essem.query.Fields.rateFields;
 
 public class DefaultResponseGenerator extends ESResponseGenerator {
 
@@ -48,6 +50,7 @@ public class DefaultResponseGenerator extends ESResponseGenerator {
    public boolean generateGraph(GraphQuery graphQuery,
                                 Response esResponse,
                                 EnumSet<Option> options,
+                                RateUnit rateUnit,
                                 HttpServletResponse response) throws IOException {
       ObjectNode jsonObject = mapper.readTree(parserFactory.createParser(esResponse.getBody().toByteArray()));
 
@@ -85,7 +88,7 @@ public class DefaultResponseGenerator extends ESResponseGenerator {
             targetMeta.put("downsampledWith", graphQuery.downsampleFunction);
          }
 
-         String error = parseGraphAggregation(aggregations, fields, targetMeta, targetGraphs);
+         String error = parseGraphAggregation(aggregations, fields, rateUnit, targetMeta, targetGraphs);
          if(error == null) {
             generateGraph(responseObject, response);
             return true;
@@ -102,7 +105,7 @@ public class DefaultResponseGenerator extends ESResponseGenerator {
                metaFields.add(field);
             }
          }
-         parseGraph(jsonObject, fields, targetMeta, targetGraphs);
+         parseGraph(jsonObject, fields, rateUnit, targetMeta, targetGraphs);
          generateGraph(responseObject, response);
          return true;
       }
@@ -118,6 +121,7 @@ public class DefaultResponseGenerator extends ESResponseGenerator {
 
 
    protected void parseGraph(JsonNode sourceParent, List<String> fields,
+                             RateUnit rateUnit,
                              ObjectNode targetMeta, ArrayNode targetGraph) {
 
       DateTimeFormatter parser = ISODateTimeFormat.basicDateTime();
@@ -156,10 +160,14 @@ public class DefaultResponseGenerator extends ESResponseGenerator {
                   for(String field : fields) {
                      if(!graphIgnoreProperties.contains(field)) {
                         JsonNode fieldNode = getFieldNode(fieldsObj, field);
-                        if(fieldNode != null) {
-                           sampleArr.add(fieldNode);
+                        if(rateUnit == RAW_RATE_UNIT || fieldNode == null || !rateFields.contains(field)) {
+                           if(fieldNode != null) {
+                              sampleArr.add(fieldNode);
+                           } else {
+                              sampleArr.addNull();
+                           }
                         } else {
-                           sampleArr.addNull();
+                           sampleArr.add(fieldNode.doubleValue() * rateUnit.mult);
                         }
                      }
                   }
@@ -170,6 +178,7 @@ public class DefaultResponseGenerator extends ESResponseGenerator {
    }
 
    protected String parseGraphAggregation(JsonNode sourceParent, List<String> fields,
+                                          RateUnit rateUnit,
                                           ObjectNode targetMeta, ArrayNode targetGraph) {
 
       Iterator<Map.Entry<String, JsonNode>> iter = sourceParent.fields();
@@ -208,7 +217,7 @@ public class DefaultResponseGenerator extends ESResponseGenerator {
             }
 
             targetMeta.put(translateBucketName(bucketName), keyNode.asText());
-            String error = parseGraphAggregation(bucketObj, fields, targetMeta.deepCopy(), targetGraph);
+            String error = parseGraphAggregation(bucketObj, fields, rateUnit, targetMeta.deepCopy(), targetGraph);
             if(error != null) {
                return error;
             }
@@ -240,10 +249,14 @@ public class DefaultResponseGenerator extends ESResponseGenerator {
                JsonNode fieldObj = bucketObj.get(field);
                if(fieldObj != null) {
                   JsonNode valueNode = fieldObj.get("value");
-                  if(valueNode != null) {
-                     sampleArr.add(valueNode);
+                  if(rateUnit == RAW_RATE_UNIT || valueNode == null || !rateFields.contains(field)) {
+                     if(valueNode != null) {
+                        sampleArr.add(valueNode);
+                     } else {
+                        sampleArr.add(0L);
+                     }
                   } else {
-                     sampleArr.add(0L);
+                     sampleArr.add(valueNode.doubleValue() * rateUnit.mult);
                   }
                } else {
                   sampleArr.add(0L);

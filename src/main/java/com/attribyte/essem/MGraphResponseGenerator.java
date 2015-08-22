@@ -16,6 +16,7 @@
 package com.attribyte.essem;
 
 import com.attribyte.essem.model.graph.MetricKey;
+import com.attribyte.essem.query.Fields;
 import com.attribyte.essem.query.GraphQuery;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -52,6 +53,7 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
    public boolean generateGraph(GraphQuery graphQuery,
                                 Response esResponse,
                                 EnumSet<Option> options,
+                                RateUnit rateUnit,
                                 HttpServletResponse response) throws IOException {
 
       ObjectNode esResponseObject = mapper.readTree(parserFactory.createParser(esResponse.getBody().toByteArray()));
@@ -62,7 +64,7 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
       if(graphQuery.isAggregation) {
          JsonNode aggregations = esResponseObject.get("aggregations");
          if(aggregations != null && aggregations.isObject()) {
-            String error = parseGraphAggregation(aggregations, fields, options, targetGraph);
+            String error = parseGraphAggregation(aggregations, fields, options, rateUnit, targetGraph);
             if(error != null) {
                response.sendError(500, error);
                return false;
@@ -75,7 +77,7 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
             return false;
          }
       } else {
-         parseGraph(esResponseObject, fields, options, targetGraph);
+         parseGraph(esResponseObject, fields, options, rateUnit, targetGraph);
          generateGraph(targetGraph, response);
          return true;
       }
@@ -92,6 +94,7 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
    protected void parseGraph(JsonNode sourceParent,
                              List<String> fields,
                              EnumSet<Option> options,
+                             RateUnit rateUnit,
                              ArrayNode targetGraph) {
 
       DateTimeFormatter parser = ISODateTimeFormat.basicDateTime();
@@ -123,9 +126,9 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
                      if(!graphIgnoreProperties.contains(currField.getKey())) {
                         JsonNode currValueNode = currField.getValue();
                         if(currValueNode.isArray() && currValueNode.size() > 0) {
-                           outObj.set(currField.getKey(), currValueNode.get(0));
+                           setFieldValue(rateUnit, outObj, currField.getKey(), currValueNode.get(0));
                         } else if(!currValueNode.isArray()) {
-                           outObj.set(currField.getKey(), currValueNode);
+                           setFieldValue(rateUnit, outObj, currField.getKey(), currValueNode);
                         }
                      }
                   }
@@ -165,6 +168,7 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
    private String parseGraphAggregation(JsonNode sourceParent,
                                         List<String> fields,
                                         EnumSet<Option> options,
+                                        RateUnit rateUnit,
                                         ArrayNode targetGraph) {
 
 
@@ -203,7 +207,7 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
                return "Aggregation is invalid";
             }
 
-            String error = parseGraphAggregation(bucketObj, fields, options, targetGraph);
+            String error = parseGraphAggregation(bucketObj, fields, options, rateUnit, targetGraph);
             if(error != null) {
                return error;
             }
@@ -239,7 +243,7 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
                      JsonNode valueNode = fieldObj.get("value");
                      if(valueNode != null) {
                         if(!valueNode.isNull()) {
-                           sampleObj.set(field, valueNode.deepCopy());
+                           setFieldValue(rateUnit, sampleObj, field, valueNode);
                         }
                      }
                   }
@@ -247,6 +251,26 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
             }
          }
          return null;
+      }
+   }
+
+   /**
+    * Sets a field value, converting rates, if requested.
+    * @param rateUnit The rate unit.
+    * @param parentObj The parent to which the field is added.
+    * @param field The field name.
+    * @param valueNode The input value node.
+    */
+   private static void setFieldValue(RateUnit rateUnit, ObjectNode parentObj, String field, JsonNode valueNode) {
+
+      if(rateUnit == ResponseGenerator.RAW_RATE_UNIT) {
+         parentObj.set(field, valueNode);
+      } else {
+         if(!Fields.rateFields.contains(field)) {
+            parentObj.set(field, valueNode);
+         } else {
+            parentObj.put(field, valueNode.doubleValue() * rateUnit.mult);
+         }
       }
    }
 }
