@@ -117,6 +117,24 @@ $topbar(index, indexList, zoneList, uid)$
     dataConfig.host = '$graph.key.host$';
     dataConfig.t = 'user_graph_stats';
 
+    $if(graph.rate)$
+    switch('$graph.rateUnit$'.toLowerCase()) {
+        case "perminute":
+            jQuery("#rselect_min").prop("checked", true);
+            dataConfig.rateUnit = 'perMinute';
+            break;
+        case "perhour":
+            jQuery("#rselect_hour").prop("checked", true);
+            dataConfig.rateUnit = 'perHour';
+            break
+        default:
+            dataConfig.rateUnit = 'perSecond';
+            break;
+    }
+    $else$
+    dataConfig.rateUnit = 'perSecond';
+    $endif$
+
     function render(data) {
         if(data.length > 0) {
             jQuery('#missing_graph').hide();
@@ -150,20 +168,7 @@ $topbar(index, indexList, zoneList, uid)$
         loadMetricData(dataConfig, render);
     });
 
-    dataConfig.rateUnit = 'perSecond';
-
     $if(graph.rate)$
-    switch('$graph.rateUnit$'.toLowerCase()) {
-        case "perminute":
-            jQuery("#rselect_min").prop("checked", true);
-            dataConfig.rateUnit = 'perMinute';
-            break;
-        case "perhour":
-            jQuery("#rselect_hour").prop("checked", true);
-            dataConfig.rateUnit = 'perHour';
-            break
-    }
-
     jQuery('.rselect').click(function(event) {
         dataConfig.rateUnit = jQuery('input[name=rselectfield]:checked').val();
         loadMetricData(dataConfig, render);
