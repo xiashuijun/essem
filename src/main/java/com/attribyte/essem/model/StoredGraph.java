@@ -614,4 +614,22 @@ public class StoredGraph {
     * A comma-separated list of tags.
     */
    public final String tagString;
+
+   /**
+    * Gets a text description of the rate unit.
+    * @return The text.
+    */
+   public final String getRateUnitText() {
+      if(rateUnit != null) {
+         switch(rateUnit.toLowerCase()) {
+            case "persecond" : return "/s";
+            case "perminute" : return "/min";
+            case "perhour" : return "/hour";
+            default : return "";
+         }
+      } else {
+         return "";
+      }
+   }
+
 }
