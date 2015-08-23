@@ -75,6 +75,12 @@
           "index": "not_analyzed",
           "doc_values": false
         },
+        "timeUnit": {
+          "type": "string",
+          "store": true,
+          "index": "not_analyzed",
+          "doc_values": false
+        },
         "title": {
           "type": "string",
           "store": true,
