@@ -23,7 +23,7 @@ public interface BucketAggregation extends Aggregation {
    /**
     * Standard bucket orders.
     */
-   public static enum Order {
+   public enum Order {
       /**
        * By count, descending.
        */
