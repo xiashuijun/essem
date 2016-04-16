@@ -52,6 +52,10 @@ function render_$graph.sid$() {
   dataConfig_$graph.sid$.startTimestamp = dataConfig_$graph.sid$.endTimestamp - rangeMillis(dataConfig_$graph.sid$.range);
  }
 
+ $if(graph.rateUnit)$
+ dataConfig_$graph.sid$.rateUnit = '$graph.rateUnit$';
+ $endif$
+
  dataConfig_$graph.sid$.host = '$graph.key.host$';
 
  function render_$graph.sid$(data) {
