@@ -101,7 +101,7 @@ public class Metric {
    /**
     * Metric types.
     */
-   public static enum Type {
+   public enum Type {
 
       /**
        * An instantaneous value.
