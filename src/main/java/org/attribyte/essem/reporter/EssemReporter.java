@@ -248,7 +248,6 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       this.rateUnit = rateUnit;
       this.durationUnit = durationUnit;
       this.lastReportedCount = skipUnchangedMetrics ? Maps.<String, Long>newConcurrentMap() : null;
-      this.lastReportedGaugeValue = skipUnchangedMetrics ? Maps.<String, Double>newConcurrentMap() : null;
    }
 
    /**
@@ -295,24 +294,11 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
 
       for(Map.Entry<String, Gauge> gauge : gauges.entrySet()) {
          Object val = gauge.getValue().getValue();
+         ReportProtos.EssemReport.Gauge.Builder gaugeBuilder = builder.addGaugeBuilder();
+         gaugeBuilder.setName(gauge.getKey());
          if(val instanceof Number) {
-            double doubleVal = ((Number)val).doubleValue();
-            if(lastReportedGaugeValue == null) {
-               ReportProtos.EssemReport.Gauge.Builder gaugeBuilder = builder.addGaugeBuilder();
-               gaugeBuilder.setName(gauge.getKey());
-               gaugeBuilder.setValue(doubleVal);
-            } else {
-               Double lastValue = lastReportedGaugeValue.getOrDefault(gauge.getKey(), Double.MIN_VALUE);
-               if(Math.abs(doubleVal - lastValue) > GAUGE_CHANGE_THRESHOLD) {
-                  lastReportedGaugeValue.put(gauge.getKey(), doubleVal);
-                  ReportProtos.EssemReport.Gauge.Builder gaugeBuilder = builder.addGaugeBuilder();
-                  gaugeBuilder.setName(gauge.getKey());
-                  gaugeBuilder.setValue(doubleVal);
-               }
-            }
+            gaugeBuilder.setValue(((Number)val).doubleValue());
          } else {
-            ReportProtos.EssemReport.Gauge.Builder gaugeBuilder = builder.addGaugeBuilder();
-            gaugeBuilder.setName(gauge.getKey());
             gaugeBuilder.setComment(val.toString());
          }
       }
@@ -574,20 +560,6 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
     * </p>
     */
    private final Map<String, Long> lastReportedCount;
-
-   /**
-    * A map that contains the last reported value for gauges.
-    * <p>
-    *    If configured, and the previously reported value is unchanged, the metric
-    *    will not be reported.
-    * </p>
-    */
-   private final Map<String, Double> lastReportedGaugeValue;
-
-   /**
-    * The threshold below which a gauge value is considered to be unchanged. (Probably should be configurable.)
-    */
-   private static final double GAUGE_CHANGE_THRESHOLD = 0.000000001;
 
    /**
     * Should reporting be skipped for this counted metric.
