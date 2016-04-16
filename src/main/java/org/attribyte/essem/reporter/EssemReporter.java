@@ -562,7 +562,12 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
    private final Map<String, Long> lastReportedCount;
 
    /**
-    * Should reporting be skipped for this counted metric.
+    * Should reporting be skipped for this counted metric?
+    *
+    * <p>
+    *    If the count is zero, no values have ever been added to the metric.
+    *    If the count is unchanged, no measurements have been recorded since the last report.
+    * </p>
     * @param name The metric name.
     * @param currentValue The current value.
     * @return Should reporting be skipped?
@@ -570,7 +575,7 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
    private boolean skipCountedReport(final String name, final long currentValue) {
       if(lastReportedCount == null) {
          return false;
-      } else if(lastReportedCount.getOrDefault(name, Long.MIN_VALUE) == currentValue) {
+      } else if(currentValue == 0L || lastReportedCount.getOrDefault(name, Long.MIN_VALUE) == currentValue) {
          return true;
       } else {
          lastReportedCount.put(name, currentValue);
