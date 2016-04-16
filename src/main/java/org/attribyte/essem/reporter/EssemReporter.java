@@ -295,20 +295,24 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
 
       for(Map.Entry<String, Gauge> gauge : gauges.entrySet()) {
          Object val = gauge.getValue().getValue();
-         ReportProtos.EssemReport.Gauge.Builder gaugeBuilder = builder.addGaugeBuilder();
-         gaugeBuilder.setName(gauge.getKey());
          if(val instanceof Number) {
             double doubleVal = ((Number)val).doubleValue();
             if(lastReportedGaugeValue == null) {
+               ReportProtos.EssemReport.Gauge.Builder gaugeBuilder = builder.addGaugeBuilder();
+               gaugeBuilder.setName(gauge.getKey());
                gaugeBuilder.setValue(doubleVal);
             } else {
                Double lastValue = lastReportedGaugeValue.getOrDefault(gauge.getKey(), Double.MIN_VALUE);
                if(Math.abs(doubleVal - lastValue) > GAUGE_CHANGE_THRESHOLD) {
                   lastReportedGaugeValue.put(gauge.getKey(), doubleVal);
+                  ReportProtos.EssemReport.Gauge.Builder gaugeBuilder = builder.addGaugeBuilder();
+                  gaugeBuilder.setName(gauge.getKey());
                   gaugeBuilder.setValue(doubleVal);
                }
             }
          } else {
+            ReportProtos.EssemReport.Gauge.Builder gaugeBuilder = builder.addGaugeBuilder();
+            gaugeBuilder.setName(gauge.getKey());
             gaugeBuilder.setComment(val.toString());
          }
       }
