@@ -20,6 +20,7 @@ import com.attribyte.essem.model.graph.MetricKey;
 import com.attribyte.essem.query.Fields;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
@@ -539,5 +540,18 @@ public class Util {
                if(!Character.isJavaIdentifierPart(ch)) return false;
          }
       return true;
+   }
+
+   /**
+    * Converts a node to a "pretty" JSON string.
+    * @param node The node.
+    * @return The node as a string.
+    */
+   public static final String toPrettyJSON(final JsonNode node) {
+      try {
+         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(node);
+      } catch(JsonProcessingException pe) {
+         return "[invalid json]";
+      }
    }
 }
