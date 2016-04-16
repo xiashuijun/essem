@@ -106,19 +106,16 @@ public class ConsoleServlet extends HttpServlet {
       }
       this.zoneMap = zoneMapBuilder.build();
 
-      DisplayTZ _defaultDisplayTz = this.zoneMap.get(TimeZone.getDefault().getID());
-      if(_defaultDisplayTz == null && zones.size() > 0) {
-         _defaultDisplayTz = zones.get(0);
+      DisplayTZ defaultDisplayTZ = this.zoneMap.get(TimeZone.getDefault().getID());
+      if(defaultDisplayTZ == null && zones.size() > 0) {
+         defaultDisplayTZ = zones.get(0);
       } else {
-         _defaultDisplayTz = new DisplayTZ(TimeZone.getDefault().getID(), TimeZone.getDefault().getDisplayName());
+         defaultDisplayTZ = new DisplayTZ(TimeZone.getDefault().getID(), TimeZone.getDefault().getDisplayName());
       }
-
-      this.defaultDisplayTZ = _defaultDisplayTz;
 
       this.client = client;
       this.requestOptions = requestOptions;
       this.logger = logger;
-      this.debug = debug;
       this.templateGroup = debug ? null : loadTemplates();
       this.dashboardTemplateGroup = debug ? null : loadDashboardTemplates();
 
@@ -1514,7 +1511,6 @@ public class ConsoleServlet extends HttpServlet {
    private final Logger logger;
    private final AsyncClient client;
    private final RequestOptions requestOptions;
-   private final boolean debug;
    private final IndexAuthorization indexAuthorization;
    private final ESEndpoint esEndpoint;
    private final ESUserStore userStore;
@@ -1522,7 +1518,6 @@ public class ConsoleServlet extends HttpServlet {
 
    private final ImmutableList<DisplayTZ> zones;
    private final ImmutableMap<String, DisplayTZ> zoneMap;
-   private final DisplayTZ defaultDisplayTZ;
 
    private final Dashboard defaultDashboard;
 
