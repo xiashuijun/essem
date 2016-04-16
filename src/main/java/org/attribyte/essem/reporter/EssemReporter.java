@@ -31,6 +31,7 @@ import com.codahale.metrics.Timer;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
 import org.attribyte.essem.ReportProtos;
@@ -191,12 +192,22 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       }
 
       /**
+       * Configures the reporter to skip reports for metrics unchanged
+       * since the last report. Default is 'true'.
+       */
+      public Builder skipUnchangedMetrics(final boolean skipUnchangedMetrics) {
+         this.skipUnchangedMetrics = skipUnchangedMetrics;
+         return this;
+      }
+
+      /**
        * Builds an immutable reporter instance.
        * @return The immutable reporter.
        */
       public EssemReporter build() {
          return new EssemReporter(uri, authValue, deflate,
-                 registry, clock, application, host, instance, filter, rateUnit, durationUnit);
+                 registry, clock, application, host, instance, filter, rateUnit, durationUnit,
+                 skipUnchangedMetrics);
       }
 
       private final URI uri;
@@ -210,6 +221,7 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       private boolean deflate;
       private TimeUnit rateUnit = TimeUnit.MILLISECONDS;
       private TimeUnit durationUnit = TimeUnit.SECONDS;
+      private boolean skipUnchangedMetrics = false;
       private MetricFilter filter;
    }
 
@@ -223,7 +235,8 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
                            final String instance,
                            final MetricFilter filter,
                            final TimeUnit rateUnit,
-                           final TimeUnit durationUnit) {
+                           final TimeUnit durationUnit,
+                           final boolean skipUnchangedMetrics) {
       super(registry, "essem-reporter", filter, rateUnit, durationUnit);
       this.uri = uri;
       this.authValue = authValue;
@@ -234,6 +247,8 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       this.instance = instance;
       this.rateUnit = rateUnit;
       this.durationUnit = durationUnit;
+      this.lastReportedCount = skipUnchangedMetrics ? Maps.<String, Long>newConcurrentMap() : null;
+      this.lastReportedGaugeValue = skipUnchangedMetrics ? Maps.<String, Double>newConcurrentMap() : null;
    }
 
    /**
@@ -283,67 +298,89 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
          ReportProtos.EssemReport.Gauge.Builder gaugeBuilder = builder.addGaugeBuilder();
          gaugeBuilder.setName(gauge.getKey());
          if(val instanceof Number) {
-            gaugeBuilder.setValue(((Number)val).doubleValue());
+            double doubleVal = ((Number)val).doubleValue();
+            if(lastReportedGaugeValue == null) {
+               gaugeBuilder.setValue(doubleVal);
+            } else {
+               Double lastValue = lastReportedGaugeValue.getOrDefault(gauge.getKey(), Double.MIN_VALUE);
+               if(Math.abs(doubleVal - lastValue) > GAUGE_CHANGE_THRESHOLD) {
+                  lastReportedGaugeValue.put(gauge.getKey(), doubleVal);
+                  gaugeBuilder.setValue(doubleVal);
+               }
+            }
          } else {
             gaugeBuilder.setComment(val.toString());
          }
       }
 
       for(Map.Entry<String, Counter> counter : counters.entrySet()) {
-         builder.addCounterBuilder()
-                 .setName(counter.getKey())
-                 .setCount(counter.getValue().getCount());
+         String name = counter.getKey();
+         long value = counter.getValue().getCount();
+         if(!skipCountedReport(name, value)) {
+            builder.addCounterBuilder()
+                    .setName(name)
+                    .setCount(value);
+         }
       }
 
       for(Map.Entry<String, Meter> nv : meters.entrySet()) {
+         String name = nv.getKey();
          Meter meter = nv.getValue();
-         builder.addMeterBuilder()
-                 .setName(nv.getKey())
-                 .setCount(meter.getCount())
-                 .setOneMinuteRate(convertRate(meter.getOneMinuteRate()))
-                 .setFiveMinuteRate(convertRate(meter.getFiveMinuteRate()))
-                 .setFifteenMinuteRate(convertRate(meter.getFifteenMinuteRate()))
-                 .setMeanRate(convertRate(meter.getMeanRate()));
+         if(!skipCountedReport(name, meter.getCount())) {
+            builder.addMeterBuilder()
+                    .setName(name)
+                    .setCount(meter.getCount())
+                    .setOneMinuteRate(convertRate(meter.getOneMinuteRate()))
+                    .setFiveMinuteRate(convertRate(meter.getFiveMinuteRate()))
+                    .setFifteenMinuteRate(convertRate(meter.getFifteenMinuteRate()))
+                    .setMeanRate(convertRate(meter.getMeanRate()));
+         }
       }
 
       for(Map.Entry<String, Histogram> nv : histograms.entrySet()) {
+         String name = nv.getKey();
          Histogram histogram = nv.getValue();
-         Snapshot snapshot = histogram.getSnapshot();
-         builder.addHistogramBuilder()
-                 .setName(nv.getKey())
-                 .setCount(histogram.getCount())
-                 .setMax(snapshot.getMax())
-                 .setMin(snapshot.getMin())
-                 .setMedian(snapshot.getMedian())
-                 .setMean(snapshot.getMean())
-                 .setStd(snapshot.getStdDev())
-                 .setPercentile75(snapshot.get75thPercentile())
-                 .setPercentile95(snapshot.get95thPercentile())
-                 .setPercentile98(snapshot.get98thPercentile())
-                 .setPercentile99(snapshot.get99thPercentile())
-                 .setPercentile999(snapshot.get999thPercentile());
+         if(!skipCountedReport(name, histogram.getCount())) {
+            Snapshot snapshot = histogram.getSnapshot();
+            builder.addHistogramBuilder()
+                    .setName(name)
+                    .setCount(histogram.getCount())
+                    .setMax(snapshot.getMax())
+                    .setMin(snapshot.getMin())
+                    .setMedian(snapshot.getMedian())
+                    .setMean(snapshot.getMean())
+                    .setStd(snapshot.getStdDev())
+                    .setPercentile75(snapshot.get75thPercentile())
+                    .setPercentile95(snapshot.get95thPercentile())
+                    .setPercentile98(snapshot.get98thPercentile())
+                    .setPercentile99(snapshot.get99thPercentile())
+                    .setPercentile999(snapshot.get999thPercentile());
+         }
       }
 
       for(Map.Entry<String, Timer> nv : timers.entrySet()) {
+         final String name = nv.getKey();
          Timer timer = nv.getValue();
-         Snapshot snapshot = timer.getSnapshot();
-         builder.addTimerBuilder()
-                 .setName(nv.getKey())
-                 .setOneMinuteRate(convertRate(timer.getOneMinuteRate()))
-                 .setFiveMinuteRate(convertRate(timer.getFiveMinuteRate()))
-                 .setFifteenMinuteRate(convertRate(timer.getFifteenMinuteRate()))
-                 .setMeanRate(convertRate(timer.getMeanRate()))
-                 .setCount(timer.getCount())
-                 .setMax(convertDuration(snapshot.getMax()))
-                 .setMin(convertDuration(snapshot.getMin()))
-                 .setMedian(convertDuration(snapshot.getMedian()))
-                 .setMean(convertDuration(snapshot.getMean()))
-                 .setStd(convertDuration(snapshot.getStdDev()))
-                 .setPercentile75(convertDuration(snapshot.get75thPercentile()))
-                 .setPercentile95(convertDuration(snapshot.get95thPercentile()))
-                 .setPercentile98(convertDuration(snapshot.get98thPercentile()))
-                 .setPercentile99(convertDuration(snapshot.get99thPercentile()))
-                 .setPercentile999(convertDuration(snapshot.get999thPercentile()));
+         if(!skipCountedReport(name, timer.getCount())) {
+            Snapshot snapshot = timer.getSnapshot();
+            builder.addTimerBuilder()
+                    .setName(nv.getKey())
+                    .setOneMinuteRate(convertRate(timer.getOneMinuteRate()))
+                    .setFiveMinuteRate(convertRate(timer.getFiveMinuteRate()))
+                    .setFifteenMinuteRate(convertRate(timer.getFifteenMinuteRate()))
+                    .setMeanRate(convertRate(timer.getMeanRate()))
+                    .setCount(timer.getCount())
+                    .setMax(convertDuration(snapshot.getMax()))
+                    .setMin(convertDuration(snapshot.getMin()))
+                    .setMedian(convertDuration(snapshot.getMedian()))
+                    .setMean(convertDuration(snapshot.getMean()))
+                    .setStd(convertDuration(snapshot.getStdDev()))
+                    .setPercentile75(convertDuration(snapshot.get75thPercentile()))
+                    .setPercentile95(convertDuration(snapshot.get95thPercentile()))
+                    .setPercentile98(convertDuration(snapshot.get98thPercentile()))
+                    .setPercentile99(convertDuration(snapshot.get99thPercentile()))
+                    .setPercentile999(convertDuration(snapshot.get999thPercentile()));
+         }
       }
 
       return builder.build();
@@ -523,5 +560,45 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
    @Override
    public Map<String, Metric> getMetrics() {
       return metrics;
+   }
+
+   /**
+    * A map that contains the last reported value for counters, meters, histograms and timers.
+    * <p>
+    *    If configured, and the previously reported value is unchanged, the metric
+    *    will not be reported.
+    * </p>
+    */
+   private final Map<String, Long> lastReportedCount;
+
+   /**
+    * A map that contains the last reported value for gauges.
+    * <p>
+    *    If configured, and the previously reported value is unchanged, the metric
+    *    will not be reported.
+    * </p>
+    */
+   private final Map<String, Double> lastReportedGaugeValue;
+
+   /**
+    * The threshold below which a gauge value is considered to be unchanged. (Probably should be configurable.)
+    */
+   private static final double GAUGE_CHANGE_THRESHOLD = 0.000000001;
+
+   /**
+    * Should reporting be skipped for this counted metric.
+    * @param name The metric name.
+    * @param currentValue The current value.
+    * @return Should reporting be skipped?
+    */
+   private boolean skipCountedReport(final String name, final long currentValue) {
+      if(lastReportedCount == null) {
+         return false;
+      } else if(lastReportedCount.getOrDefault(name, Long.MIN_VALUE) == currentValue) {
+         return true;
+      } else {
+         lastReportedCount.put(name, currentValue);
+         return false;
+      }
    }
 }
