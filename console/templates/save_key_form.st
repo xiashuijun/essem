@@ -1,5 +1,5 @@
 save_key_form(graph) ::= <<
-<form action="POST" id="save-key-form">
+<form action="" id="save-key-form">
     <div class="row">
         <div class="small-12 colunms">
             <h5 class="subheader" id="save-key-form-title">
