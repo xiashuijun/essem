@@ -48,6 +48,7 @@ import java.net.URL;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
@@ -219,8 +220,8 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       private String host;
       private String instance;
       private boolean deflate;
-      private TimeUnit rateUnit = TimeUnit.MILLISECONDS;
-      private TimeUnit durationUnit = TimeUnit.SECONDS;
+      private TimeUnit rateUnit = TimeUnit.SECONDS;
+      private TimeUnit durationUnit = TimeUnit.MILLISECONDS;
       private boolean skipUnchangedMetrics = false;
       private MetricFilter filter;
    }
@@ -291,6 +292,8 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       if(application != null) builder.setApplication(application);
       if(host != null) builder.setHost(host);
       if(instance != null) builder.setInstance(instance);
+
+      lastMetricCount.set(gauges.size() + counters.size() + histograms.size() + meters.size() + timers.size());
 
       for(Map.Entry<String, Gauge> gauge : gauges.entrySet()) {
          Object val = gauge.getValue().getValue();
@@ -540,13 +543,20 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
    private final Timer sendTimer = new Timer();
    private final Meter sendErrors = new Meter();
    private final Histogram reportSize = new Histogram(new ExponentiallyDecayingReservoir());
+   private final Counter skippedUnchanged = new Counter();
+
    private final ImmutableMap<String, Metric> metrics =
-           ImmutableMap.<String, Metric>of(
+           ImmutableMap.of(
                    "reports", sendTimer,
                    "failed-reports", sendErrors,
-                   "report-size-bytes", reportSize
+                   "report-size-bytes", reportSize,
+                   "skipped-unchanged", skippedUnchanged,
+                   "report-count", new Gauge<Integer>() {
+                      public Integer getValue() {
+                         return lastMetricCount.get();
+                      }
+                   }
            );
-
    @Override
    public Map<String, Metric> getMetrics() {
       return metrics;
@@ -560,6 +570,12 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
     * </p>
     */
    private final Map<String, Long> lastReportedCount;
+
+
+   /**
+    * The number of metrics last reported.
+    */
+   private final AtomicInteger lastMetricCount = new AtomicInteger();
 
    /**
     * Should reporting be skipped for this counted metric?
@@ -576,6 +592,7 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       if(lastReportedCount == null) {
          return false;
       } else if(lastReportedCount.getOrDefault(name, Long.MIN_VALUE) == currentValue) {
+         skippedUnchanged.inc();
          return true;
       } else {
          lastReportedCount.put(name, currentValue);
