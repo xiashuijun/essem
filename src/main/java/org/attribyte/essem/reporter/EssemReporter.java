@@ -575,7 +575,7 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
    private boolean skipCountedReport(final String name, final long currentValue) {
       if(lastReportedCount == null) {
          return false;
-      } else if(currentValue == 0L || lastReportedCount.getOrDefault(name, Long.MIN_VALUE) == currentValue) {
+      } else if(lastReportedCount.getOrDefault(name, Long.MIN_VALUE) == currentValue) {
          return true;
       } else {
          lastReportedCount.put(name, currentValue);
