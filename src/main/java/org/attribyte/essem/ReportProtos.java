@@ -1815,6 +1815,515 @@ public final class ReportProtos {
       // @@protoc_insertion_point(class_scope:org.attribyte.essem.EssemReport.Meter)
     }
     
+    public interface BinOrBuilder
+        extends com.google.protobuf.MessageOrBuilder {
+      
+      // optional double min = 1;
+      boolean hasMin();
+      double getMin();
+      
+      // optional double max = 2;
+      boolean hasMax();
+      double getMax();
+      
+      // optional uint64 count = 3;
+      boolean hasCount();
+      long getCount();
+      
+      // optional double percentile = 4;
+      boolean hasPercentile();
+      double getPercentile();
+    }
+    public static final class Bin extends
+        com.google.protobuf.GeneratedMessage
+        implements BinOrBuilder {
+      // Use Bin.newBuilder() to construct.
+      private Bin(Builder builder) {
+        super(builder);
+      }
+      private Bin(boolean noInit) {}
+      
+      private static final Bin defaultInstance;
+      public static Bin getDefaultInstance() {
+        return defaultInstance;
+      }
+      
+      public Bin getDefaultInstanceForType() {
+        return defaultInstance;
+      }
+      
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.attribyte.essem.ReportProtos.internal_static_org_attribyte_essem_EssemReport_Bin_descriptor;
+      }
+      
+      protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.attribyte.essem.ReportProtos.internal_static_org_attribyte_essem_EssemReport_Bin_fieldAccessorTable;
+      }
+      
+      private int bitField0_;
+      // optional double min = 1;
+      public static final int MIN_FIELD_NUMBER = 1;
+      private double min_;
+      public boolean hasMin() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      public double getMin() {
+        return min_;
+      }
+      
+      // optional double max = 2;
+      public static final int MAX_FIELD_NUMBER = 2;
+      private double max_;
+      public boolean hasMax() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      public double getMax() {
+        return max_;
+      }
+      
+      // optional uint64 count = 3;
+      public static final int COUNT_FIELD_NUMBER = 3;
+      private long count_;
+      public boolean hasCount() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      public long getCount() {
+        return count_;
+      }
+      
+      // optional double percentile = 4;
+      public static final int PERCENTILE_FIELD_NUMBER = 4;
+      private double percentile_;
+      public boolean hasPercentile() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      public double getPercentile() {
+        return percentile_;
+      }
+      
+      private void initFields() {
+        min_ = 0D;
+        max_ = 0D;
+        count_ = 0L;
+        percentile_ = 0D;
+      }
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized != -1) return isInitialized == 1;
+        
+        memoizedIsInitialized = 1;
+        return true;
+      }
+      
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        getSerializedSize();
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeDouble(1, min_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeDouble(2, max_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          output.writeUInt64(3, count_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          output.writeDouble(4, percentile_);
+        }
+        getUnknownFields().writeTo(output);
+      }
+      
+      private int memoizedSerializedSize = -1;
+      public int getSerializedSize() {
+        int size = memoizedSerializedSize;
+        if (size != -1) return size;
+      
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeDoubleSize(1, min_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeDoubleSize(2, max_);
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeUInt64Size(3, count_);
+        }
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeDoubleSize(4, percentile_);
+        }
+        size += getUnknownFields().getSerializedSize();
+        memoizedSerializedSize = size;
+        return size;
+      }
+      
+      private static final long serialVersionUID = 0L;
+      @java.lang.Override
+      protected java.lang.Object writeReplace()
+          throws java.io.ObjectStreamException {
+        return super.writeReplace();
+      }
+      
+      public static org.attribyte.essem.ReportProtos.EssemReport.Bin parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return newBuilder().mergeFrom(data).buildParsed();
+      }
+      public static org.attribyte.essem.ReportProtos.EssemReport.Bin parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return newBuilder().mergeFrom(data, extensionRegistry)
+                 .buildParsed();
+      }
+      public static org.attribyte.essem.ReportProtos.EssemReport.Bin parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return newBuilder().mergeFrom(data).buildParsed();
+      }
+      public static org.attribyte.essem.ReportProtos.EssemReport.Bin parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return newBuilder().mergeFrom(data, extensionRegistry)
+                 .buildParsed();
+      }
+      public static org.attribyte.essem.ReportProtos.EssemReport.Bin parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return newBuilder().mergeFrom(input).buildParsed();
+      }
+      public static org.attribyte.essem.ReportProtos.EssemReport.Bin parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return newBuilder().mergeFrom(input, extensionRegistry)
+                 .buildParsed();
+      }
+      public static org.attribyte.essem.ReportProtos.EssemReport.Bin parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        Builder builder = newBuilder();
+        if (builder.mergeDelimitedFrom(input)) {
+          return builder.buildParsed();
+        } else {
+          return null;
+        }
+      }
+      public static org.attribyte.essem.ReportProtos.EssemReport.Bin parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        Builder builder = newBuilder();
+        if (builder.mergeDelimitedFrom(input, extensionRegistry)) {
+          return builder.buildParsed();
+        } else {
+          return null;
+        }
+      }
+      public static org.attribyte.essem.ReportProtos.EssemReport.Bin parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return newBuilder().mergeFrom(input).buildParsed();
+      }
+      public static org.attribyte.essem.ReportProtos.EssemReport.Bin parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return newBuilder().mergeFrom(input, extensionRegistry)
+                 .buildParsed();
+      }
+      
+      public static Builder newBuilder() { return Builder.create(); }
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder(org.attribyte.essem.ReportProtos.EssemReport.Bin prototype) {
+        return newBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() { return newBuilder(this); }
+      
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessage.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessage.Builder<Builder>
+         implements org.attribyte.essem.ReportProtos.EssemReport.BinOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return org.attribyte.essem.ReportProtos.internal_static_org_attribyte_essem_EssemReport_Bin_descriptor;
+        }
+        
+        protected com.google.protobuf.GeneratedMessage.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return org.attribyte.essem.ReportProtos.internal_static_org_attribyte_essem_EssemReport_Bin_fieldAccessorTable;
+        }
+        
+        // Construct using org.attribyte.essem.ReportProtos.EssemReport.Bin.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+        
+        private Builder(BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+          }
+        }
+        private static Builder create() {
+          return new Builder();
+        }
+        
+        public Builder clear() {
+          super.clear();
+          min_ = 0D;
+          bitField0_ = (bitField0_ & ~0x00000001);
+          max_ = 0D;
+          bitField0_ = (bitField0_ & ~0x00000002);
+          count_ = 0L;
+          bitField0_ = (bitField0_ & ~0x00000004);
+          percentile_ = 0D;
+          bitField0_ = (bitField0_ & ~0x00000008);
+          return this;
+        }
+        
+        public Builder clone() {
+          return create().mergeFrom(buildPartial());
+        }
+        
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return org.attribyte.essem.ReportProtos.EssemReport.Bin.getDescriptor();
+        }
+        
+        public org.attribyte.essem.ReportProtos.EssemReport.Bin getDefaultInstanceForType() {
+          return org.attribyte.essem.ReportProtos.EssemReport.Bin.getDefaultInstance();
+        }
+        
+        public org.attribyte.essem.ReportProtos.EssemReport.Bin build() {
+          org.attribyte.essem.ReportProtos.EssemReport.Bin result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+        
+        private org.attribyte.essem.ReportProtos.EssemReport.Bin buildParsed()
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          org.attribyte.essem.ReportProtos.EssemReport.Bin result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(
+              result).asInvalidProtocolBufferException();
+          }
+          return result;
+        }
+        
+        public org.attribyte.essem.ReportProtos.EssemReport.Bin buildPartial() {
+          org.attribyte.essem.ReportProtos.EssemReport.Bin result = new org.attribyte.essem.ReportProtos.EssemReport.Bin(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.min_ = min_;
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.max_ = max_;
+          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.count_ = count_;
+          if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+            to_bitField0_ |= 0x00000008;
+          }
+          result.percentile_ = percentile_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+        
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof org.attribyte.essem.ReportProtos.EssemReport.Bin) {
+            return mergeFrom((org.attribyte.essem.ReportProtos.EssemReport.Bin)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+        
+        public Builder mergeFrom(org.attribyte.essem.ReportProtos.EssemReport.Bin other) {
+          if (other == org.attribyte.essem.ReportProtos.EssemReport.Bin.getDefaultInstance()) return this;
+          if (other.hasMin()) {
+            setMin(other.getMin());
+          }
+          if (other.hasMax()) {
+            setMax(other.getMax());
+          }
+          if (other.hasCount()) {
+            setCount(other.getCount());
+          }
+          if (other.hasPercentile()) {
+            setPercentile(other.getPercentile());
+          }
+          this.mergeUnknownFields(other.getUnknownFields());
+          return this;
+        }
+        
+        public final boolean isInitialized() {
+          return true;
+        }
+        
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder(
+              this.getUnknownFields());
+          while (true) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                this.setUnknownFields(unknownFields.build());
+                onChanged();
+                return this;
+              default: {
+                if (!parseUnknownField(input, unknownFields,
+                                       extensionRegistry, tag)) {
+                  this.setUnknownFields(unknownFields.build());
+                  onChanged();
+                  return this;
+                }
+                break;
+              }
+              case 9: {
+                bitField0_ |= 0x00000001;
+                min_ = input.readDouble();
+                break;
+              }
+              case 17: {
+                bitField0_ |= 0x00000002;
+                max_ = input.readDouble();
+                break;
+              }
+              case 24: {
+                bitField0_ |= 0x00000004;
+                count_ = input.readUInt64();
+                break;
+              }
+              case 33: {
+                bitField0_ |= 0x00000008;
+                percentile_ = input.readDouble();
+                break;
+              }
+            }
+          }
+        }
+        
+        private int bitField0_;
+        
+        // optional double min = 1;
+        private double min_ ;
+        public boolean hasMin() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        public double getMin() {
+          return min_;
+        }
+        public Builder setMin(double value) {
+          bitField0_ |= 0x00000001;
+          min_ = value;
+          onChanged();
+          return this;
+        }
+        public Builder clearMin() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          min_ = 0D;
+          onChanged();
+          return this;
+        }
+        
+        // optional double max = 2;
+        private double max_ ;
+        public boolean hasMax() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        public double getMax() {
+          return max_;
+        }
+        public Builder setMax(double value) {
+          bitField0_ |= 0x00000002;
+          max_ = value;
+          onChanged();
+          return this;
+        }
+        public Builder clearMax() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          max_ = 0D;
+          onChanged();
+          return this;
+        }
+        
+        // optional uint64 count = 3;
+        private long count_ ;
+        public boolean hasCount() {
+          return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+        public long getCount() {
+          return count_;
+        }
+        public Builder setCount(long value) {
+          bitField0_ |= 0x00000004;
+          count_ = value;
+          onChanged();
+          return this;
+        }
+        public Builder clearCount() {
+          bitField0_ = (bitField0_ & ~0x00000004);
+          count_ = 0L;
+          onChanged();
+          return this;
+        }
+        
+        // optional double percentile = 4;
+        private double percentile_ ;
+        public boolean hasPercentile() {
+          return ((bitField0_ & 0x00000008) == 0x00000008);
+        }
+        public double getPercentile() {
+          return percentile_;
+        }
+        public Builder setPercentile(double value) {
+          bitField0_ |= 0x00000008;
+          percentile_ = value;
+          onChanged();
+          return this;
+        }
+        public Builder clearPercentile() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          percentile_ = 0D;
+          onChanged();
+          return this;
+        }
+        
+        // @@protoc_insertion_point(builder_scope:org.attribyte.essem.EssemReport.Bin)
+      }
+      
+      static {
+        defaultInstance = new Bin(true);
+        defaultInstance.initFields();
+      }
+      
+      // @@protoc_insertion_point(class_scope:org.attribyte.essem.EssemReport.Bin)
+    }
+    
     public interface HistogramOrBuilder
         extends com.google.protobuf.MessageOrBuilder {
       
@@ -1865,6 +2374,16 @@ public final class ReportProtos {
       // optional double percentile999 = 12;
       boolean hasPercentile999();
       double getPercentile999();
+      
+      // repeated .org.attribyte.essem.EssemReport.Bin bin = 13;
+      java.util.List<org.attribyte.essem.ReportProtos.EssemReport.Bin> 
+          getBinList();
+      org.attribyte.essem.ReportProtos.EssemReport.Bin getBin(int index);
+      int getBinCount();
+      java.util.List<? extends org.attribyte.essem.ReportProtos.EssemReport.BinOrBuilder> 
+          getBinOrBuilderList();
+      org.attribyte.essem.ReportProtos.EssemReport.BinOrBuilder getBinOrBuilder(
+          int index);
     }
     public static final class Histogram extends
         com.google.protobuf.GeneratedMessage
@@ -2037,6 +2556,27 @@ public final class ReportProtos {
         return percentile999_;
       }
       
+      // repeated .org.attribyte.essem.EssemReport.Bin bin = 13;
+      public static final int BIN_FIELD_NUMBER = 13;
+      private java.util.List<org.attribyte.essem.ReportProtos.EssemReport.Bin> bin_;
+      public java.util.List<org.attribyte.essem.ReportProtos.EssemReport.Bin> getBinList() {
+        return bin_;
+      }
+      public java.util.List<? extends org.attribyte.essem.ReportProtos.EssemReport.BinOrBuilder> 
+          getBinOrBuilderList() {
+        return bin_;
+      }
+      public int getBinCount() {
+        return bin_.size();
+      }
+      public org.attribyte.essem.ReportProtos.EssemReport.Bin getBin(int index) {
+        return bin_.get(index);
+      }
+      public org.attribyte.essem.ReportProtos.EssemReport.BinOrBuilder getBinOrBuilder(
+          int index) {
+        return bin_.get(index);
+      }
+      
       private void initFields() {
         name_ = "";
         count_ = 0L;
@@ -2050,6 +2590,7 @@ public final class ReportProtos {
         percentile98_ = 0D;
         percentile99_ = 0D;
         percentile999_ = 0D;
+        bin_ = java.util.Collections.emptyList();
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -2098,6 +2639,9 @@ public final class ReportProtos {
         }
         if (((bitField0_ & 0x00000800) == 0x00000800)) {
           output.writeDouble(12, percentile999_);
+        }
+        for (int i = 0; i < bin_.size(); i++) {
+          output.writeMessage(13, bin_.get(i));
         }
         getUnknownFields().writeTo(output);
       }
@@ -2155,6 +2699,10 @@ public final class ReportProtos {
         if (((bitField0_ & 0x00000800) == 0x00000800)) {
           size += com.google.protobuf.CodedOutputStream
             .computeDoubleSize(12, percentile999_);
+        }
+        for (int i = 0; i < bin_.size(); i++) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(13, bin_.get(i));
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -2272,6 +2820,7 @@ public final class ReportProtos {
         }
         private void maybeForceBuilderInitialization() {
           if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+            getBinFieldBuilder();
           }
         }
         private static Builder create() {
@@ -2304,6 +2853,12 @@ public final class ReportProtos {
           bitField0_ = (bitField0_ & ~0x00000400);
           percentile999_ = 0D;
           bitField0_ = (bitField0_ & ~0x00000800);
+          if (binBuilder_ == null) {
+            bin_ = java.util.Collections.emptyList();
+            bitField0_ = (bitField0_ & ~0x00001000);
+          } else {
+            binBuilder_.clear();
+          }
           return this;
         }
         
@@ -2390,6 +2945,15 @@ public final class ReportProtos {
             to_bitField0_ |= 0x00000800;
           }
           result.percentile999_ = percentile999_;
+          if (binBuilder_ == null) {
+            if (((bitField0_ & 0x00001000) == 0x00001000)) {
+              bin_ = java.util.Collections.unmodifiableList(bin_);
+              bitField0_ = (bitField0_ & ~0x00001000);
+            }
+            result.bin_ = bin_;
+          } else {
+            result.bin_ = binBuilder_.build();
+          }
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -2441,6 +3005,32 @@ public final class ReportProtos {
           }
           if (other.hasPercentile999()) {
             setPercentile999(other.getPercentile999());
+          }
+          if (binBuilder_ == null) {
+            if (!other.bin_.isEmpty()) {
+              if (bin_.isEmpty()) {
+                bin_ = other.bin_;
+                bitField0_ = (bitField0_ & ~0x00001000);
+              } else {
+                ensureBinIsMutable();
+                bin_.addAll(other.bin_);
+              }
+              onChanged();
+            }
+          } else {
+            if (!other.bin_.isEmpty()) {
+              if (binBuilder_.isEmpty()) {
+                binBuilder_.dispose();
+                binBuilder_ = null;
+                bin_ = other.bin_;
+                bitField0_ = (bitField0_ & ~0x00001000);
+                binBuilder_ = 
+                  com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
+                     getBinFieldBuilder() : null;
+              } else {
+                binBuilder_.addAllMessages(other.bin_);
+              }
+            }
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -2531,6 +3121,12 @@ public final class ReportProtos {
               case 97: {
                 bitField0_ |= 0x00000800;
                 percentile999_ = input.readDouble();
+                break;
+              }
+              case 106: {
+                org.attribyte.essem.ReportProtos.EssemReport.Bin.Builder subBuilder = org.attribyte.essem.ReportProtos.EssemReport.Bin.newBuilder();
+                input.readMessage(subBuilder, extensionRegistry);
+                addBin(subBuilder.buildPartial());
                 break;
               }
             }
@@ -2806,6 +3402,192 @@ public final class ReportProtos {
           return this;
         }
         
+        // repeated .org.attribyte.essem.EssemReport.Bin bin = 13;
+        private java.util.List<org.attribyte.essem.ReportProtos.EssemReport.Bin> bin_ =
+          java.util.Collections.emptyList();
+        private void ensureBinIsMutable() {
+          if (!((bitField0_ & 0x00001000) == 0x00001000)) {
+            bin_ = new java.util.ArrayList<org.attribyte.essem.ReportProtos.EssemReport.Bin>(bin_);
+            bitField0_ |= 0x00001000;
+           }
+        }
+        
+        private com.google.protobuf.RepeatedFieldBuilder<
+            org.attribyte.essem.ReportProtos.EssemReport.Bin, org.attribyte.essem.ReportProtos.EssemReport.Bin.Builder, org.attribyte.essem.ReportProtos.EssemReport.BinOrBuilder> binBuilder_;
+        
+        public java.util.List<org.attribyte.essem.ReportProtos.EssemReport.Bin> getBinList() {
+          if (binBuilder_ == null) {
+            return java.util.Collections.unmodifiableList(bin_);
+          } else {
+            return binBuilder_.getMessageList();
+          }
+        }
+        public int getBinCount() {
+          if (binBuilder_ == null) {
+            return bin_.size();
+          } else {
+            return binBuilder_.getCount();
+          }
+        }
+        public org.attribyte.essem.ReportProtos.EssemReport.Bin getBin(int index) {
+          if (binBuilder_ == null) {
+            return bin_.get(index);
+          } else {
+            return binBuilder_.getMessage(index);
+          }
+        }
+        public Builder setBin(
+            int index, org.attribyte.essem.ReportProtos.EssemReport.Bin value) {
+          if (binBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureBinIsMutable();
+            bin_.set(index, value);
+            onChanged();
+          } else {
+            binBuilder_.setMessage(index, value);
+          }
+          return this;
+        }
+        public Builder setBin(
+            int index, org.attribyte.essem.ReportProtos.EssemReport.Bin.Builder builderForValue) {
+          if (binBuilder_ == null) {
+            ensureBinIsMutable();
+            bin_.set(index, builderForValue.build());
+            onChanged();
+          } else {
+            binBuilder_.setMessage(index, builderForValue.build());
+          }
+          return this;
+        }
+        public Builder addBin(org.attribyte.essem.ReportProtos.EssemReport.Bin value) {
+          if (binBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureBinIsMutable();
+            bin_.add(value);
+            onChanged();
+          } else {
+            binBuilder_.addMessage(value);
+          }
+          return this;
+        }
+        public Builder addBin(
+            int index, org.attribyte.essem.ReportProtos.EssemReport.Bin value) {
+          if (binBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            ensureBinIsMutable();
+            bin_.add(index, value);
+            onChanged();
+          } else {
+            binBuilder_.addMessage(index, value);
+          }
+          return this;
+        }
+        public Builder addBin(
+            org.attribyte.essem.ReportProtos.EssemReport.Bin.Builder builderForValue) {
+          if (binBuilder_ == null) {
+            ensureBinIsMutable();
+            bin_.add(builderForValue.build());
+            onChanged();
+          } else {
+            binBuilder_.addMessage(builderForValue.build());
+          }
+          return this;
+        }
+        public Builder addBin(
+            int index, org.attribyte.essem.ReportProtos.EssemReport.Bin.Builder builderForValue) {
+          if (binBuilder_ == null) {
+            ensureBinIsMutable();
+            bin_.add(index, builderForValue.build());
+            onChanged();
+          } else {
+            binBuilder_.addMessage(index, builderForValue.build());
+          }
+          return this;
+        }
+        public Builder addAllBin(
+            java.lang.Iterable<? extends org.attribyte.essem.ReportProtos.EssemReport.Bin> values) {
+          if (binBuilder_ == null) {
+            ensureBinIsMutable();
+            super.addAll(values, bin_);
+            onChanged();
+          } else {
+            binBuilder_.addAllMessages(values);
+          }
+          return this;
+        }
+        public Builder clearBin() {
+          if (binBuilder_ == null) {
+            bin_ = java.util.Collections.emptyList();
+            bitField0_ = (bitField0_ & ~0x00001000);
+            onChanged();
+          } else {
+            binBuilder_.clear();
+          }
+          return this;
+        }
+        public Builder removeBin(int index) {
+          if (binBuilder_ == null) {
+            ensureBinIsMutable();
+            bin_.remove(index);
+            onChanged();
+          } else {
+            binBuilder_.remove(index);
+          }
+          return this;
+        }
+        public org.attribyte.essem.ReportProtos.EssemReport.Bin.Builder getBinBuilder(
+            int index) {
+          return getBinFieldBuilder().getBuilder(index);
+        }
+        public org.attribyte.essem.ReportProtos.EssemReport.BinOrBuilder getBinOrBuilder(
+            int index) {
+          if (binBuilder_ == null) {
+            return bin_.get(index);  } else {
+            return binBuilder_.getMessageOrBuilder(index);
+          }
+        }
+        public java.util.List<? extends org.attribyte.essem.ReportProtos.EssemReport.BinOrBuilder> 
+             getBinOrBuilderList() {
+          if (binBuilder_ != null) {
+            return binBuilder_.getMessageOrBuilderList();
+          } else {
+            return java.util.Collections.unmodifiableList(bin_);
+          }
+        }
+        public org.attribyte.essem.ReportProtos.EssemReport.Bin.Builder addBinBuilder() {
+          return getBinFieldBuilder().addBuilder(
+              org.attribyte.essem.ReportProtos.EssemReport.Bin.getDefaultInstance());
+        }
+        public org.attribyte.essem.ReportProtos.EssemReport.Bin.Builder addBinBuilder(
+            int index) {
+          return getBinFieldBuilder().addBuilder(
+              index, org.attribyte.essem.ReportProtos.EssemReport.Bin.getDefaultInstance());
+        }
+        public java.util.List<org.attribyte.essem.ReportProtos.EssemReport.Bin.Builder> 
+             getBinBuilderList() {
+          return getBinFieldBuilder().getBuilderList();
+        }
+        private com.google.protobuf.RepeatedFieldBuilder<
+            org.attribyte.essem.ReportProtos.EssemReport.Bin, org.attribyte.essem.ReportProtos.EssemReport.Bin.Builder, org.attribyte.essem.ReportProtos.EssemReport.BinOrBuilder> 
+            getBinFieldBuilder() {
+          if (binBuilder_ == null) {
+            binBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
+                org.attribyte.essem.ReportProtos.EssemReport.Bin, org.attribyte.essem.ReportProtos.EssemReport.Bin.Builder, org.attribyte.essem.ReportProtos.EssemReport.BinOrBuilder>(
+                    bin_,
+                    ((bitField0_ & 0x00001000) == 0x00001000),
+                    getParentForChildren(),
+                    isClean());
+            bin_ = null;
+          }
+          return binBuilder_;
+        }
+        
         // @@protoc_insertion_point(builder_scope:org.attribyte.essem.EssemReport.Histogram)
       }
       
@@ -2883,6 +3665,16 @@ public final class ReportProtos {
       // optional double percentile999 = 16;
       boolean hasPercentile999();
       double getPercentile999();
+      
+      // optional .org.attribyte.essem.EssemReport.Histogram timingSnapshot = 17;
+      boolean hasTimingSnapshot();
+      org.attribyte.essem.ReportProtos.EssemReport.Histogram getTimingSnapshot();
+      org.attribyte.essem.ReportProtos.EssemReport.HistogramOrBuilder getTimingSnapshotOrBuilder();
+      
+      // optional .org.attribyte.essem.EssemReport.Histogram timing = 18;
+      boolean hasTiming();
+      org.attribyte.essem.ReportProtos.EssemReport.Histogram getTiming();
+      org.attribyte.essem.ReportProtos.EssemReport.HistogramOrBuilder getTimingOrBuilder();
     }
     public static final class Timer extends
         com.google.protobuf.GeneratedMessage
@@ -3095,6 +3887,32 @@ public final class ReportProtos {
         return percentile999_;
       }
       
+      // optional .org.attribyte.essem.EssemReport.Histogram timingSnapshot = 17;
+      public static final int TIMINGSNAPSHOT_FIELD_NUMBER = 17;
+      private org.attribyte.essem.ReportProtos.EssemReport.Histogram timingSnapshot_;
+      public boolean hasTimingSnapshot() {
+        return ((bitField0_ & 0x00010000) == 0x00010000);
+      }
+      public org.attribyte.essem.ReportProtos.EssemReport.Histogram getTimingSnapshot() {
+        return timingSnapshot_;
+      }
+      public org.attribyte.essem.ReportProtos.EssemReport.HistogramOrBuilder getTimingSnapshotOrBuilder() {
+        return timingSnapshot_;
+      }
+      
+      // optional .org.attribyte.essem.EssemReport.Histogram timing = 18;
+      public static final int TIMING_FIELD_NUMBER = 18;
+      private org.attribyte.essem.ReportProtos.EssemReport.Histogram timing_;
+      public boolean hasTiming() {
+        return ((bitField0_ & 0x00020000) == 0x00020000);
+      }
+      public org.attribyte.essem.ReportProtos.EssemReport.Histogram getTiming() {
+        return timing_;
+      }
+      public org.attribyte.essem.ReportProtos.EssemReport.HistogramOrBuilder getTimingOrBuilder() {
+        return timing_;
+      }
+      
       private void initFields() {
         name_ = "";
         oneMinuteRate_ = 0D;
@@ -3112,6 +3930,8 @@ public final class ReportProtos {
         percentile98_ = 0D;
         percentile99_ = 0D;
         percentile999_ = 0D;
+        timingSnapshot_ = org.attribyte.essem.ReportProtos.EssemReport.Histogram.getDefaultInstance();
+        timing_ = org.attribyte.essem.ReportProtos.EssemReport.Histogram.getDefaultInstance();
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -3172,6 +3992,12 @@ public final class ReportProtos {
         }
         if (((bitField0_ & 0x00008000) == 0x00008000)) {
           output.writeDouble(16, percentile999_);
+        }
+        if (((bitField0_ & 0x00010000) == 0x00010000)) {
+          output.writeMessage(17, timingSnapshot_);
+        }
+        if (((bitField0_ & 0x00020000) == 0x00020000)) {
+          output.writeMessage(18, timing_);
         }
         getUnknownFields().writeTo(output);
       }
@@ -3245,6 +4071,14 @@ public final class ReportProtos {
         if (((bitField0_ & 0x00008000) == 0x00008000)) {
           size += com.google.protobuf.CodedOutputStream
             .computeDoubleSize(16, percentile999_);
+        }
+        if (((bitField0_ & 0x00010000) == 0x00010000)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(17, timingSnapshot_);
+        }
+        if (((bitField0_ & 0x00020000) == 0x00020000)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(18, timing_);
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -3362,6 +4196,8 @@ public final class ReportProtos {
         }
         private void maybeForceBuilderInitialization() {
           if (com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders) {
+            getTimingSnapshotFieldBuilder();
+            getTimingFieldBuilder();
           }
         }
         private static Builder create() {
@@ -3402,6 +4238,18 @@ public final class ReportProtos {
           bitField0_ = (bitField0_ & ~0x00004000);
           percentile999_ = 0D;
           bitField0_ = (bitField0_ & ~0x00008000);
+          if (timingSnapshotBuilder_ == null) {
+            timingSnapshot_ = org.attribyte.essem.ReportProtos.EssemReport.Histogram.getDefaultInstance();
+          } else {
+            timingSnapshotBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00010000);
+          if (timingBuilder_ == null) {
+            timing_ = org.attribyte.essem.ReportProtos.EssemReport.Histogram.getDefaultInstance();
+          } else {
+            timingBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00020000);
           return this;
         }
         
@@ -3504,6 +4352,22 @@ public final class ReportProtos {
             to_bitField0_ |= 0x00008000;
           }
           result.percentile999_ = percentile999_;
+          if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+            to_bitField0_ |= 0x00010000;
+          }
+          if (timingSnapshotBuilder_ == null) {
+            result.timingSnapshot_ = timingSnapshot_;
+          } else {
+            result.timingSnapshot_ = timingSnapshotBuilder_.build();
+          }
+          if (((from_bitField0_ & 0x00020000) == 0x00020000)) {
+            to_bitField0_ |= 0x00020000;
+          }
+          if (timingBuilder_ == null) {
+            result.timing_ = timing_;
+          } else {
+            result.timing_ = timingBuilder_.build();
+          }
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -3567,6 +4431,12 @@ public final class ReportProtos {
           }
           if (other.hasPercentile999()) {
             setPercentile999(other.getPercentile999());
+          }
+          if (other.hasTimingSnapshot()) {
+            mergeTimingSnapshot(other.getTimingSnapshot());
+          }
+          if (other.hasTiming()) {
+            mergeTiming(other.getTiming());
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -3677,6 +4547,24 @@ public final class ReportProtos {
               case 129: {
                 bitField0_ |= 0x00008000;
                 percentile999_ = input.readDouble();
+                break;
+              }
+              case 138: {
+                org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder subBuilder = org.attribyte.essem.ReportProtos.EssemReport.Histogram.newBuilder();
+                if (hasTimingSnapshot()) {
+                  subBuilder.mergeFrom(getTimingSnapshot());
+                }
+                input.readMessage(subBuilder, extensionRegistry);
+                setTimingSnapshot(subBuilder.buildPartial());
+                break;
+              }
+              case 146: {
+                org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder subBuilder = org.attribyte.essem.ReportProtos.EssemReport.Histogram.newBuilder();
+                if (hasTiming()) {
+                  subBuilder.mergeFrom(getTiming());
+                }
+                input.readMessage(subBuilder, extensionRegistry);
+                setTiming(subBuilder.buildPartial());
                 break;
               }
             }
@@ -4034,6 +4922,186 @@ public final class ReportProtos {
           percentile999_ = 0D;
           onChanged();
           return this;
+        }
+        
+        // optional .org.attribyte.essem.EssemReport.Histogram timingSnapshot = 17;
+        private org.attribyte.essem.ReportProtos.EssemReport.Histogram timingSnapshot_ = org.attribyte.essem.ReportProtos.EssemReport.Histogram.getDefaultInstance();
+        private com.google.protobuf.SingleFieldBuilder<
+            org.attribyte.essem.ReportProtos.EssemReport.Histogram, org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder, org.attribyte.essem.ReportProtos.EssemReport.HistogramOrBuilder> timingSnapshotBuilder_;
+        public boolean hasTimingSnapshot() {
+          return ((bitField0_ & 0x00010000) == 0x00010000);
+        }
+        public org.attribyte.essem.ReportProtos.EssemReport.Histogram getTimingSnapshot() {
+          if (timingSnapshotBuilder_ == null) {
+            return timingSnapshot_;
+          } else {
+            return timingSnapshotBuilder_.getMessage();
+          }
+        }
+        public Builder setTimingSnapshot(org.attribyte.essem.ReportProtos.EssemReport.Histogram value) {
+          if (timingSnapshotBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            timingSnapshot_ = value;
+            onChanged();
+          } else {
+            timingSnapshotBuilder_.setMessage(value);
+          }
+          bitField0_ |= 0x00010000;
+          return this;
+        }
+        public Builder setTimingSnapshot(
+            org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder builderForValue) {
+          if (timingSnapshotBuilder_ == null) {
+            timingSnapshot_ = builderForValue.build();
+            onChanged();
+          } else {
+            timingSnapshotBuilder_.setMessage(builderForValue.build());
+          }
+          bitField0_ |= 0x00010000;
+          return this;
+        }
+        public Builder mergeTimingSnapshot(org.attribyte.essem.ReportProtos.EssemReport.Histogram value) {
+          if (timingSnapshotBuilder_ == null) {
+            if (((bitField0_ & 0x00010000) == 0x00010000) &&
+                timingSnapshot_ != org.attribyte.essem.ReportProtos.EssemReport.Histogram.getDefaultInstance()) {
+              timingSnapshot_ =
+                org.attribyte.essem.ReportProtos.EssemReport.Histogram.newBuilder(timingSnapshot_).mergeFrom(value).buildPartial();
+            } else {
+              timingSnapshot_ = value;
+            }
+            onChanged();
+          } else {
+            timingSnapshotBuilder_.mergeFrom(value);
+          }
+          bitField0_ |= 0x00010000;
+          return this;
+        }
+        public Builder clearTimingSnapshot() {
+          if (timingSnapshotBuilder_ == null) {
+            timingSnapshot_ = org.attribyte.essem.ReportProtos.EssemReport.Histogram.getDefaultInstance();
+            onChanged();
+          } else {
+            timingSnapshotBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00010000);
+          return this;
+        }
+        public org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder getTimingSnapshotBuilder() {
+          bitField0_ |= 0x00010000;
+          onChanged();
+          return getTimingSnapshotFieldBuilder().getBuilder();
+        }
+        public org.attribyte.essem.ReportProtos.EssemReport.HistogramOrBuilder getTimingSnapshotOrBuilder() {
+          if (timingSnapshotBuilder_ != null) {
+            return timingSnapshotBuilder_.getMessageOrBuilder();
+          } else {
+            return timingSnapshot_;
+          }
+        }
+        private com.google.protobuf.SingleFieldBuilder<
+            org.attribyte.essem.ReportProtos.EssemReport.Histogram, org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder, org.attribyte.essem.ReportProtos.EssemReport.HistogramOrBuilder> 
+            getTimingSnapshotFieldBuilder() {
+          if (timingSnapshotBuilder_ == null) {
+            timingSnapshotBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+                org.attribyte.essem.ReportProtos.EssemReport.Histogram, org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder, org.attribyte.essem.ReportProtos.EssemReport.HistogramOrBuilder>(
+                    timingSnapshot_,
+                    getParentForChildren(),
+                    isClean());
+            timingSnapshot_ = null;
+          }
+          return timingSnapshotBuilder_;
+        }
+        
+        // optional .org.attribyte.essem.EssemReport.Histogram timing = 18;
+        private org.attribyte.essem.ReportProtos.EssemReport.Histogram timing_ = org.attribyte.essem.ReportProtos.EssemReport.Histogram.getDefaultInstance();
+        private com.google.protobuf.SingleFieldBuilder<
+            org.attribyte.essem.ReportProtos.EssemReport.Histogram, org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder, org.attribyte.essem.ReportProtos.EssemReport.HistogramOrBuilder> timingBuilder_;
+        public boolean hasTiming() {
+          return ((bitField0_ & 0x00020000) == 0x00020000);
+        }
+        public org.attribyte.essem.ReportProtos.EssemReport.Histogram getTiming() {
+          if (timingBuilder_ == null) {
+            return timing_;
+          } else {
+            return timingBuilder_.getMessage();
+          }
+        }
+        public Builder setTiming(org.attribyte.essem.ReportProtos.EssemReport.Histogram value) {
+          if (timingBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            timing_ = value;
+            onChanged();
+          } else {
+            timingBuilder_.setMessage(value);
+          }
+          bitField0_ |= 0x00020000;
+          return this;
+        }
+        public Builder setTiming(
+            org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder builderForValue) {
+          if (timingBuilder_ == null) {
+            timing_ = builderForValue.build();
+            onChanged();
+          } else {
+            timingBuilder_.setMessage(builderForValue.build());
+          }
+          bitField0_ |= 0x00020000;
+          return this;
+        }
+        public Builder mergeTiming(org.attribyte.essem.ReportProtos.EssemReport.Histogram value) {
+          if (timingBuilder_ == null) {
+            if (((bitField0_ & 0x00020000) == 0x00020000) &&
+                timing_ != org.attribyte.essem.ReportProtos.EssemReport.Histogram.getDefaultInstance()) {
+              timing_ =
+                org.attribyte.essem.ReportProtos.EssemReport.Histogram.newBuilder(timing_).mergeFrom(value).buildPartial();
+            } else {
+              timing_ = value;
+            }
+            onChanged();
+          } else {
+            timingBuilder_.mergeFrom(value);
+          }
+          bitField0_ |= 0x00020000;
+          return this;
+        }
+        public Builder clearTiming() {
+          if (timingBuilder_ == null) {
+            timing_ = org.attribyte.essem.ReportProtos.EssemReport.Histogram.getDefaultInstance();
+            onChanged();
+          } else {
+            timingBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00020000);
+          return this;
+        }
+        public org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder getTimingBuilder() {
+          bitField0_ |= 0x00020000;
+          onChanged();
+          return getTimingFieldBuilder().getBuilder();
+        }
+        public org.attribyte.essem.ReportProtos.EssemReport.HistogramOrBuilder getTimingOrBuilder() {
+          if (timingBuilder_ != null) {
+            return timingBuilder_.getMessageOrBuilder();
+          } else {
+            return timing_;
+          }
+        }
+        private com.google.protobuf.SingleFieldBuilder<
+            org.attribyte.essem.ReportProtos.EssemReport.Histogram, org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder, org.attribyte.essem.ReportProtos.EssemReport.HistogramOrBuilder> 
+            getTimingFieldBuilder() {
+          if (timingBuilder_ == null) {
+            timingBuilder_ = new com.google.protobuf.SingleFieldBuilder<
+                org.attribyte.essem.ReportProtos.EssemReport.Histogram, org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder, org.attribyte.essem.ReportProtos.EssemReport.HistogramOrBuilder>(
+                    timing_,
+                    getParentForChildren(),
+                    isClean());
+            timing_ = null;
+          }
+          return timingBuilder_;
         }
         
         // @@protoc_insertion_point(builder_scope:org.attribyte.essem.EssemReport.Timer)
@@ -6080,6 +7148,11 @@ public final class ReportProtos {
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_org_attribyte_essem_EssemReport_Meter_fieldAccessorTable;
   private static com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_attribyte_essem_EssemReport_Bin_descriptor;
+  private static
+    com.google.protobuf.GeneratedMessage.FieldAccessorTable
+      internal_static_org_attribyte_essem_EssemReport_Bin_fieldAccessorTable;
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_org_attribyte_essem_EssemReport_Histogram_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
@@ -6099,7 +7172,7 @@ public final class ReportProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\021EssemReport.proto\022\023org.attribyte.essem" +
-      "\"\310\n\n\013EssemReport\0225\n\005meter\030\001 \003(\0132&.org.at" +
+      "\"\277\014\n\013EssemReport\0225\n\005meter\030\001 \003(\0132&.org.at" +
       "tribyte.essem.EssemReport.Meter\0225\n\005timer" +
       "\030\002 \003(\0132&.org.attribyte.essem.EssemReport" +
       ".Timer\0229\n\007counter\030\003 \003(\0132(.org.attribyte." +
@@ -6117,23 +7190,29 @@ public final class ReportProtos {
       "\005Meter\022\014\n\004name\030\001 \001(\t\022\025\n\roneMinuteRate\030\002 " +
       "\001(\001\022\026\n\016fiveMinuteRate\030\003 \001(\001\022\031\n\021fifteenMi" +
       "nuteRate\030\004 \001(\001\022\020\n\010meanRate\030\005 \001(\001\022\r\n\005coun" +
-      "t\030\006 \001(\004\032\334\001\n\tHistogram\022\014\n\004name\030\001 \001(\t\022\r\n\005c",
-      "ount\030\002 \001(\004\022\013\n\003max\030\003 \001(\001\022\014\n\004mean\030\004 \001(\001\022\013\n" +
-      "\003min\030\005 \001(\001\022\013\n\003std\030\006 \001(\001\022\016\n\006median\030\007 \001(\001\022" +
-      "\024\n\014percentile75\030\010 \001(\001\022\024\n\014percentile95\030\t " +
-      "\001(\001\022\024\n\014percentile98\030\n \001(\001\022\024\n\014percentile9" +
-      "9\030\013 \001(\001\022\025\n\rpercentile999\030\014 \001(\001\032\264\002\n\005Timer" +
-      "\022\014\n\004name\030\001 \001(\t\022\025\n\roneMinuteRate\030\002 \001(\001\022\026\n" +
-      "\016fiveMinuteRate\030\003 \001(\001\022\031\n\021fifteenMinuteRa" +
-      "te\030\004 \001(\001\022\020\n\010meanRate\030\005 \001(\001\022\r\n\005count\030\006 \001(" +
-      "\004\022\013\n\003max\030\007 \001(\001\022\014\n\004mean\030\010 \001(\001\022\013\n\003min\030\t \001(" +
-      "\001\022\013\n\003std\030\n \001(\001\022\016\n\006median\030\013 \001(\001\022\024\n\014percen",
-      "tile75\030\014 \001(\001\022\024\n\014percentile95\030\r \001(\001\022\024\n\014pe" +
-      "rcentile98\030\016 \001(\001\022\024\n\014percentile99\030\017 \001(\001\022\025" +
-      "\n\rpercentile999\030\020 \001(\001\"\\\n\010TimeUnit\022\t\n\005NAN" +
-      "OS\020\001\022\n\n\006MICROS\020\002\022\n\n\006MILLIS\020\003\022\013\n\007SECONDS\020" +
-      "\004\022\013\n\007MINUTES\020\005\022\t\n\005HOURS\020\006\022\010\n\004DAYS\020\007B\016B\014R" +
-      "eportProtos"
+      "t\030\006 \001(\004\032B\n\003Bin\022\013\n\003min\030\001 \001(\001\022\013\n\003max\030\002 \001(\001",
+      "\022\r\n\005count\030\003 \001(\004\022\022\n\npercentile\030\004 \001(\001\032\217\002\n\t" +
+      "Histogram\022\014\n\004name\030\001 \001(\t\022\r\n\005count\030\002 \001(\004\022\013" +
+      "\n\003max\030\003 \001(\001\022\014\n\004mean\030\004 \001(\001\022\013\n\003min\030\005 \001(\001\022\013" +
+      "\n\003std\030\006 \001(\001\022\016\n\006median\030\007 \001(\001\022\024\n\014percentil" +
+      "e75\030\010 \001(\001\022\024\n\014percentile95\030\t \001(\001\022\024\n\014perce" +
+      "ntile98\030\n \001(\001\022\024\n\014percentile99\030\013 \001(\001\022\025\n\rp" +
+      "ercentile999\030\014 \001(\001\0221\n\003bin\030\r \003(\0132$.org.at" +
+      "tribyte.essem.EssemReport.Bin\032\264\003\n\005Timer\022" +
+      "\014\n\004name\030\001 \001(\t\022\025\n\roneMinuteRate\030\002 \001(\001\022\026\n\016" +
+      "fiveMinuteRate\030\003 \001(\001\022\031\n\021fifteenMinuteRat",
+      "e\030\004 \001(\001\022\020\n\010meanRate\030\005 \001(\001\022\r\n\005count\030\006 \001(\004" +
+      "\022\013\n\003max\030\007 \001(\001\022\014\n\004mean\030\010 \001(\001\022\013\n\003min\030\t \001(\001" +
+      "\022\013\n\003std\030\n \001(\001\022\016\n\006median\030\013 \001(\001\022\024\n\014percent" +
+      "ile75\030\014 \001(\001\022\024\n\014percentile95\030\r \001(\001\022\024\n\014per" +
+      "centile98\030\016 \001(\001\022\024\n\014percentile99\030\017 \001(\001\022\025\n" +
+      "\rpercentile999\030\020 \001(\001\022B\n\016timingSnapshot\030\021" +
+      " \001(\0132*.org.attribyte.essem.EssemReport.H" +
+      "istogram\022:\n\006timing\030\022 \001(\0132*.org.attribyte" +
+      ".essem.EssemReport.Histogram\"\\\n\010TimeUnit" +
+      "\022\t\n\005NANOS\020\001\022\n\n\006MICROS\020\002\022\n\n\006MILLIS\020\003\022\013\n\007S",
+      "ECONDS\020\004\022\013\n\007MINUTES\020\005\022\t\n\005HOURS\020\006\022\010\n\004DAYS" +
+      "\020\007B\016B\014ReportProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -6172,20 +7251,28 @@ public final class ReportProtos {
               new java.lang.String[] { "Name", "OneMinuteRate", "FiveMinuteRate", "FifteenMinuteRate", "MeanRate", "Count", },
               org.attribyte.essem.ReportProtos.EssemReport.Meter.class,
               org.attribyte.essem.ReportProtos.EssemReport.Meter.Builder.class);
-          internal_static_org_attribyte_essem_EssemReport_Histogram_descriptor =
+          internal_static_org_attribyte_essem_EssemReport_Bin_descriptor =
             internal_static_org_attribyte_essem_EssemReport_descriptor.getNestedTypes().get(3);
+          internal_static_org_attribyte_essem_EssemReport_Bin_fieldAccessorTable = new
+            com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+              internal_static_org_attribyte_essem_EssemReport_Bin_descriptor,
+              new java.lang.String[] { "Min", "Max", "Count", "Percentile", },
+              org.attribyte.essem.ReportProtos.EssemReport.Bin.class,
+              org.attribyte.essem.ReportProtos.EssemReport.Bin.Builder.class);
+          internal_static_org_attribyte_essem_EssemReport_Histogram_descriptor =
+            internal_static_org_attribyte_essem_EssemReport_descriptor.getNestedTypes().get(4);
           internal_static_org_attribyte_essem_EssemReport_Histogram_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_attribyte_essem_EssemReport_Histogram_descriptor,
-              new java.lang.String[] { "Name", "Count", "Max", "Mean", "Min", "Std", "Median", "Percentile75", "Percentile95", "Percentile98", "Percentile99", "Percentile999", },
+              new java.lang.String[] { "Name", "Count", "Max", "Mean", "Min", "Std", "Median", "Percentile75", "Percentile95", "Percentile98", "Percentile99", "Percentile999", "Bin", },
               org.attribyte.essem.ReportProtos.EssemReport.Histogram.class,
               org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder.class);
           internal_static_org_attribyte_essem_EssemReport_Timer_descriptor =
-            internal_static_org_attribyte_essem_EssemReport_descriptor.getNestedTypes().get(4);
+            internal_static_org_attribyte_essem_EssemReport_descriptor.getNestedTypes().get(5);
           internal_static_org_attribyte_essem_EssemReport_Timer_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_attribyte_essem_EssemReport_Timer_descriptor,
-              new java.lang.String[] { "Name", "OneMinuteRate", "FiveMinuteRate", "FifteenMinuteRate", "MeanRate", "Count", "Max", "Mean", "Min", "Std", "Median", "Percentile75", "Percentile95", "Percentile98", "Percentile99", "Percentile999", },
+              new java.lang.String[] { "Name", "OneMinuteRate", "FiveMinuteRate", "FifteenMinuteRate", "MeanRate", "Count", "Max", "Mean", "Min", "Std", "Median", "Percentile75", "Percentile95", "Percentile98", "Percentile99", "Percentile999", "TimingSnapshot", "Timing", },
               org.attribyte.essem.ReportProtos.EssemReport.Timer.class,
               org.attribyte.essem.ReportProtos.EssemReport.Timer.Builder.class);
           return null;

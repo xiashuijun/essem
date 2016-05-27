@@ -34,7 +34,11 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
+import org.HdrHistogram.AbstractHistogram;
+import org.HdrHistogram.HistogramIterationValue;
+import org.HdrHistogram.PercentileIterator;
 import org.attribyte.essem.ReportProtos;
+import org.attribyte.essem.metrics.HDRHistogram;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,6 +49,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
@@ -202,13 +207,23 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       }
 
       /**
+       * Configures the number of HDR histogram reporting points per exponentially decreasing half-distance. Default is {@code 5}.
+       * @param percentileTicksPerHalfDistance The number of HDR histogram reporting points per exponentially decreasing half-distance.
+       * @return A self-reference.
+       */
+      public Builder percentileTicksPerHalfDistance(final int percentileTicksPerHalfDistance) {
+         this.percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;
+         return this;
+      }
+
+      /**
        * Builds an immutable reporter instance.
        * @return The immutable reporter.
        */
       public EssemReporter build() {
          return new EssemReporter(uri, authValue, deflate,
                  registry, clock, application, host, instance, filter, rateUnit, durationUnit,
-                 skipUnchangedMetrics);
+                 skipUnchangedMetrics, percentileTicksPerHalfDistance);
       }
 
       private final URI uri;
@@ -224,6 +239,7 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       private TimeUnit durationUnit = TimeUnit.MILLISECONDS;
       private boolean skipUnchangedMetrics = false;
       private MetricFilter filter;
+      private int percentileTicksPerHalfDistance = 5;
    }
 
    protected EssemReporter(final URI uri,
@@ -237,7 +253,8 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
                            final MetricFilter filter,
                            final TimeUnit rateUnit,
                            final TimeUnit durationUnit,
-                           final boolean skipUnchangedMetrics) {
+                           final boolean skipUnchangedMetrics,
+                           final int percentileTicksPerHalfDistance) {
       super(registry, "essem-reporter", filter, rateUnit, durationUnit);
       this.uri = uri;
       this.authValue = authValue;
@@ -249,6 +266,7 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       this.rateUnit = rateUnit;
       this.durationUnit = durationUnit;
       this.lastReportedCount = skipUnchangedMetrics ? Maps.<String, Long>newConcurrentMap() : null;
+      this.percentileTicksPerHalfDistance = percentileTicksPerHalfDistance;
    }
 
    /**
@@ -356,7 +374,8 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
          Timer timer = nv.getValue();
          if(!skipCountedReport(name, timer.getCount())) {
             Snapshot snapshot = timer.getSnapshot();
-            builder.addTimerBuilder()
+            ReportProtos.EssemReport.Timer.Builder timerBuilder = builder.addTimerBuilder();
+            timerBuilder
                     .setName(nv.getKey())
                     .setOneMinuteRate(convertRate(timer.getOneMinuteRate()))
                     .setFiveMinuteRate(convertRate(timer.getFiveMinuteRate()))
@@ -373,10 +392,42 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
                     .setPercentile98(convertDuration(snapshot.get98thPercentile()))
                     .setPercentile99(convertDuration(snapshot.get99thPercentile()))
                     .setPercentile999(convertDuration(snapshot.get999thPercentile()));
+
+            if(snapshot instanceof HDRHistogram.HDRSnapshot) {
+               HDRHistogram.HDRSnapshot hdrSnapshot = (HDRHistogram.HDRSnapshot)snapshot;
+               timerBuilder.setTimingSnapshot(buildHistogram(hdrSnapshot.sinceLastSnapshot(), ReportProtos.EssemReport.Histogram.newBuilder()));
+               timerBuilder.setTiming(buildHistogram(hdrSnapshot.totalSnapshot(), ReportProtos.EssemReport.Histogram.newBuilder()));
+            }
          }
       }
 
       return builder.build();
+   }
+
+   private ReportProtos.EssemReport.Histogram.Builder buildHistogram(final HDRHistogram.HDRSnapshot snapshot,
+                                                                     final ReportProtos.EssemReport.Histogram.Builder builder) {
+      builder.setMax(snapshot.getMax())
+              .setMin(snapshot.getMin())
+              .setMedian(snapshot.getMedian())
+              .setMean(snapshot.getMean())
+              .setStd(snapshot.getStdDev())
+              .setPercentile75(snapshot.get75thPercentile())
+              .setPercentile95(snapshot.get95thPercentile())
+              .setPercentile98(snapshot.get98thPercentile())
+              .setPercentile99(snapshot.get99thPercentile())
+              .setPercentile999(snapshot.get999thPercentile());
+
+      for(final HistogramIterationValue histogramIterationValue : snapshot.getHistogram().percentiles(percentileTicksPerHalfDistance)) {
+         if(histogramIterationValue.getValueIteratedFrom() != histogramIterationValue.getValueIteratedTo()) {
+            builder.addBinBuilder()
+                    .setCount(histogramIterationValue.getCountAtValueIteratedTo())
+                    .setPercentile(histogramIterationValue.getPercentileLevelIteratedTo())
+                    .setMin(histogramIterationValue.getValueIteratedFrom())
+                    .setMax(histogramIterationValue.getDoubleValueIteratedTo());
+         }
+      }
+
+      return builder;
    }
 
    @Override
@@ -599,4 +650,9 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
          return false;
       }
    }
+
+   /**
+    * The number of HDR histogram reporting points per exponentially decreasing half-distance.
+    */
+   private final int percentileTicksPerHalfDistance;
 }
