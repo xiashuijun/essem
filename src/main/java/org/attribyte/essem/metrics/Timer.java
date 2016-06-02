@@ -15,15 +15,14 @@
 package org.attribyte.essem.metrics;
 
 import com.codahale.metrics.Clock;
-import com.google.protobuf.TextFormat;
-import org.HdrHistogram.AbstractHistogram;
+import com.google.protobuf.ByteString;
 import org.HdrHistogram.Histogram;
 import org.HdrHistogram.HistogramIterationValue;
-import org.attribyte.essem.ReportProtos;
-import org.attribyte.essem.reporter.EssemReporter;
 
+import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Iterator;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A timer that uses a high dynamic range histogram by default and allows the histogram to be
@@ -32,7 +31,11 @@ import java.util.Iterator;
  */
 public class Timer extends com.codahale.metrics.Timer {
 
-   public static void main(String[] args) {
+   public static void main(String[] args) throws Exception {
+
+      System.out.println(TimeUnit.NANOSECONDS.convert(1, TimeUnit.MILLISECONDS));
+      System.out.println(TimeUnit.NANOSECONDS.convert(1, TimeUnit.MICROSECONDS));
+
 
       Histogram histogram = new Histogram(1, 5001, 2);
       SecureRandom rnd = new SecureRandom();
@@ -44,6 +47,19 @@ public class Timer extends com.codahale.metrics.Timer {
          }
       }
 
+      int estimatedBytes = histogram.getNeededByteBufferCapacity();
+      System.out.println("estimated capacity is " + estimatedBytes);
+
+      ByteBuffer buf = ByteBuffer.allocate(histogram.getNeededByteBufferCapacity());
+      int compressedSize = histogram.encodeIntoCompressedByteBuffer(buf);
+      System.out.println("compressed is " + compressedSize);
+
+      ByteString str = ByteString.copyFrom(buf, compressedSize);
+      buf.rewind();
+      System.out.println("str length is " + str.size());
+
+      histogram = Histogram.decodeFromCompressedByteBuffer(buf, 5001);
+
       /*
       ReportProtos.EssemReport.Histogram.Builder builder = ReportProtos.EssemReport.Histogram.newBuilder();
       EssemReporter.buildHistogram(new HDRHistogram.HDRSnapshot(histogram, histogram), builder);
@@ -51,7 +67,20 @@ public class Timer extends com.codahale.metrics.Timer {
       System.out.println(protoResponse);
       */
 
+      System.out.println("percentiles...");
+
+
       Iterator<HistogramIterationValue> values = histogram.percentiles(5).iterator();
+      while(values.hasNext()) {
+         System.out.println(values.next());
+      }
+
+      System.out.println();
+      System.out.println();
+
+      int linearBucketUnits = (int)(histogram.getMaxValue() - histogram.getMinNonZeroValue())/10;
+      values = histogram.linearBucketValues(linearBucketUnits).iterator();
+      System.out.println("linear...");
       while(values.hasNext()) {
          System.out.println(values.next());
       }
@@ -82,7 +111,7 @@ public class Timer extends com.codahale.metrics.Timer {
     * @param numberOfSignificantValueDigits The number of significant digits in the value.
     */
    public Timer(final int numberOfSignificantValueDigits) {
-      super(new HDRHistogram(numberOfSignificantValueDigits), Clock.defaultClock());
+      super(new HDRReservoir(numberOfSignificantValueDigits), Clock.defaultClock());
    }
 
    /**
@@ -94,7 +123,7 @@ public class Timer extends com.codahale.metrics.Timer {
    public Timer(final long highestTrackableValue,
                 final int numberOfSignificantValueDigits,
                 final Clock clock) {
-      super(new HDRHistogram(highestTrackableValue, numberOfSignificantValueDigits), clock);
+      super(new HDRReservoir(highestTrackableValue, numberOfSignificantValueDigits), clock);
    }
 
    /**
@@ -104,6 +133,6 @@ public class Timer extends com.codahale.metrics.Timer {
     */
    public Timer(final int numberOfSignificantValueDigits,
                 final Clock clock) {
-      super(new HDRHistogram(numberOfSignificantValueDigits), clock);
+      super(new HDRReservoir(numberOfSignificantValueDigits), clock);
    }
 }

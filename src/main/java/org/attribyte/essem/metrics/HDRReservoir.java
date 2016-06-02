@@ -31,7 +31,7 @@ import static java.lang.Math.toIntExact;
  * A High Dynamic Range (HDR) histogram implementation.
  * @see <a href="https://github.com/HdrHistogram/HdrHistogram">HdrHistogram</a>.
  */
-public class HDRHistogram implements Reservoir {
+public class HDRReservoir implements Reservoir {
 
 
    public static final class HDRSnapshot extends Snapshot {
@@ -53,6 +53,15 @@ public class HDRHistogram implements Reservoir {
          this.histogram = histogram;
          this.totalHistogram = totalHistogram;
          this.lastSnapshotHistogram = lastSnapshotHistogram;
+      }
+
+      /**
+       * Creates a snapshot from a HDR histogram.
+       * @param histogram The histogram.
+       * @return The snapshot.
+       */
+      public HDRSnapshot fromHistogram(final Histogram histogram) {
+         return new HDRSnapshot(histogram, histogram, histogram);
       }
 
       /**
@@ -145,7 +154,7 @@ public class HDRHistogram implements Reservoir {
     * Creates a HDR histogram.
     * @param numberOfSignificantValueDigits The number of significant digits in the value.
     */
-   public HDRHistogram(final int numberOfSignificantValueDigits) {
+   public HDRReservoir(final int numberOfSignificantValueDigits) {
       this.highestTrackableValue = Long.MAX_VALUE;
       this.recorder = new Recorder(numberOfSignificantValueDigits);
       this.totalHistogram = new Histogram(numberOfSignificantValueDigits);
@@ -156,7 +165,7 @@ public class HDRHistogram implements Reservoir {
     * @param highestTrackableValue The highest value tracked. Anything larger will be set to the maximum.
     * @param numberOfSignificantValueDigits The number of significant digits in the value.
     */
-   public HDRHistogram(final long highestTrackableValue, final int numberOfSignificantValueDigits) {
+   public HDRReservoir(final long highestTrackableValue, final int numberOfSignificantValueDigits) {
       this.highestTrackableValue = highestTrackableValue;
       this.recorder = new Recorder(highestTrackableValue, numberOfSignificantValueDigits);
       this.totalHistogram = new Histogram(highestTrackableValue, numberOfSignificantValueDigits);
