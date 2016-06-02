@@ -2,6 +2,7 @@ package com.attribyte.essem.test;
 
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.MetricRegistry;
+import org.attribyte.essem.metrics.HDRReservoir;
 
 public class RandomHistogram extends RandomMetric {
 
@@ -17,7 +18,7 @@ public class RandomHistogram extends RandomMetric {
       super(name);
       this.minValue = minValue;
       this.range = maxValue - minValue;
-      this.histogram = registry.histogram(name);
+      this.histogram = registry.register(name, new Histogram(new HDRReservoir(2)));
    }
 
    @Override

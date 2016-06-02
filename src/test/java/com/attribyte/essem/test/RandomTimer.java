@@ -1,7 +1,7 @@
 package com.attribyte.essem.test;
 
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
+import org.attribyte.essem.metrics.Timer;
 
 import java.util.concurrent.TimeUnit;
 
@@ -22,7 +22,7 @@ public class RandomTimer extends RandomMetric {
       super(name);
       this.minTimeMillis = minTimeMillis;
       this.range = maxTimeMillis - minTimeMillis;
-      this.timer = registry.timer(name);
+      this.timer = registry.register(name, new Timer());
       this.maxEvents = maxEvents;
    }
 
