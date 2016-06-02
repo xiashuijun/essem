@@ -34,6 +34,10 @@ import static java.lang.Math.toIntExact;
 public class HDRReservoir implements Reservoir {
 
 
+   /**
+    * A specialized snapshot that contains both the "total" histogram (since start),
+    * and the one collected since {@code getSnapshot} was last called.
+    */
    public static final class HDRSnapshot extends Snapshot {
 
       /**
@@ -153,22 +157,29 @@ public class HDRReservoir implements Reservoir {
    /**
     * Creates a HDR histogram.
     * @param numberOfSignificantValueDigits The number of significant digits in the value.
+    * @param reportTotalHistogram If {@code true}, the long-running histogram will be reported. Otherwise, the histogram
+    * collected since the last snapshot was acquired will be reported.
     */
-   public HDRReservoir(final int numberOfSignificantValueDigits) {
+   public HDRReservoir(final int numberOfSignificantValueDigits, final boolean reportTotalHistogram) {
       this.highestTrackableValue = Long.MAX_VALUE;
       this.recorder = new Recorder(numberOfSignificantValueDigits);
       this.totalHistogram = new Histogram(numberOfSignificantValueDigits);
+      this.reportTotalHistogram = reportTotalHistogram;
    }
 
    /**
-    * Creats a HDR histogram.
+    * Creates a HDR histogram.
     * @param highestTrackableValue The highest value tracked. Anything larger will be set to the maximum.
     * @param numberOfSignificantValueDigits The number of significant digits in the value.
+    * @param reportTotalHistogram If {@code true}, the long-running histogram will be reported. Otherwise, the histogram
+    * collected since the last snapshot was acquired will be reported.
     */
-   public HDRReservoir(final long highestTrackableValue, final int numberOfSignificantValueDigits) {
+   public HDRReservoir(final long highestTrackableValue, final int numberOfSignificantValueDigits,
+                       final boolean reportTotalHistogram) {
       this.highestTrackableValue = highestTrackableValue;
       this.recorder = new Recorder(highestTrackableValue, numberOfSignificantValueDigits);
       this.totalHistogram = new Histogram(highestTrackableValue, numberOfSignificantValueDigits);
+      this.reportTotalHistogram = reportTotalHistogram;
    }
 
    @Override
@@ -185,7 +196,8 @@ public class HDRReservoir implements Reservoir {
    public synchronized Snapshot getSnapshot() {
       lastSnapshotHistogram = recorder.getIntervalHistogram(lastSnapshotHistogram);
       totalHistogram.add(lastSnapshotHistogram);
-      return new HDRSnapshot(totalHistogram.copy(), lastSnapshotHistogram.copy());
+      HDRSnapshot snapshot = new HDRSnapshot(totalHistogram.copy(), lastSnapshotHistogram.copy());
+      return reportTotalHistogram ? snapshot.totalSnapshot() : snapshot.sinceLastSnapshot();
    }
 
    /**
@@ -207,4 +219,10 @@ public class HDRReservoir implements Reservoir {
     * The highest value tracked.
     */
    private final long highestTrackableValue;
+
+   /**
+    * If {@code true}, when {@code getSnapshot} is called, the total histogram (for all time) will be reported.
+    * Otherwise, the histogram since the last call will be reported.
+    */
+   private final boolean reportTotalHistogram;
 }
