@@ -321,6 +321,31 @@ function loadMetricData(config, renderFn) {
     });
 }
 
+function loadHistogramData(config, renderFn) {
+
+    //setDynamicTitles(config);
+    $('#gloading').show();
+
+    var rangeComponent = '?range=' + config.range;
+    if(config.startTimestamp > 0 && config.endTimestamp > 0) {
+        rangeComponent = rangeComponent + '&rangeStart=' + config.startTimestamp +'&rangeEnd=' + config.endTimestamp;
+    }
+
+    var graphURL =
+        '/mgraph/'+config.index+'/histogram' + rangeComponent +
+        '&name='+encodeURIComponent(config.name) +
+        '&app='+config.app+'&host='+config.host +
+        '&units=millis';
+
+    $('#json-link').attr('href', graphURL);
+
+    $.getJSON(graphURL, function(data) {
+        if(renderFn) {
+            renderFn(data.bin);
+        }
+    });
+}
+
 function rangeDetail(config) {
 
     var mformat0 = 'YYYY-MM-DD HH:mm:ss';
@@ -598,5 +623,65 @@ function deleteGraph(index, id, hideId) {
             }
         },
         error: handleXHRError
+    });
+}
+
+function loadHistogram(data, config, dataConfig) {
+
+    var target = dataConfig.target;
+    if(!target) {
+        target = '#m_' + config.name_hash + '_' + config.field;
+    }
+
+    var left_margin = config.left_margin ? config.left_margin : 60;
+    var bottom_margin = config.bottom_margin ? config.bottom_margin : 40;
+    var full_width = config.full_width ? config.full_width : false;
+    var full_height = config.full_height ? config.full_height : false;
+
+    var x_label = "";
+    var y_label = "";
+
+    if(config.with_labels) {
+        x_label = config.x_label ? config.x_label : "";
+        y_label = config.y_label ? config.y_label : "";
+    }
+    var title = "";
+    if(config.with_title) {
+        title = config.title ? config.title : "";
+    }
+
+    var small_text = config.small_text ? config.small_text : false;
+
+    MG.data_graphic({
+        chart_type: 'histogram',
+        binned: true,
+        bar_margin: 1,
+        animate_on_load: true,
+        data: data,
+        width: dataConfig.width,
+        full_width: full_width,
+        full_height: full_height,
+        height: dataConfig.height,
+        left: left_margin,
+        bottom: bottom_margin,
+        buffer: 0,
+        show_secondary_x_label: false,
+        small_text: small_text,
+        y_extended_ticks: true,
+        target: target,
+        x_accessor: 'percentile',
+        xax_tick: 1,
+        xax_count: 20,
+        //xax_format: xAxisFormatter,
+        //y_accessor: config.field,
+        y_accessor: 'count',
+        min_y_from_data: false,
+        title: title,
+        x_label: x_label,
+        y_label: y_label,
+        mouseover: function(d, i) {
+            d3.select(target + ' svg .mg-active-datapoint')
+                .text('Value: ' + d3.round(d.x,2) +  '   Count: ' + d.y);
+        }
     });
 }

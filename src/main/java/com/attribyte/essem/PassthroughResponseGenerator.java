@@ -16,6 +16,7 @@
 package com.attribyte.essem;
 
 import com.attribyte.essem.query.GraphQuery;
+import com.attribyte.essem.query.HistogramQuery;
 import com.attribyte.essem.query.NameQuery;
 import com.attribyte.essem.query.StatsQuery;
 import org.attribyte.api.http.Response;
@@ -57,6 +58,17 @@ public class PassthroughResponseGenerator implements ResponseGenerator {
                                 final Response esResponse,
                                 final EnumSet<Option> options,
                                 final HttpServletResponse response) throws IOException {
+      response.setContentType("application/json");
+      response.setStatus(esResponse.getStatusCode());
+      response.getOutputStream().write(esResponse.getBody().toByteArray());
+      return true;
+   }
+
+   @Override
+   public boolean generateHistogram(HistogramQuery histogramQuery,
+                                    Response esResponse,
+                                    EnumSet<Option> options,
+                                    HttpServletResponse response) throws IOException {
       response.setContentType("application/json");
       response.setStatus(esResponse.getStatusCode());
       response.getOutputStream().write(esResponse.getBody().toByteArray());

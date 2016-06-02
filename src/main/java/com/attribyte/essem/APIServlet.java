@@ -18,6 +18,7 @@ package com.attribyte.essem;
 import com.attribyte.essem.es.SearchRequest;
 import com.attribyte.essem.model.graph.MetricKey;
 import com.attribyte.essem.query.GraphQuery;
+import com.attribyte.essem.query.HistogramQuery;
 import com.attribyte.essem.query.NameQuery;
 import com.attribyte.essem.query.StatsQuery;
 import com.attribyte.essem.util.Util;
@@ -92,7 +93,7 @@ public class APIServlet extends HttpServlet implements MetricSet {
     * Allowed operations.
     */
    private enum Op {
-      GRAPH, METRIC, STATS
+      GRAPH, METRIC, STATS, HISTOGRAM
    }
 
    //http://localhost:8086/pass/test/graph?aggregateOn=name&downsampleTo=second&downsampleFn=avg&name=requests&field=p99&range=day&limit=5000&host=app01
@@ -101,7 +102,7 @@ public class APIServlet extends HttpServlet implements MetricSet {
     * Valid operations.
     */
    private static ImmutableMap<String, Op> ops =
-           ImmutableMap.of("graph", Op.GRAPH, "metric", Op.METRIC, "stats", Op.STATS);
+           ImmutableMap.of("graph", Op.GRAPH, "metric", Op.METRIC, "stats", Op.STATS, "histogram", Op.HISTOGRAM);
 
    @Override
    protected void doGet(final HttpServletRequest request,
@@ -203,6 +204,27 @@ public class APIServlet extends HttpServlet implements MetricSet {
                }
                break;
             }
+            case HISTOGRAM: {
+               HistogramQuery query = new HistogramQuery(request, DEFAULT_RANGE);
+               if(query.error != null) {
+                  response.sendError(HttpServletResponse.SC_BAD_REQUEST, query.error);
+                  markError(op);
+                  return;
+               }
+
+               String esQuery = query.searchRequest.toJSON();
+               Request esRequest = esEndpoint.postRequestBuilder(esEndpoint.buildIndexURI(index),
+                       esQuery.getBytes(Charsets.UTF_8)).create();
+               Response esResponse = httpClient.send(esRequest, requestOptions);
+               if(esResponse.getStatusCode() == HttpServletResponse.SC_OK) {
+                  responseGenerated = responseGenerator.generateHistogram(query, esResponse, responseOptions(request), response);
+               } else {
+                  reportBackendError(esResponse, response);
+                  responseGenerated = false;
+               }
+               break;
+            }
+
             default: {
                response.sendError(HttpServletResponse.SC_NOT_FOUND);
                responseGenerated = true;

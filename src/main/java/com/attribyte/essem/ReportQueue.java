@@ -101,11 +101,6 @@ public class ReportQueue implements MetricSet {
    public static final String QUEUE_CAPACITY_KEY = "queueCapacity";
 
    /**
-    * The config parameter key for retry queue capacity.
-    */
-   public static final String RETRY_QUEUE_CAPACITY_KEY = "retryQueueCapacity";
-
-   /**
     * Creates a report queue from servlet config.
     * @param reporter The reporter.
     * @param retryStrategy The retry strategy.
@@ -150,8 +145,8 @@ public class ReportQueue implements MetricSet {
                       final int reporterProcessingListSize) {
       this.queueTimeoutSeconds = queueTimeoutSeconds;
       this.retryStrategy = retryStrategy;
-      this.reportQueue = queueCapacity < 1 ? new LinkedBlockingDeque<QueuedReport>()
-              : new ArrayBlockingQueue<QueuedReport>(queueCapacity);
+      this.reportQueue = queueCapacity < 1 ? new LinkedBlockingDeque<>()
+              : new ArrayBlockingQueue<>(queueCapacity);
       this.reporter = reporter;
 
       this.failedReportService = Executors.newScheduledThreadPool(numRetryThreads,
@@ -224,24 +219,14 @@ public class ReportQueue implements MetricSet {
       }
    }
 
-   private final Function<QueuedReport, Boolean> enqueueRetryFn = new Function<QueuedReport, Boolean>() {
-      @Override
-      public Boolean apply(QueuedReport failedReport) {
-         return enqueueRetry(failedReport);
-      }
-   };
+   private final Function<QueuedReport, Boolean> enqueueRetryFn = this::enqueueRetry;
 
    private boolean enqueueRetry(final QueuedReport failedReport) {
 
       long backoffMillis = retryStrategy.backoffMillis(failedReport.failedCount);
 
       if(backoffMillis > 0L) {
-         failedReportService.schedule(new Runnable() {
-            @Override
-            public void run() {
-               reporter.retry(failedReport, enqueueRetryFn);
-            }
-         }, backoffMillis, TimeUnit.MILLISECONDS);
+         failedReportService.schedule((Runnable)() -> reporter.retry(failedReport, this::enqueueRetry), backoffMillis, TimeUnit.MILLISECONDS);
          return true;
       } else {
          return false;

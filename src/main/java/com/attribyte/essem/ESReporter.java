@@ -27,6 +27,7 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.protobuf.ByteString;
@@ -349,7 +350,12 @@ class ESReporter implements Reporter {
       generator.writeNumberField(Fields.P999_FIELD, timer.getPercentile999());
       generator.writeNumberField(Fields.STD_FIELD, timer.getStd());
       generator.writeNumberField(Fields.TIMESTAMP_FIELD, timestamp);
+      if(timer.hasHdrHistogram()) {
+         generator.writeStringField(Fields.HDR_HISTOGRAM_FIELD, BaseEncoding.base64().encode(timer.getHdrHistogram().toByteArray()));
+      }
       generator.writeEndObject();
+
+
       generator.flush();
    }
 
@@ -381,6 +387,9 @@ class ESReporter implements Reporter {
       generator.writeNumberField(Fields.P999_FIELD, histogram.getPercentile999());
       generator.writeNumberField(Fields.STD_FIELD, histogram.getStd());
       generator.writeNumberField(Fields.TIMESTAMP_FIELD, timestamp);
+      if(histogram.hasHdrHistogram()) {
+         generator.writeStringField(Fields.HDR_HISTOGRAM_FIELD, BaseEncoding.base64().encode(histogram.getHdrHistogram().toByteArray()));
+      }
       generator.writeEndObject();
       generator.flush();
    }

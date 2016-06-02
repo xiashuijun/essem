@@ -18,13 +18,18 @@ package com.attribyte.essem;
 import com.attribyte.essem.model.graph.MetricKey;
 import com.attribyte.essem.query.Fields;
 import com.attribyte.essem.query.GraphQuery;
+import com.attribyte.essem.query.HistogramQuery;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.io.BaseEncoding;
+import org.HdrHistogram.Histogram;
+import org.HdrHistogram.HistogramIterationValue;
 import org.attribyte.api.http.Response;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
@@ -32,14 +37,19 @@ import org.joda.time.format.ISODateTimeFormat;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.zip.DataFormatException;
 
 import static com.attribyte.essem.util.Util.getStringField;
 import static com.attribyte.essem.util.Util.graphIgnoreProperties;
+import static com.attribyte.essem.util.Util.timeUnitFromString;
+import static com.attribyte.essem.util.Util.nanosToUnits;
 
 public class MGraphResponseGenerator extends ESResponseGenerator {
 
@@ -252,6 +262,103 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
          }
          return null;
       }
+   }
+
+   @Override
+   public boolean generateHistogram(HistogramQuery histogramQuery,
+                                    Response esResponse,
+                                    EnumSet<Option> options,
+                                    HttpServletResponse response) throws IOException {
+      response.setContentType("application/json");
+      response.setStatus(esResponse.getStatusCode());
+      ObjectNode esResponseObject = mapper.readTree(parserFactory.createParser(esResponse.getBody().toByteArray()));
+      Histogram totalHistogram = totalHistogram(esResponseObject);
+      if(totalHistogram == null) {
+         totalHistogram = new Histogram(2);
+      }
+
+      ObjectNode responseObject = JsonNodeFactory.instance.objectNode();
+
+      TimeUnit convertUnit = null;
+      String units = Strings.nullToEmpty(histogramQuery.units).trim();
+      if(!units.isEmpty()) {
+         responseObject.put("units", units);
+         convertUnit = timeUnitFromString(units, null);
+         if(convertUnit != null) {
+            responseObject.put("timeUnits", convertUnit.toString().toLowerCase());
+         }
+      }
+
+      long totalCount = totalHistogram.getTotalCount();
+      responseObject.put("totalCount", totalCount);
+      responseObject.put("minValue", nanosToUnits(totalHistogram.getMinNonZeroValue(), convertUnit));
+      responseObject.put("maxValue", nanosToUnits(totalHistogram.getMaxValue(), convertUnit));
+      responseObject.put("mean", nanosToUnits(totalHistogram.getMean(), convertUnit));
+      responseObject.put("std", nanosToUnits(totalHistogram.getStdDeviation(), convertUnit));
+
+      ArrayNode targetGraph = responseObject.putArray("bin");
+
+      int linearBucketUnits = (int)(totalHistogram.getMaxValue() - totalHistogram.getMinNonZeroValue())/50;
+      responseObject.put("buckets", linearBucketUnits);
+
+//      for(final HistogramIterationValue histogramIterationValue : totalHistogram.percentiles(5)) {
+      for(final HistogramIterationValue histogramIterationValue : totalHistogram.linearBucketValues(linearBucketUnits)) {
+         toJSON(targetGraph.addObject(), histogramIterationValue, totalCount, convertUnit != null ? TimeUnit.NANOSECONDS.convert(1, convertUnit) : 1L);
+      }
+      response.setContentType(JSON_CONTENT_TYPE_HEADER);
+      response.setStatus(HttpServletResponse.SC_OK);
+      response.getOutputStream().write(responseObject.toString().getBytes("UTF-8"));
+      response.getOutputStream().flush();
+      return true;
+   }
+
+   /**
+    * Builds a HDR histogram from a histogram query.
+    * @param esResponseObject The ES response.
+    * @return The histogram or {@code null}, if none.
+    * @throws IOException on JSON error.
+    */
+   static Histogram totalHistogram(ObjectNode esResponseObject) throws IOException {
+      Histogram totalHistogram = null;
+      for(JsonNode valuesNode : esResponseObject.findValues(Fields.HDR_HISTOGRAM_FIELD)) {
+         if(valuesNode.isArray() && valuesNode.size() > 0) {
+            String encoded = valuesNode.get(0).asText();
+            byte[] decoded = BaseEncoding.base64().decode(encoded);
+            try {
+               Histogram histogram = Histogram.decodeFromCompressedByteBuffer(ByteBuffer.wrap(decoded), 5000);
+               if(totalHistogram == null) {
+                  totalHistogram = histogram;
+               } else {
+                  totalHistogram.add(histogram);
+               }
+            } catch(DataFormatException de) {
+               //TODO...
+            }
+         }
+      }
+
+      return totalHistogram;
+   }
+
+   /**
+    * Writes a {@code HistogramIterationValue} to JSON.
+    * @param parent The parent node.
+    * @param value The value.
+    * @param totalCount The total count for the histogram.
+    * @param scalingDivisor Scale the values by dividing by this value.
+    */
+   private static void toJSON(final ObjectNode parent,
+                              final HistogramIterationValue value,
+                              final long totalCount,
+                              final long scalingDivisor) {
+      parent.put("minValue", value.getValueIteratedFrom()/scalingDivisor);
+      parent.put("maxValue", value.getValueIteratedTo()/scalingDivisor);
+      parent.put("percentile", value.getPercentileLevelIteratedTo());
+      parent.put("count", value.getCountAddedInThisIterationStep());
+      parent.put("probability", (double)value.getCountAddedInThisIterationStep()/(double)totalCount);
+      parent.put("cumulativeCount", value.getTotalCountToThisValue());
+      parent.put("cumulativeProbability", (double)value.getTotalCountToThisValue()/(double)totalCount);
+      parent.put("cumulativeValue", value.getTotalValueToThisValue()/scalingDivisor);
    }
 
    /**

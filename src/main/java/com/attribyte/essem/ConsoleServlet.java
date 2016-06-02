@@ -206,6 +206,7 @@ public class ConsoleServlet extends HttpServlet {
       APPS,
       METRICS,
       GRAPHS,
+      HISTOGRAM,
       INDEX_STATS,
       FIELD_STATS,
       SAVEGRAPH,
@@ -224,6 +225,7 @@ public class ConsoleServlet extends HttpServlet {
            .put("apps", Op.APPS)
            .put("metrics", Op.METRICS)
            .put("graphs", Op.GRAPHS)
+           .put("histogram", Op.HISTOGRAM)
            .put("fstats", Op.FIELD_STATS)
            .put("savegraph", Op.SAVEGRAPH)
            .put("usergraph", Op.USERGRAPH)
@@ -408,6 +410,15 @@ public class ConsoleServlet extends HttpServlet {
             String id = path.hasNext() ? path.next() : null;
             doUserGraph(request, auth, index, id, response);
             break;
+         case HISTOGRAM: {
+            if(!path.hasNext()) {
+               sendError(request, response, HttpServletResponse.SC_BAD_REQUEST, "An 'application' must be specified");
+               return;
+            }
+            String appName = path.next();
+            doHistogram(request, auth, index, appName, response);
+            break;
+         }
          case USERGRAPHS:
             doUserGraphs(request, auth, index, response);
             break;
@@ -1273,6 +1284,81 @@ public class ConsoleServlet extends HttpServlet {
       }
    }
 
+   /**
+    * Renders a histogram.
+    * @param request The request.
+    * @param auth The auth info.
+    * @param index The index.
+    * @param appName The application name.
+    * @param response The response.
+    * @throws IOException on output error.
+    */
+   protected void doHistogram(final HttpServletRequest request,
+                              final IndexAuthorization.Auth auth,
+                              final String index,
+                              final String appName,
+                              final HttpServletResponse response) throws IOException {
+
+
+      ST template = getTemplate(HISTOGRAM_TEMPLATE);
+      if(template == null) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, String.format("Missing '%s' template", HISTOGRAM_TEMPLATE));
+         return;
+      }
+
+      if(!auth.isSystem) {
+         template.add("uid", auth.uid);
+      }
+
+      try {
+
+         Application app = applicationCache.getApplication(index, appName);
+         String metricName = request.getParameter("name");
+
+         MetricGraph proto = new MetricGraph("Histogram", "histogram", "short histogram", new MetricGraph.Labels("percentile", "count"), false);
+
+         if(app != null) {
+            Metric metric = app.getMetric(metricName);
+            if(metric != null) {
+               template.add("graph", new MetricGraph(proto, metric));
+            }
+         }
+
+         long rangeStart = Util.getLongParameter(request, QueryBase.START_TIMESTAMP_PARAMETER, 0L);
+         long rangeEnd = Util.getLongParameter(request, QueryBase.END_TIMESTAMP_PARAMETER, 0L);
+         String rangeName = Strings.nullToEmpty(request.getParameter(QueryBase.RANGE_PARAMETER)).trim();
+         if(rangeName.isEmpty()) {
+            rangeName = Util.nearestInterval(rangeEnd - rangeStart);
+         }
+
+         if(rangeName == null) {
+            rangeName = DEFAULT_GRAPH_RANGE;
+            rangeStart = 0;
+            rangeEnd = 0;
+         }
+
+         GraphRange range = new GraphRange(rangeName, rangeStart, rangeEnd);
+
+         String host = Strings.nullToEmpty(request.getParameter("host")).trim();
+         if(host.isEmpty()) {
+            template.add("host", host);
+         }
+
+         template.add("indexList", buildAllowedIndexList(request, index));
+         template.add("zoneList", zones);
+         template.add("range", range);
+         template.add("app", app);
+         template.add("index", index);
+
+         response.setStatus(HttpServletResponse.SC_OK);
+         response.setContentType(HTML_CONTENT_TYPE);
+         response.getWriter().print(template.render());
+         response.getWriter().flush();
+      } catch(Exception e) {
+         sendError(request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+         e.printStackTrace();
+      }
+   }
 
    protected void sendError(final HttpServletRequest request,
                             final HttpServletResponse response,
@@ -1453,6 +1539,12 @@ public class ConsoleServlet extends HttpServlet {
     * The user (saved) graph template.
     */
    public static final String USER_GRAPH_TEMPLATE = "user_graph_main";
+
+
+   /**
+    * The histogram template.
+    */
+   public static final String HISTOGRAM_TEMPLATE = "histogram_main";
 
    /**
     * The template that renders the list of apps.

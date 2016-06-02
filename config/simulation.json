@@ -1,5 +1,5 @@
 {
-  "endpoint": "http://localhost:8086/report/test",
+  "endpoint": "http://192.168.10.16:8086/report/test",
   "endpointUsername": "tester",
   "endpointPassword": "secret",
   "application": [

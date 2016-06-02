@@ -26,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
 import javax.servlet.http.HttpServletRequest;
@@ -34,6 +35,7 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Utility functions and constants.
@@ -553,5 +555,70 @@ public class Util {
       } catch(JsonProcessingException pe) {
          return "[invalid json]";
       }
+   }
+
+   /**
+    * Creates a time unit from a string.
+    * @param str The string.
+    * @param defaultUnit The default unit.
+    * @return The time unit or the default value.
+    */
+   public static final TimeUnit timeUnitFromString(final String str, final TimeUnit defaultUnit) {
+      TimeUnit unit = str != null ? timeUnitMap.get(str.toLowerCase().trim()) : defaultUnit;
+      return unit != null ? unit : defaultUnit;
+   }
+
+   /**
+    * Maps a string name to a time unit.
+    */
+   private static final ImmutableMap<String, TimeUnit> timeUnitMap =
+           ImmutableMap.<String, TimeUnit>builder()
+                   .put("nano", TimeUnit.NANOSECONDS)
+                   .put("nanoseconds", TimeUnit.NANOSECONDS)
+                   .put("nanos", TimeUnit.NANOSECONDS)
+
+                   .put("us", TimeUnit.MICROSECONDS)
+                   .put("microseconds", TimeUnit.MICROSECONDS)
+                   .put("micros", TimeUnit.MICROSECONDS)
+
+                   .put("ms", TimeUnit.MILLISECONDS)
+                   .put("milliseconds", TimeUnit.MILLISECONDS)
+                   .put("millis", TimeUnit.MILLISECONDS)
+
+                   .put("s", TimeUnit.SECONDS)
+                   .put("second", TimeUnit.SECONDS)
+                   .put("seconds", TimeUnit.SECONDS)
+
+                   .put("min", TimeUnit.MINUTES)
+                   .put("minute", TimeUnit.MINUTES)
+                   .put("minutes", TimeUnit.MINUTES)
+
+                   .put("h", TimeUnit.HOURS)
+                   .put("hour", TimeUnit.HOURS)
+                   .put("hours", TimeUnit.HOURS)
+
+                   .put("d", TimeUnit.DAYS)
+                   .put("day", TimeUnit.DAYS)
+                   .put("days", TimeUnit.DAYS)
+                   .build();
+
+   /**
+    * Converts nanos to the specified units.
+    * @param value The value to convert.
+    * @param units The units (may be {@code null}).
+    * @return The converted value.
+    */
+   public static long nanosToUnits(final long value, final TimeUnit units) {
+      return units != null ? value / TimeUnit.NANOSECONDS.convert(1, units) : value;
+   }
+
+   /**
+    * Converts nanos (as a double) to the specified units.
+    * @param value The value to convert.
+    * @param units The units (may be {@code null}).
+    * @return The converted value.
+    */
+   public static double nanosToUnits(final double value, final TimeUnit units) {
+      return units != null ? value / (double)TimeUnit.NANOSECONDS.convert(1, units) : value;
    }
 }
