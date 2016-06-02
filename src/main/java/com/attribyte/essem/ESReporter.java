@@ -16,11 +16,9 @@
 package com.attribyte.essem;
 
 import com.attribyte.essem.query.Fields;
-import com.codahale.metrics.ExponentiallyDecayingReservoir;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metric;
-import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.google.common.base.Charsets;
@@ -36,6 +34,8 @@ import org.attribyte.api.http.AsyncClient;
 import org.attribyte.api.http.Request;
 import org.attribyte.api.http.Response;
 import org.attribyte.essem.ReportProtos;
+import org.attribyte.essem.metrics.HDRReservoir;
+import org.attribyte.essem.metrics.Timer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -426,7 +426,7 @@ class ESReporter implements Reporter {
    private final Timer requestGenerateTimer = new Timer();
    private final Timer requestSendTimer = new Timer();
    private final Meter requestErrorMeter = new Meter();
-   private final Histogram requestSize = new Histogram(new ExponentiallyDecayingReservoir());
+   private final Histogram requestSize = new Histogram(new HDRReservoir(2, HDRReservoir.REPORT_SNAPSHOT_HISTOGRAM));
 
    private final AsyncClient httpClient;
    private final ESEndpoint esEndpoint;

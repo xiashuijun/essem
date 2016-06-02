@@ -17,17 +17,16 @@ package org.attribyte.essem.reporter;
 
 import com.codahale.metrics.Clock;
 import com.codahale.metrics.Counter;
-import com.codahale.metrics.ExponentiallyDecayingReservoir;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metric;
+import com.codahale.metrics.Timer;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Snapshot;
-import com.codahale.metrics.Timer;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -626,9 +625,9 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
    private final String authValue;
    private final boolean deflate;
 
-   private final Timer sendTimer = new Timer();
+   private final Timer sendTimer = new org.attribyte.essem.metrics.Timer();
    private final Meter sendErrors = new Meter();
-   private final Histogram reportSize = new Histogram(new ExponentiallyDecayingReservoir());
+   private final Histogram reportSize = new Histogram(new HDRReservoir(2, HDRReservoir.REPORT_SNAPSHOT_HISTOGRAM));
    private final Counter skippedUnchanged = new Counter();
 
    private final ImmutableMap<String, Metric> metrics =

@@ -225,4 +225,14 @@ public class HDRReservoir implements Reservoir {
     * Otherwise, the histogram since the last call will be reported.
     */
    private final boolean reportTotalHistogram;
+
+   /**
+    * Indicates that the total histogram should be reported.
+    */
+   public static final boolean REPORT_TOTAL_HISTOGRAM = true;
+
+   /**
+    * Indicates that the snapshot histogram should be reported.
+    */
+   public static final boolean REPORT_SNAPSHOT_HISTOGRAM = false;
 }

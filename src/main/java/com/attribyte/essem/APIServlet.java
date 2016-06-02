@@ -25,7 +25,6 @@ import com.attribyte.essem.util.Util;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
-import com.codahale.metrics.Timer;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -33,6 +32,7 @@ import org.attribyte.api.http.AsyncClient;
 import org.attribyte.api.http.Request;
 import org.attribyte.api.http.RequestOptions;
 import org.attribyte.api.http.Response;
+import org.attribyte.essem.metrics.Timer;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;

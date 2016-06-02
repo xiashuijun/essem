@@ -26,7 +26,6 @@ import com.attribyte.essem.query.StatsQuery;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricSet;
-import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -41,6 +40,7 @@ import org.attribyte.api.http.AsyncClient;
 import org.attribyte.api.http.Request;
 import org.attribyte.api.http.RequestOptions;
 import org.attribyte.api.http.Response;
+import org.attribyte.essem.metrics.Timer;
 
 import java.io.IOException;
 import java.util.List;

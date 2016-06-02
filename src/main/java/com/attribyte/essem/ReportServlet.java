@@ -16,15 +16,15 @@
 package com.attribyte.essem;
 
 import com.attribyte.essem.util.Util;
-import com.codahale.metrics.ExponentiallyDecayingReservoir;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
-import com.codahale.metrics.Timer;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import org.attribyte.essem.ReportProtos;
+import org.attribyte.essem.metrics.HDRReservoir;
+import org.attribyte.essem.metrics.Timer;
 import org.attribyte.util.EncodingUtil;
 
 import javax.servlet.http.HttpServlet;
@@ -50,8 +50,8 @@ public class ReportServlet extends HttpServlet implements MetricSet {
       this.reportQueue = reportQueue;
       this.indexAuthorization = indexAuthorization;
       this.acceptTimer = new Timer();
-      this.acceptSize = new Histogram(new ExponentiallyDecayingReservoir());
-      this.acceptCompressionRatio = new Histogram(new ExponentiallyDecayingReservoir());
+      this.acceptSize = new Histogram(new HDRReservoir(2, HDRReservoir.REPORT_SNAPSHOT_HISTOGRAM));
+      this.acceptCompressionRatio = new Histogram(new HDRReservoir(2, HDRReservoir.REPORT_SNAPSHOT_HISTOGRAM));
       this.metrics = ImmutableMap.<String, Metric>builder()
               .putAll(this.reportQueue.getMetrics())
               .put("reports-accepted", acceptTimer)

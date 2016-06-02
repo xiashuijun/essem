@@ -16,7 +16,6 @@
 package com.attribyte.essem;
 
 import com.codahale.metrics.Counter;
-import com.codahale.metrics.ExponentiallyDecayingReservoir;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
@@ -26,6 +25,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.attribyte.essem.ReportProtos;
+import org.attribyte.essem.metrics.HDRReservoir;
 
 import javax.servlet.ServletException;
 import java.util.List;
@@ -251,7 +251,7 @@ public class ReportQueue implements MetricSet {
    /**
     * The number of metrics in reports.
     */
-   private final Histogram reportMetricCount = new Histogram(new ExponentiallyDecayingReservoir());
+   private final Histogram reportMetricCount = new Histogram(new HDRReservoir(2, HDRReservoir.REPORT_SNAPSHOT_HISTOGRAM));
 
    /**
     * The current number of reports in the queue.

@@ -27,7 +27,7 @@ public class Timer extends com.codahale.metrics.Timer {
     * with no limit on trackable values and 2 significant value digits.
     */
    public Timer() {
-      this(2, Clock.defaultClock(), false);
+      this(2, Clock.defaultClock(), HDRReservoir.REPORT_SNAPSHOT_HISTOGRAM);
    }
 
    /**
@@ -38,7 +38,7 @@ public class Timer extends com.codahale.metrics.Timer {
     */
    public Timer(final long highestTrackableValue,
                 final int numberOfSignificantValueDigits) {
-      this(highestTrackableValue, numberOfSignificantValueDigits, Clock.defaultClock(), false);
+      this(highestTrackableValue, numberOfSignificantValueDigits, Clock.defaultClock(), HDRReservoir.REPORT_SNAPSHOT_HISTOGRAM);
    }
 
    /**
@@ -46,7 +46,7 @@ public class Timer extends com.codahale.metrics.Timer {
     * @param numberOfSignificantValueDigits The number of significant digits in the value.
     */
    public Timer(final int numberOfSignificantValueDigits) {
-      super(new HDRReservoir(numberOfSignificantValueDigits, false), Clock.defaultClock());
+      super(new HDRReservoir(numberOfSignificantValueDigits, HDRReservoir.REPORT_SNAPSHOT_HISTOGRAM), Clock.defaultClock());
    }
 
    /**
