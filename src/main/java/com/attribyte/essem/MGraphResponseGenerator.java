@@ -273,12 +273,7 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
       response.setStatus(esResponse.getStatusCode());
       ObjectNode esResponseObject = mapper.readTree(parserFactory.createParser(esResponse.getBody().toByteArray()));
       Histogram totalHistogram = totalHistogram(esResponseObject);
-      if(totalHistogram == null) {
-         totalHistogram = new Histogram(2);
-      }
-
       ObjectNode responseObject = JsonNodeFactory.instance.objectNode();
-
       TimeUnit convertUnit = null;
       String units = Strings.nullToEmpty(histogramQuery.units).trim();
       if(!units.isEmpty()) {
@@ -298,10 +293,8 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
 
       ArrayNode targetGraph = responseObject.putArray("bin");
 
-
-
-      int linearBucketUnits = (int)(totalHistogram.getMaxValue() - totalHistogram.getMinNonZeroValue())/50;
-      responseObject.put("buckets", linearBucketUnits);
+      //int linearBucketUnits = (int)(totalHistogram.getMaxValue() - totalHistogram.getMinNonZeroValue())/50;
+      //responseObject.put("buckets", linearBucketUnits);
 
       for(final HistogramIterationValue histogramIterationValue : totalHistogram.percentiles(5)) {
 //      for(final HistogramIterationValue histogramIterationValue : totalHistogram.linearBucketValues(linearBucketUnits)) {
@@ -321,24 +314,20 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
     * @throws IOException on JSON error.
     */
    static Histogram totalHistogram(ObjectNode esResponseObject) throws IOException {
-      Histogram totalHistogram = null;
+      Histogram totalHistogram = new Histogram(2);
+      totalHistogram.setAutoResize(true);
       for(JsonNode valuesNode : esResponseObject.findValues(Fields.HDR_HISTOGRAM_FIELD)) {
          if(valuesNode.isArray() && valuesNode.size() > 0) {
             String encoded = valuesNode.get(0).asText();
             byte[] decoded = BaseEncoding.base64().decode(encoded);
             try {
                Histogram histogram = Histogram.decodeFromCompressedByteBuffer(ByteBuffer.wrap(decoded), 5000);
-               if(totalHistogram == null) {
-                  totalHistogram = histogram;
-               } else {
-                  totalHistogram.add(histogram);
-               }
+               totalHistogram.add(histogram);
             } catch(DataFormatException de) {
                //TODO...
             }
          }
       }
-
       return totalHistogram;
    }
 
