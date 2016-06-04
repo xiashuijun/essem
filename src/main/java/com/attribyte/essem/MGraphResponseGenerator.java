@@ -298,11 +298,13 @@ public class MGraphResponseGenerator extends ESResponseGenerator {
 
       ArrayNode targetGraph = responseObject.putArray("bin");
 
+
+
       int linearBucketUnits = (int)(totalHistogram.getMaxValue() - totalHistogram.getMinNonZeroValue())/50;
       responseObject.put("buckets", linearBucketUnits);
 
-//      for(final HistogramIterationValue histogramIterationValue : totalHistogram.percentiles(5)) {
-      for(final HistogramIterationValue histogramIterationValue : totalHistogram.linearBucketValues(linearBucketUnits)) {
+      for(final HistogramIterationValue histogramIterationValue : totalHistogram.percentiles(5)) {
+//      for(final HistogramIterationValue histogramIterationValue : totalHistogram.linearBucketValues(linearBucketUnits)) {
          toJSON(targetGraph.addObject(), histogramIterationValue, totalCount, convertUnit != null ? TimeUnit.NANOSECONDS.convert(1, convertUnit) : 1L);
       }
       response.setContentType(JSON_CONTENT_TYPE_HEADER);
