@@ -15,6 +15,7 @@
 
 package com.attribyte.essem.model;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
@@ -165,7 +166,9 @@ public class Metric {
    public Metric(final String name, final Type type) {
       this.name = name;
       this.type = type;
-      this.nameHash = hasher.newHasher().putString(name).putString(type.toString()).hash().toString().substring(0, 12);
+      this.nameHash = hasher.newHasher()
+              .putString(name, Charsets.UTF_8)
+              .putString(type.toString(), Charsets.UTF_8).hash().toString().substring(0, 12);
    }
 
    @Override

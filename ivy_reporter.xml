@@ -9,6 +9,6 @@
         <dependency org="com.google.protobuf" name="protobuf-java" rev="2.4.1" conf="compile->default"/>
         <dependency org="io.dropwizard.metrics" name="metrics-core" rev="3.1.2" conf="compile->default"/>
         <dependency org="org.hdrhistogram" name="HdrHistogram" rev="2.1.9" conf="compile->default"/>
-        <dependency org="junit" name="junit" rev="4.11" conf="test->default"/>\
+        <dependency org="junit" name="junit" rev="4.11" conf="test->default"/>
     </dependencies>
 </ivy-module>

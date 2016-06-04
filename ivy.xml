@@ -7,10 +7,13 @@
     </configurations>
     <dependencies>
         <dependency org="org.attribyte" name="attribyte-shared-base" rev="1.0" conf="compile->default"/>
-        <dependency org="org.attribyte" name="attribyte-http" rev="0.5.0" conf="compile->default"/>
-        <dependency org="com.google.guava" name="guava" rev="14.0.1" conf="compile->default"/>
+        <dependency org="org.attribyte" name="attribyte-http" rev="[0.5.3,)" conf="compile->default"/>
+        <dependency org="com.google.guava" name="guava" rev="[14.0.1,)" conf="compile->default"/>
         <dependency org="com.google.protobuf" name="protobuf-java" rev="2.4.1" conf="compile->default"/>
-        <dependency org="org.eclipse.jetty.aggregate" name="jetty-all" rev="9.2.4.v20141103" conf="compile->default"/>
+        <dependency org="org.eclipse.jetty" name="jetty-client" rev="9.3.8.v20160314" conf="compile->default"/>
+        <dependency org="org.eclipse.jetty" name="jetty-server" rev="9.3.8.v20160314" conf="compile->default"/>
+        <dependency org="org.eclipse.jetty" name="jetty-servlet" rev="9.3.8.v20160314" conf="compile->default"/>
+        <dependency org="org.eclipse.jetty" name="jetty-servlets" rev="9.3.8.v20160314" conf="compile->default"/>
         <dependency org="log4j" name="log4j" rev="1.2.17" conf="compile->default"/>
         <dependency org="io.dropwizard.metrics" name="metrics-core" rev="3.1.2" conf="compile->default"/>
         <dependency org="com.fasterxml.jackson.core" name="jackson-core" rev="2.4.3" conf="compile->default"/>

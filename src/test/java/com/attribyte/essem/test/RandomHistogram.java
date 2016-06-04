@@ -18,7 +18,7 @@ public class RandomHistogram extends RandomMetric {
       super(name);
       this.minValue = minValue;
       this.range = maxValue - minValue;
-      this.histogram = registry.register(name, new Histogram(new HDRReservoir(2)));
+      this.histogram = registry.register(name, new Histogram(new HDRReservoir(2, HDRReservoir.REPORT_SNAPSHOT_HISTOGRAM)));
    }
 
    @Override
