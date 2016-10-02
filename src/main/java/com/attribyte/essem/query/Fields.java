@@ -48,6 +48,7 @@ public class Fields {
    public static final String P99_FIELD = "p99";
    public static final String P999_FIELD = "p999";
    public static final String STD_FIELD = "std";
+   public static final String HDR_HISTOGRAM_FIELD = "hdrHistogram";
 
    public static final String TYPE_FIELD = "_type";
 

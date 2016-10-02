@@ -1,12 +1,12 @@
 package com.attribyte.essem;
 
 import com.attribyte.essem.model.MonitoredEndpoint;
+import org.attribyte.essem.metrics.HDRReservoir;
+import org.attribyte.essem.metrics.Timer;
 import org.attribyte.essem.reporter.EssemReporter;
-import com.codahale.metrics.ExponentiallyDecayingReservoir;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.attribyte.api.Logger;
@@ -38,7 +38,7 @@ public class JSONEndpointSampler {
          this.endpoint = endpoint;
          this.timer = new Timer();
          this.errors = new Meter();
-         this.reportSize = new Histogram(new ExponentiallyDecayingReservoir());
+         this.reportSize = new Histogram(new HDRReservoir(2, HDRReservoir.REPORT_SNAPSHOT_HISTOGRAM));
          this.registry = new MetricRegistry();
          this.registry.register("essem-reports", this.timer);
          this.registry.register("essem-report-errors", this.errors);

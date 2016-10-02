@@ -34,12 +34,7 @@ public class GuavaCacheMetrics implements MetricSet {
     */
    public GuavaCacheMetrics(final Cache cache) {
 
-      final Gauge<Long> sizeGauge = new Gauge<Long>() {
-         @Override
-         public Long getValue() {
-            return cache.size();
-         }
-      };
+      final Gauge<Long> sizeGauge = cache::size;
 
       final Gauge<Double> hitRatioGauge = new Gauge<Double>() {
          @Override

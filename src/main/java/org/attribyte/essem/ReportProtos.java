@@ -1865,6 +1865,10 @@ public final class ReportProtos {
       // optional double percentile999 = 12;
       boolean hasPercentile999();
       double getPercentile999();
+      
+      // optional bytes hdrHistogram = 13;
+      boolean hasHdrHistogram();
+      com.google.protobuf.ByteString getHdrHistogram();
     }
     public static final class Histogram extends
         com.google.protobuf.GeneratedMessage
@@ -2037,6 +2041,16 @@ public final class ReportProtos {
         return percentile999_;
       }
       
+      // optional bytes hdrHistogram = 13;
+      public static final int HDRHISTOGRAM_FIELD_NUMBER = 13;
+      private com.google.protobuf.ByteString hdrHistogram_;
+      public boolean hasHdrHistogram() {
+        return ((bitField0_ & 0x00001000) == 0x00001000);
+      }
+      public com.google.protobuf.ByteString getHdrHistogram() {
+        return hdrHistogram_;
+      }
+      
       private void initFields() {
         name_ = "";
         count_ = 0L;
@@ -2050,6 +2064,7 @@ public final class ReportProtos {
         percentile98_ = 0D;
         percentile99_ = 0D;
         percentile999_ = 0D;
+        hdrHistogram_ = com.google.protobuf.ByteString.EMPTY;
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -2098,6 +2113,9 @@ public final class ReportProtos {
         }
         if (((bitField0_ & 0x00000800) == 0x00000800)) {
           output.writeDouble(12, percentile999_);
+        }
+        if (((bitField0_ & 0x00001000) == 0x00001000)) {
+          output.writeBytes(13, hdrHistogram_);
         }
         getUnknownFields().writeTo(output);
       }
@@ -2155,6 +2173,10 @@ public final class ReportProtos {
         if (((bitField0_ & 0x00000800) == 0x00000800)) {
           size += com.google.protobuf.CodedOutputStream
             .computeDoubleSize(12, percentile999_);
+        }
+        if (((bitField0_ & 0x00001000) == 0x00001000)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(13, hdrHistogram_);
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -2304,6 +2326,8 @@ public final class ReportProtos {
           bitField0_ = (bitField0_ & ~0x00000400);
           percentile999_ = 0D;
           bitField0_ = (bitField0_ & ~0x00000800);
+          hdrHistogram_ = com.google.protobuf.ByteString.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00001000);
           return this;
         }
         
@@ -2390,6 +2414,10 @@ public final class ReportProtos {
             to_bitField0_ |= 0x00000800;
           }
           result.percentile999_ = percentile999_;
+          if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+            to_bitField0_ |= 0x00001000;
+          }
+          result.hdrHistogram_ = hdrHistogram_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -2441,6 +2469,9 @@ public final class ReportProtos {
           }
           if (other.hasPercentile999()) {
             setPercentile999(other.getPercentile999());
+          }
+          if (other.hasHdrHistogram()) {
+            setHdrHistogram(other.getHdrHistogram());
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -2531,6 +2562,11 @@ public final class ReportProtos {
               case 97: {
                 bitField0_ |= 0x00000800;
                 percentile999_ = input.readDouble();
+                break;
+              }
+              case 106: {
+                bitField0_ |= 0x00001000;
+                hdrHistogram_ = input.readBytes();
                 break;
               }
             }
@@ -2806,6 +2842,30 @@ public final class ReportProtos {
           return this;
         }
         
+        // optional bytes hdrHistogram = 13;
+        private com.google.protobuf.ByteString hdrHistogram_ = com.google.protobuf.ByteString.EMPTY;
+        public boolean hasHdrHistogram() {
+          return ((bitField0_ & 0x00001000) == 0x00001000);
+        }
+        public com.google.protobuf.ByteString getHdrHistogram() {
+          return hdrHistogram_;
+        }
+        public Builder setHdrHistogram(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00001000;
+          hdrHistogram_ = value;
+          onChanged();
+          return this;
+        }
+        public Builder clearHdrHistogram() {
+          bitField0_ = (bitField0_ & ~0x00001000);
+          hdrHistogram_ = getDefaultInstance().getHdrHistogram();
+          onChanged();
+          return this;
+        }
+        
         // @@protoc_insertion_point(builder_scope:org.attribyte.essem.EssemReport.Histogram)
       }
       
@@ -2883,6 +2943,10 @@ public final class ReportProtos {
       // optional double percentile999 = 16;
       boolean hasPercentile999();
       double getPercentile999();
+      
+      // optional bytes hdrHistogram = 17;
+      boolean hasHdrHistogram();
+      com.google.protobuf.ByteString getHdrHistogram();
     }
     public static final class Timer extends
         com.google.protobuf.GeneratedMessage
@@ -3095,6 +3159,16 @@ public final class ReportProtos {
         return percentile999_;
       }
       
+      // optional bytes hdrHistogram = 17;
+      public static final int HDRHISTOGRAM_FIELD_NUMBER = 17;
+      private com.google.protobuf.ByteString hdrHistogram_;
+      public boolean hasHdrHistogram() {
+        return ((bitField0_ & 0x00010000) == 0x00010000);
+      }
+      public com.google.protobuf.ByteString getHdrHistogram() {
+        return hdrHistogram_;
+      }
+      
       private void initFields() {
         name_ = "";
         oneMinuteRate_ = 0D;
@@ -3112,6 +3186,7 @@ public final class ReportProtos {
         percentile98_ = 0D;
         percentile99_ = 0D;
         percentile999_ = 0D;
+        hdrHistogram_ = com.google.protobuf.ByteString.EMPTY;
       }
       private byte memoizedIsInitialized = -1;
       public final boolean isInitialized() {
@@ -3172,6 +3247,9 @@ public final class ReportProtos {
         }
         if (((bitField0_ & 0x00008000) == 0x00008000)) {
           output.writeDouble(16, percentile999_);
+        }
+        if (((bitField0_ & 0x00010000) == 0x00010000)) {
+          output.writeBytes(17, hdrHistogram_);
         }
         getUnknownFields().writeTo(output);
       }
@@ -3245,6 +3323,10 @@ public final class ReportProtos {
         if (((bitField0_ & 0x00008000) == 0x00008000)) {
           size += com.google.protobuf.CodedOutputStream
             .computeDoubleSize(16, percentile999_);
+        }
+        if (((bitField0_ & 0x00010000) == 0x00010000)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(17, hdrHistogram_);
         }
         size += getUnknownFields().getSerializedSize();
         memoizedSerializedSize = size;
@@ -3402,6 +3484,8 @@ public final class ReportProtos {
           bitField0_ = (bitField0_ & ~0x00004000);
           percentile999_ = 0D;
           bitField0_ = (bitField0_ & ~0x00008000);
+          hdrHistogram_ = com.google.protobuf.ByteString.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00010000);
           return this;
         }
         
@@ -3504,6 +3588,10 @@ public final class ReportProtos {
             to_bitField0_ |= 0x00008000;
           }
           result.percentile999_ = percentile999_;
+          if (((from_bitField0_ & 0x00010000) == 0x00010000)) {
+            to_bitField0_ |= 0x00010000;
+          }
+          result.hdrHistogram_ = hdrHistogram_;
           result.bitField0_ = to_bitField0_;
           onBuilt();
           return result;
@@ -3567,6 +3655,9 @@ public final class ReportProtos {
           }
           if (other.hasPercentile999()) {
             setPercentile999(other.getPercentile999());
+          }
+          if (other.hasHdrHistogram()) {
+            setHdrHistogram(other.getHdrHistogram());
           }
           this.mergeUnknownFields(other.getUnknownFields());
           return this;
@@ -3677,6 +3768,11 @@ public final class ReportProtos {
               case 129: {
                 bitField0_ |= 0x00008000;
                 percentile999_ = input.readDouble();
+                break;
+              }
+              case 138: {
+                bitField0_ |= 0x00010000;
+                hdrHistogram_ = input.readBytes();
                 break;
               }
             }
@@ -4032,6 +4128,30 @@ public final class ReportProtos {
         public Builder clearPercentile999() {
           bitField0_ = (bitField0_ & ~0x00008000);
           percentile999_ = 0D;
+          onChanged();
+          return this;
+        }
+        
+        // optional bytes hdrHistogram = 17;
+        private com.google.protobuf.ByteString hdrHistogram_ = com.google.protobuf.ByteString.EMPTY;
+        public boolean hasHdrHistogram() {
+          return ((bitField0_ & 0x00010000) == 0x00010000);
+        }
+        public com.google.protobuf.ByteString getHdrHistogram() {
+          return hdrHistogram_;
+        }
+        public Builder setHdrHistogram(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00010000;
+          hdrHistogram_ = value;
+          onChanged();
+          return this;
+        }
+        public Builder clearHdrHistogram() {
+          bitField0_ = (bitField0_ & ~0x00010000);
+          hdrHistogram_ = getDefaultInstance().getHdrHistogram();
           onChanged();
           return this;
         }
@@ -6099,7 +6219,7 @@ public final class ReportProtos {
   static {
     java.lang.String[] descriptorData = {
       "\n\021EssemReport.proto\022\023org.attribyte.essem" +
-      "\"\310\n\n\013EssemReport\0225\n\005meter\030\001 \003(\0132&.org.at" +
+      "\"\364\n\n\013EssemReport\0225\n\005meter\030\001 \003(\0132&.org.at" +
       "tribyte.essem.EssemReport.Meter\0225\n\005timer" +
       "\030\002 \003(\0132&.org.attribyte.essem.EssemReport" +
       ".Timer\0229\n\007counter\030\003 \003(\0132(.org.attribyte." +
@@ -6117,23 +6237,24 @@ public final class ReportProtos {
       "\005Meter\022\014\n\004name\030\001 \001(\t\022\025\n\roneMinuteRate\030\002 " +
       "\001(\001\022\026\n\016fiveMinuteRate\030\003 \001(\001\022\031\n\021fifteenMi" +
       "nuteRate\030\004 \001(\001\022\020\n\010meanRate\030\005 \001(\001\022\r\n\005coun" +
-      "t\030\006 \001(\004\032\334\001\n\tHistogram\022\014\n\004name\030\001 \001(\t\022\r\n\005c",
+      "t\030\006 \001(\004\032\362\001\n\tHistogram\022\014\n\004name\030\001 \001(\t\022\r\n\005c",
       "ount\030\002 \001(\004\022\013\n\003max\030\003 \001(\001\022\014\n\004mean\030\004 \001(\001\022\013\n" +
       "\003min\030\005 \001(\001\022\013\n\003std\030\006 \001(\001\022\016\n\006median\030\007 \001(\001\022" +
       "\024\n\014percentile75\030\010 \001(\001\022\024\n\014percentile95\030\t " +
       "\001(\001\022\024\n\014percentile98\030\n \001(\001\022\024\n\014percentile9" +
-      "9\030\013 \001(\001\022\025\n\rpercentile999\030\014 \001(\001\032\264\002\n\005Timer" +
-      "\022\014\n\004name\030\001 \001(\t\022\025\n\roneMinuteRate\030\002 \001(\001\022\026\n" +
-      "\016fiveMinuteRate\030\003 \001(\001\022\031\n\021fifteenMinuteRa" +
-      "te\030\004 \001(\001\022\020\n\010meanRate\030\005 \001(\001\022\r\n\005count\030\006 \001(" +
-      "\004\022\013\n\003max\030\007 \001(\001\022\014\n\004mean\030\010 \001(\001\022\013\n\003min\030\t \001(" +
-      "\001\022\013\n\003std\030\n \001(\001\022\016\n\006median\030\013 \001(\001\022\024\n\014percen",
-      "tile75\030\014 \001(\001\022\024\n\014percentile95\030\r \001(\001\022\024\n\014pe" +
-      "rcentile98\030\016 \001(\001\022\024\n\014percentile99\030\017 \001(\001\022\025" +
-      "\n\rpercentile999\030\020 \001(\001\"\\\n\010TimeUnit\022\t\n\005NAN" +
-      "OS\020\001\022\n\n\006MICROS\020\002\022\n\n\006MILLIS\020\003\022\013\n\007SECONDS\020" +
-      "\004\022\013\n\007MINUTES\020\005\022\t\n\005HOURS\020\006\022\010\n\004DAYS\020\007B\016B\014R" +
-      "eportProtos"
+      "9\030\013 \001(\001\022\025\n\rpercentile999\030\014 \001(\001\022\024\n\014hdrHis" +
+      "togram\030\r \001(\014\032\312\002\n\005Timer\022\014\n\004name\030\001 \001(\t\022\025\n\r" +
+      "oneMinuteRate\030\002 \001(\001\022\026\n\016fiveMinuteRate\030\003 " +
+      "\001(\001\022\031\n\021fifteenMinuteRate\030\004 \001(\001\022\020\n\010meanRa" +
+      "te\030\005 \001(\001\022\r\n\005count\030\006 \001(\004\022\013\n\003max\030\007 \001(\001\022\014\n\004" +
+      "mean\030\010 \001(\001\022\013\n\003min\030\t \001(\001\022\013\n\003std\030\n \001(\001\022\016\n\006",
+      "median\030\013 \001(\001\022\024\n\014percentile75\030\014 \001(\001\022\024\n\014pe" +
+      "rcentile95\030\r \001(\001\022\024\n\014percentile98\030\016 \001(\001\022\024" +
+      "\n\014percentile99\030\017 \001(\001\022\025\n\rpercentile999\030\020 " +
+      "\001(\001\022\024\n\014hdrHistogram\030\021 \001(\014\"\\\n\010TimeUnit\022\t\n" +
+      "\005NANOS\020\001\022\n\n\006MICROS\020\002\022\n\n\006MILLIS\020\003\022\013\n\007SECO" +
+      "NDS\020\004\022\013\n\007MINUTES\020\005\022\t\n\005HOURS\020\006\022\010\n\004DAYS\020\007B" +
+      "\016B\014ReportProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
       new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
@@ -6177,7 +6298,7 @@ public final class ReportProtos {
           internal_static_org_attribyte_essem_EssemReport_Histogram_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_attribyte_essem_EssemReport_Histogram_descriptor,
-              new java.lang.String[] { "Name", "Count", "Max", "Mean", "Min", "Std", "Median", "Percentile75", "Percentile95", "Percentile98", "Percentile99", "Percentile999", },
+              new java.lang.String[] { "Name", "Count", "Max", "Mean", "Min", "Std", "Median", "Percentile75", "Percentile95", "Percentile98", "Percentile99", "Percentile999", "HdrHistogram", },
               org.attribyte.essem.ReportProtos.EssemReport.Histogram.class,
               org.attribyte.essem.ReportProtos.EssemReport.Histogram.Builder.class);
           internal_static_org_attribyte_essem_EssemReport_Timer_descriptor =
@@ -6185,7 +6306,7 @@ public final class ReportProtos {
           internal_static_org_attribyte_essem_EssemReport_Timer_fieldAccessorTable = new
             com.google.protobuf.GeneratedMessage.FieldAccessorTable(
               internal_static_org_attribyte_essem_EssemReport_Timer_descriptor,
-              new java.lang.String[] { "Name", "OneMinuteRate", "FiveMinuteRate", "FifteenMinuteRate", "MeanRate", "Count", "Max", "Mean", "Min", "Std", "Median", "Percentile75", "Percentile95", "Percentile98", "Percentile99", "Percentile999", },
+              new java.lang.String[] { "Name", "OneMinuteRate", "FiveMinuteRate", "FifteenMinuteRate", "MeanRate", "Count", "Max", "Mean", "Min", "Std", "Median", "Percentile75", "Percentile95", "Percentile98", "Percentile99", "Percentile999", "HdrHistogram", },
               org.attribyte.essem.ReportProtos.EssemReport.Timer.class,
               org.attribyte.essem.ReportProtos.EssemReport.Timer.Builder.class);
           return null;

@@ -17,23 +17,25 @@ package org.attribyte.essem.reporter;
 
 import com.codahale.metrics.Clock;
 import com.codahale.metrics.Counter;
-import com.codahale.metrics.ExponentiallyDecayingReservoir;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metric;
+import com.codahale.metrics.Timer;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Snapshot;
-import com.codahale.metrics.Timer;
 import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.ByteStreams;
+import com.google.protobuf.ByteString;
 import org.attribyte.essem.ReportProtos;
+import org.attribyte.essem.metrics.HDRReservoir;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,9 +46,11 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
 
@@ -55,6 +59,27 @@ import java.util.zip.DeflaterOutputStream;
  * protocol.
  */
 public class EssemReporter extends ScheduledReporter implements MetricSet {
+
+   /**
+    * Selects the HDR histogram reporting method.
+    */
+   public enum HdrReport {
+
+      /**
+       * Don't report.
+       */
+      NONE,
+
+      /**
+       * Report the total histogram.
+       */
+      TOTAL,
+
+      /**
+       * Report the snapshot histogram.
+       */
+      SNAPSHOT
+   }
 
    /**
     * Creates a builder.
@@ -191,13 +216,34 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       }
 
       /**
+       * Configures the reporter to skip reports for metrics unchanged
+       * since the last report. Default is 'true'.
+       */
+      public Builder skipUnchangedMetrics(final boolean skipUnchangedMetrics) {
+         this.skipUnchangedMetrics = skipUnchangedMetrics;
+         return this;
+      }
+
+      /**
+       * Sets the HDR histogram report mode. Default is {@code SNAPSHOT}.
+       * @param hdrReport The HDR report mode.
+       * @return A self-reference.
+       */
+      public Builder setHdrReport(final HdrReport hdrReport) {
+         this.hdrReport = hdrReport;
+         return this;
+      }
+
+      /**
        * Builds an immutable reporter instance.
        * @return The immutable reporter.
        */
       public EssemReporter build() {
          return new EssemReporter(uri, authValue, deflate,
-                 registry, clock, application, host, instance, filter, rateUnit, durationUnit);
+                 registry, clock, application, host, instance, filter, rateUnit, durationUnit,
+                 skipUnchangedMetrics, hdrReport);
       }
+
 
       private final URI uri;
       private final MetricRegistry registry;
@@ -208,9 +254,11 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       private String host;
       private String instance;
       private boolean deflate;
-      private TimeUnit rateUnit = TimeUnit.MILLISECONDS;
-      private TimeUnit durationUnit = TimeUnit.SECONDS;
+      private TimeUnit rateUnit = TimeUnit.SECONDS;
+      private TimeUnit durationUnit = TimeUnit.MILLISECONDS;
+      private boolean skipUnchangedMetrics = false;
       private MetricFilter filter;
+      private HdrReport hdrReport = HdrReport.SNAPSHOT;
    }
 
    protected EssemReporter(final URI uri,
@@ -223,7 +271,9 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
                            final String instance,
                            final MetricFilter filter,
                            final TimeUnit rateUnit,
-                           final TimeUnit durationUnit) {
+                           final TimeUnit durationUnit,
+                           final boolean skipUnchangedMetrics,
+                           final HdrReport hdrReport) {
       super(registry, "essem-reporter", filter, rateUnit, durationUnit);
       this.uri = uri;
       this.authValue = authValue;
@@ -234,6 +284,8 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       this.instance = instance;
       this.rateUnit = rateUnit;
       this.durationUnit = durationUnit;
+      this.lastReportedCount = skipUnchangedMetrics ? Maps.<String, Long>newConcurrentMap() : null;
+      this.hdrReport = hdrReport;
    }
 
    /**
@@ -278,6 +330,8 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       if(host != null) builder.setHost(host);
       if(instance != null) builder.setInstance(instance);
 
+      lastMetricCount.set(gauges.size() + counters.size() + histograms.size() + meters.size() + timers.size());
+
       for(Map.Entry<String, Gauge> gauge : gauges.entrySet()) {
          Object val = gauge.getValue().getValue();
          ReportProtos.EssemReport.Gauge.Builder gaugeBuilder = builder.addGaugeBuilder();
@@ -290,60 +344,121 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
       }
 
       for(Map.Entry<String, Counter> counter : counters.entrySet()) {
-         builder.addCounterBuilder()
-                 .setName(counter.getKey())
-                 .setCount(counter.getValue().getCount());
+         String name = counter.getKey();
+         long value = counter.getValue().getCount();
+         if(!skipCountedReport(name, value)) {
+            builder.addCounterBuilder()
+                    .setName(name)
+                    .setCount(value);
+         }
       }
 
       for(Map.Entry<String, Meter> nv : meters.entrySet()) {
+         String name = nv.getKey();
          Meter meter = nv.getValue();
-         builder.addMeterBuilder()
-                 .setName(nv.getKey())
-                 .setCount(meter.getCount())
-                 .setOneMinuteRate(convertRate(meter.getOneMinuteRate()))
-                 .setFiveMinuteRate(convertRate(meter.getFiveMinuteRate()))
-                 .setFifteenMinuteRate(convertRate(meter.getFifteenMinuteRate()))
-                 .setMeanRate(convertRate(meter.getMeanRate()));
+         if(!skipCountedReport(name, meter.getCount())) {
+            builder.addMeterBuilder()
+                    .setName(name)
+                    .setCount(meter.getCount())
+                    .setOneMinuteRate(convertRate(meter.getOneMinuteRate()))
+                    .setFiveMinuteRate(convertRate(meter.getFiveMinuteRate()))
+                    .setFifteenMinuteRate(convertRate(meter.getFifteenMinuteRate()))
+                    .setMeanRate(convertRate(meter.getMeanRate()));
+         }
       }
 
       for(Map.Entry<String, Histogram> nv : histograms.entrySet()) {
+         String name = nv.getKey();
          Histogram histogram = nv.getValue();
-         Snapshot snapshot = histogram.getSnapshot();
-         builder.addHistogramBuilder()
-                 .setName(nv.getKey())
-                 .setCount(histogram.getCount())
-                 .setMax(snapshot.getMax())
-                 .setMin(snapshot.getMin())
-                 .setMedian(snapshot.getMedian())
-                 .setMean(snapshot.getMean())
-                 .setStd(snapshot.getStdDev())
-                 .setPercentile75(snapshot.get75thPercentile())
-                 .setPercentile95(snapshot.get95thPercentile())
-                 .setPercentile98(snapshot.get98thPercentile())
-                 .setPercentile99(snapshot.get99thPercentile())
-                 .setPercentile999(snapshot.get999thPercentile());
+         if(!skipCountedReport(name, histogram.getCount())) {
+            Snapshot snapshot = histogram.getSnapshot();
+            final HDRReservoir.HDRSnapshot hdrSnapshot;
+            if(snapshot instanceof HDRReservoir.HDRSnapshot && hdrReport != HdrReport.NONE) {
+               hdrSnapshot = (HDRReservoir.HDRSnapshot)snapshot;
+               switch(hdrReport) {
+                  case TOTAL:
+                     snapshot = hdrSnapshot.totalSnapshot();
+                     break;
+                  case SNAPSHOT:
+                     snapshot = hdrSnapshot.sinceLastSnapshot();
+                     break;
+               }
+            } else {
+               hdrSnapshot = null;
+            }
+
+            ReportProtos.EssemReport.Histogram.Builder histogramBuilder = builder.addHistogramBuilder();
+            histogramBuilder
+                    .setName(name)
+                    .setCount(histogram.getCount())
+                    .setMax(snapshot.getMax())
+                    .setMin(snapshot.getMin())
+                    .setMedian(snapshot.getMedian())
+                    .setMean(snapshot.getMean())
+                    .setStd(snapshot.getStdDev())
+                    .setPercentile75(snapshot.get75thPercentile())
+                    .setPercentile95(snapshot.get95thPercentile())
+                    .setPercentile98(snapshot.get98thPercentile())
+                    .setPercentile99(snapshot.get99thPercentile())
+                    .setPercentile999(snapshot.get999thPercentile());
+
+            if(hdrSnapshot != null) {
+               org.HdrHistogram.Histogram storedHistogram = hdrSnapshot.sinceLastSnapshot().getHistogram();
+               ByteBuffer buf = ByteBuffer.allocate(storedHistogram.getNeededByteBufferCapacity());
+               int compressedSize = storedHistogram.encodeIntoCompressedByteBuffer(buf);
+               buf.rewind();
+               histogramBuilder.setHdrHistogram(ByteString.copyFrom(buf, compressedSize));
+            }
+         }
       }
 
       for(Map.Entry<String, Timer> nv : timers.entrySet()) {
+         final String name = nv.getKey();
          Timer timer = nv.getValue();
-         Snapshot snapshot = timer.getSnapshot();
-         builder.addTimerBuilder()
-                 .setName(nv.getKey())
-                 .setOneMinuteRate(convertRate(timer.getOneMinuteRate()))
-                 .setFiveMinuteRate(convertRate(timer.getFiveMinuteRate()))
-                 .setFifteenMinuteRate(convertRate(timer.getFifteenMinuteRate()))
-                 .setMeanRate(convertRate(timer.getMeanRate()))
-                 .setCount(timer.getCount())
-                 .setMax(convertDuration(snapshot.getMax()))
-                 .setMin(convertDuration(snapshot.getMin()))
-                 .setMedian(convertDuration(snapshot.getMedian()))
-                 .setMean(convertDuration(snapshot.getMean()))
-                 .setStd(convertDuration(snapshot.getStdDev()))
-                 .setPercentile75(convertDuration(snapshot.get75thPercentile()))
-                 .setPercentile95(convertDuration(snapshot.get95thPercentile()))
-                 .setPercentile98(convertDuration(snapshot.get98thPercentile()))
-                 .setPercentile99(convertDuration(snapshot.get99thPercentile()))
-                 .setPercentile999(convertDuration(snapshot.get999thPercentile()));
+         if(!skipCountedReport(name, timer.getCount())) {
+            Snapshot snapshot = timer.getSnapshot();
+            final HDRReservoir.HDRSnapshot hdrSnapshot;
+            if(snapshot instanceof HDRReservoir.HDRSnapshot && hdrReport != HdrReport.NONE) {
+               hdrSnapshot = (HDRReservoir.HDRSnapshot)snapshot;
+               switch(hdrReport) {
+                  case TOTAL:
+                     snapshot = hdrSnapshot.totalSnapshot();
+                     break;
+                  case SNAPSHOT:
+                     snapshot = hdrSnapshot.sinceLastSnapshot();
+                     break;
+               }
+            } else {
+               hdrSnapshot = null;
+            }
+
+            ReportProtos.EssemReport.Timer.Builder timerBuilder = builder.addTimerBuilder();
+            timerBuilder
+                    .setName(nv.getKey())
+                    .setOneMinuteRate(convertRate(timer.getOneMinuteRate()))
+                    .setFiveMinuteRate(convertRate(timer.getFiveMinuteRate()))
+                    .setFifteenMinuteRate(convertRate(timer.getFifteenMinuteRate()))
+                    .setMeanRate(convertRate(timer.getMeanRate()))
+                    .setCount(timer.getCount())
+                    .setMax(convertDuration(snapshot.getMax()))
+                    .setMin(convertDuration(snapshot.getMin()))
+                    .setMedian(convertDuration(snapshot.getMedian()))
+                    .setMean(convertDuration(snapshot.getMean()))
+                    .setStd(convertDuration(snapshot.getStdDev()))
+                    .setPercentile75(convertDuration(snapshot.get75thPercentile()))
+                    .setPercentile95(convertDuration(snapshot.get95thPercentile()))
+                    .setPercentile98(convertDuration(snapshot.get98thPercentile()))
+                    .setPercentile99(convertDuration(snapshot.get99thPercentile()))
+                    .setPercentile999(convertDuration(snapshot.get999thPercentile()));
+
+            if(hdrSnapshot != null) {
+               org.HdrHistogram.Histogram storedHistogram = hdrSnapshot.sinceLastSnapshot().getHistogram();
+               ByteBuffer buf = ByteBuffer.allocate(storedHistogram.getNeededByteBufferCapacity());
+               int compressedSize = storedHistogram.encodeIntoCompressedByteBuffer(buf);
+               buf.rewind();
+               timerBuilder.setHdrHistogram(ByteString.copyFrom(buf, compressedSize));
+            }
+         }
       }
 
       return builder.build();
@@ -510,18 +625,68 @@ public class EssemReporter extends ScheduledReporter implements MetricSet {
    private final String authValue;
    private final boolean deflate;
 
-   private final Timer sendTimer = new Timer();
+   private final Timer sendTimer = new org.attribyte.essem.metrics.Timer();
    private final Meter sendErrors = new Meter();
-   private final Histogram reportSize = new Histogram(new ExponentiallyDecayingReservoir());
+   private final Histogram reportSize = new Histogram(new HDRReservoir(2, HDRReservoir.REPORT_SNAPSHOT_HISTOGRAM));
+   private final Counter skippedUnchanged = new Counter();
+
    private final ImmutableMap<String, Metric> metrics =
-           ImmutableMap.<String, Metric>of(
+           ImmutableMap.of(
                    "reports", sendTimer,
                    "failed-reports", sendErrors,
-                   "report-size-bytes", reportSize
+                   "report-size-bytes", reportSize,
+                   "skipped-unchanged", skippedUnchanged,
+                   "report-count", new Gauge<Integer>() {
+                      public Integer getValue() {
+                         return lastMetricCount.get();
+                      }
+                   }
            );
-
    @Override
    public Map<String, Metric> getMetrics() {
       return metrics;
    }
+
+   /**
+    * A map that contains the last reported value for counters, meters, histograms and timers.
+    * <p>
+    *    If configured, and the previously reported value is unchanged, the metric
+    *    will not be reported.
+    * </p>
+    */
+   private final Map<String, Long> lastReportedCount;
+
+
+   /**
+    * The number of metrics last reported.
+    */
+   private final AtomicInteger lastMetricCount = new AtomicInteger();
+
+   /**
+    * Should reporting be skipped for this counted metric?
+    *
+    * <p>
+    *    If the count is zero, no values have ever been added to the metric.
+    *    If the count is unchanged, no measurements have been recorded since the last report.
+    * </p>
+    * @param name The metric name.
+    * @param currentValue The current value.
+    * @return Should reporting be skipped?
+    */
+   private boolean skipCountedReport(final String name, final long currentValue) {
+      if(lastReportedCount == null) {
+         return false;
+      } else if(lastReportedCount.getOrDefault(name, Long.MIN_VALUE) == currentValue) {
+         skippedUnchanged.inc();
+         return true;
+      } else {
+         lastReportedCount.put(name, currentValue);
+         return false;
+      }
+   }
+
+   /**
+    * The HDR histogram report mode.
+    */
+   private final HdrReport hdrReport;
 }

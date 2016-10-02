@@ -26,7 +26,6 @@ import com.attribyte.essem.query.StatsQuery;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricSet;
-import com.codahale.metrics.Timer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableList;
@@ -41,6 +40,7 @@ import org.attribyte.api.http.AsyncClient;
 import org.attribyte.api.http.Request;
 import org.attribyte.api.http.RequestOptions;
 import org.attribyte.api.http.Response;
+import org.attribyte.essem.metrics.Timer;
 
 import java.io.IOException;
 import java.util.List;
@@ -52,6 +52,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.attribyte.essem.util.Util.parserFactory;
 import static com.attribyte.essem.util.Util.mapper;
@@ -147,9 +148,7 @@ class ApplicationCache implements MetricSet {
        */
       final List<Application> getApps() {
          List<Application> apps = Lists.newArrayListWithCapacity(this.apps.size());
-         for(CachedApplication app : this.apps) {
-            apps.add(app.app);
-         }
+         apps.addAll(this.apps.stream().map(app -> app.app).collect(Collectors.toList()));
          return apps;
       }
 
@@ -207,12 +206,7 @@ class ApplicationCache implements MetricSet {
 
 
       final BlockingQueue<Runnable> requestQueue = new ArrayBlockingQueue<>(4096);
-      final Gauge<Integer> requestQueueSize = new Gauge<Integer>() {
-         @Override
-         public Integer getValue() {
-            return requestQueue.size();
-         }
-      };
+      final Gauge<Integer> requestQueueSize = requestQueue::size;
 
       final ThreadPoolExecutor requestExecutor = new ThreadPoolExecutor(2, 8, 5L, TimeUnit.MINUTES,
               requestQueue, new ThreadFactoryBuilder().setNameFormat("application-cache-%d").build());

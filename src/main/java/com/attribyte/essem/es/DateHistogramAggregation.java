@@ -24,7 +24,7 @@ import java.util.List;
 
 public class DateHistogramAggregation extends QueryComponent implements BucketAggregation {
 
-   public static enum Interval {
+   public enum Interval {
       YEAR("year"),
       QUARTER("quarter"),
       MONTH("month"),
@@ -36,7 +36,7 @@ public class DateHistogramAggregation extends QueryComponent implements BucketAg
       FIVE_SECOND("5s"),
       SECOND("second");
 
-      private Interval(final String name) {
+      Interval(final String name) {
          this.name = name;
       }
 

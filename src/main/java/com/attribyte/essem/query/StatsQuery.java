@@ -21,8 +21,6 @@ import com.attribyte.essem.es.IntRangeQuery;
 import com.attribyte.essem.es.SearchRequest;
 import com.attribyte.essem.model.graph.MetricKey;
 
-import javax.servlet.http.HttpServletRequest;
-
 /**
  * Creates an ES query for field stats over a range.
  */

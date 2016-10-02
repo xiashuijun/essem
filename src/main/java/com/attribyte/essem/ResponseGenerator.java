@@ -16,6 +16,7 @@
 package com.attribyte.essem;
 
 import com.attribyte.essem.query.GraphQuery;
+import com.attribyte.essem.query.HistogramQuery;
 import com.attribyte.essem.query.NameQuery;
 import com.attribyte.essem.query.StatsQuery;
 import org.attribyte.api.http.Response;
@@ -95,4 +96,19 @@ public interface ResponseGenerator {
                                 Response esResponse,
                                 EnumSet<Option> options,
                                 HttpServletResponse response) throws IOException;
+
+   /**
+    * Generates a histogram response.
+    * @param histogramQuery The query.
+    * @param esResponse The response from ES.
+    * @param options Response options.
+    * @param response The target HTTP response.
+    * @return Was the response an error?
+    * @throws IOException on write error.
+    */
+   public boolean generateHistogram(HistogramQuery histogramQuery,
+                                    Response esResponse,
+                                    EnumSet<Option> options,
+                                    HttpServletResponse response) throws IOException;
+
 }

@@ -1,10 +1,10 @@
 save_key_form(graph) ::= <<
-<form action="POST" id="save-key-form">
+<form action="" id="save-key-form">
     <div class="row">
         <div class="small-12 colunms">
-            <h6 class="subheader" id="save-key-form-title">
-                <h5>$graph.key.captionWithField$</h5>
-            </h6>
+            <h5 class="subheader" id="save-key-form-title">
+                $graph.key.captionWithField$ $if(graph.rateUnit)$$graph.rateUnitText$$endif$
+            </h5>
         </div>
     </div>
     <div class="row collapse">

@@ -62,6 +62,7 @@ message EssemReport {
      optional double percentile98 = 10;
      optional double percentile99 = 11;
      optional double percentile999 = 12;
+     optional bytes hdrHistogram = 13;
    }
 
    message Timer {
@@ -81,6 +82,7 @@ message EssemReport {
      optional double percentile98 = 14;
      optional double percentile99 = 15;
      optional double percentile999 = 16;
+     optional bytes hdrHistogram = 17;
    }
 
    repeated Meter meter = 1;

@@ -36,13 +36,14 @@ import org.attribyte.api.http.RequestOptions;
 import org.attribyte.api.http.Response;
 import org.attribyte.api.http.impl.jetty.JettyClient;
 import org.attribyte.util.InitUtil;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.NCSARequestLog;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.server.handler.RequestLogHandler;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.LifeCycle;
@@ -194,14 +195,19 @@ public class Server {
          httpConnector.setIdleTimeout(30000L);
          server.addConnector(httpConnector);
 
-         HandlerCollection serverHandlers = new HandlerCollection();
-         server.setHandler(serverHandlers);
 
-         ServletContextHandler rootContext = new ServletContextHandler(ServletContextHandler.NO_SESSIONS | ServletContextHandler.NO_SECURITY);
+         ServletContextHandler rootContext = new ServletContextHandler(ServletContextHandler.NO_SECURITY);
          rootContext.setContextPath("/");
          rootContext.addAliasCheck(new ContextHandler.ApproveAliases());
          //rootContext.setErrorHandler(new JettyErrorHandler(logger));
-         serverHandlers.addHandler(rootContext);
+
+         GzipHandler gzip = new GzipHandler();
+         server.setHandler(gzip);
+         HandlerList handlers = new HandlerList();
+         handlers.setHandlers(new Handler[] {rootContext});
+         gzip.setHandler(handlers);
+
+         handlers.addHandler(rootContext);
 
          File requestLogPathFile = getSystemFile(REQUEST_LOG_PATH_KEY, props, false);
 
@@ -224,10 +230,7 @@ public class Server {
             requestLog.setLogTimeZone(requestLogTimeZone);
             requestLog.setLogCookies(false);
             requestLog.setPreferProxiedForAddress(true);
-
-            RequestLogHandler requestLogHandler = new RequestLogHandler();
-            requestLogHandler.setRequestLog(requestLog);
-            serverHandlers.addHandler(requestLogHandler);
+            server.setRequestLog(requestLog);
          } else {
             logInfo(logger, "Request logging is disabled!");
          }

@@ -25,6 +25,7 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Charsets;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -328,21 +329,21 @@ public class StoredGraph {
       this.endTimestamp = endTimestamp;
 
       final Hasher hasher = hashFunction.newHasher();
-      hasher.putString(this.index)
-              .putString(this.uid)
-              .putString(key.application)
-              .putString(key.host)
-              .putString(key.instance)
-              .putString(key.name)
-              .putString(key.field)
-              .putString(this.downsampleFn)
-              .putString(this.rateUnit);
+      hasher.putString(this.index, Charsets.UTF_8)
+              .putString(this.uid, Charsets.UTF_8)
+              .putString(key.application, Charsets.UTF_8)
+              .putString(key.host, Charsets.UTF_8)
+              .putString(key.instance, Charsets.UTF_8)
+              .putString(key.name, Charsets.UTF_8)
+              .putString(key.field, Charsets.UTF_8)
+              .putString(this.downsampleFn, Charsets.UTF_8)
+              .putString(this.rateUnit, Charsets.UTF_8);
 
       if(startTimestamp > 0L && endTimestamp > 0L) {
          hasher.putLong(startTimestamp);
          hasher.putLong(endTimestamp);
       } else {
-         hasher.putString(this.range);
+         hasher.putString(this.range, Charsets.UTF_8);
       }
 
       this.id = hasher.hash().toString();
@@ -614,4 +615,22 @@ public class StoredGraph {
     * A comma-separated list of tags.
     */
    public final String tagString;
+
+   /**
+    * Gets a text description of the rate unit.
+    * @return The text.
+    */
+   public final String getRateUnitText() {
+      if(rateUnit != null) {
+         switch(rateUnit.toLowerCase()) {
+            case "persecond" : return "/s";
+            case "perminute" : return "/min";
+            case "perhour" : return "/hour";
+            default : return "";
+         }
+      } else {
+         return "";
+      }
+   }
+
 }

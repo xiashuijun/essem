@@ -1,3 +1,5 @@
+/* globals moment, d3, MG */
+
 function handleXHRError(xhr, textStatus, errorThrown) {
     alert(xhr.code);
     alert(xhr.responseText);
@@ -46,7 +48,7 @@ function activateHost(host) {
 }
 
 function setCurrentTimezone(display) {
-    jQuery('#set_tz').text(display);
+    $('#set_tz').text(display);
 }
 
 function bindApps(index) {
@@ -147,13 +149,13 @@ function buildMetricsEndpoint(index, app, overridePrefix) {
     var type = currTypeFilter();
     var filter = currActivityFilter();
     var prefix = overridePrefix;
-    if(prefix == null) {
+    if(prefix) {
         prefix = currPrefix();
     }
 
     var url = '/console/' + index + '/metrics/' + app + '/' + type + "?filter=" + filter;
 
-    if(prefix != null && prefix.length > 0) {
+    if(prefix) {
         return url + '&prefix=' + encodeURIComponent(prefix);
     } else {
         return url;
@@ -171,7 +173,7 @@ function loadMetrics(index, app) {
             bindMetricSearchBox(index, app);
         },
         error: handleXHRError
-    })
+    });
 }
 
 var MINUTE_MILLIS = 60000;
@@ -256,7 +258,7 @@ function offsetMatchesLocal(tz) {
     var currTime = new Date();
     var localOffsetMinutes = currTime.getTimezoneOffset();
     var checkOffsetMinutes = moment.tz.zone(tz).offset(currTime.getTime());
-    return localOffsetMinutes == checkOffsetMinutes;
+    return localOffsetMinutes === checkOffsetMinutes;
 }
 
 function bindMetricSearchBox(index, app) {
@@ -273,15 +275,17 @@ function bindMetricSearchBox(index, app) {
                 loadSubContent(html);
             },
             error: handleXHRError
-        })
+        });
     }
     mf.unbind();
     mf.keyup(function() {
         clearTimeout(athread);
-        var $this = $(this); athread = setTimeout(function(){displayMatches($this.val())}, KEYUP_REFRESH_MILLIS);
+        var $this = $(this); athread = setTimeout(function() {
+            displayMatches($this.val());
+        }, KEYUP_REFRESH_MILLIS);
     });
     mf.keydown(function(event) {
-        if (event.which == 27 ) {
+        if (event.which === 27 ) {
             event.preventDefault();
             mf.val('');
         }
@@ -306,12 +310,39 @@ function loadMetricData(config, renderFn) {
     $('#json-link').attr('href', graphURL);
 
     $.getJSON(graphURL, function(data) {
-        if(config.tz == null || config.tz == '') {
+        if(!config.tz) {
             data = convertTimestamps(data);
         } else {
             data = changeTimezone(data, config.tz);
         }
-        if(renderFn != null) renderFn(data);
+        if(renderFn) {
+            renderFn(data);
+        }
+    });
+}
+
+function loadHistogramData(config, renderFn) {
+
+    //setDynamicTitles(config);
+    $('#gloading').show();
+
+    var rangeComponent = '?range=' + config.range;
+    if(config.startTimestamp > 0 && config.endTimestamp > 0) {
+        rangeComponent = rangeComponent + '&rangeStart=' + config.startTimestamp +'&rangeEnd=' + config.endTimestamp;
+    }
+
+    var graphURL =
+        '/mgraph/'+config.index+'/histogram' + rangeComponent +
+        '&name='+encodeURIComponent(config.name) +
+        '&app='+config.app+'&host='+config.host +
+        '&units=millis';
+
+    $('#json-link').attr('href', graphURL);
+
+    $.getJSON(graphURL, function(data) {
+        if(renderFn) {
+            renderFn(data.bin);
+        }
     });
 }
 
@@ -320,19 +351,19 @@ function rangeDetail(config) {
     var mformat0 = 'YYYY-MM-DD HH:mm:ss';
     var mformat1 = 'YYYY-MM-DD HH:mm:ss Z z';
 
-    var rangeDetail = '';
-    if(config.tz != null && config.tz != '') {
-        rangeDetail = moment.tz(config.startTimestamp, config.tz).format(mformat0) + ' - ' +
+    var rangeDetailStr = '';
+    if(config.tz) {
+        rangeDetailStr = moment.tz(config.startTimestamp, config.tz).format(mformat0) + ' - ' +
         moment.tz(config.endTimestamp, config.tz).format(mformat1);
     } else {
-        rangeDetail = moment(config.startTimestamp).format(mformat0) + ' - ' + moment(config.endTimestamp).format(mformat0);
+        rangeDetailStr = moment(config.startTimestamp).format(mformat0) + ' - ' + moment(config.endTimestamp).format(mformat0);
     }
-    return rangeDetail;
+    return rangeDetailStr;
 }
 
 function setDynamicTitles(config) {
 
-    if(config.host != '') {
+    if(config.host) {
         $('#app-title').html(config.app + '&nbsp;&raquo;&nbsp;' + config.host);
     } else {
         $('#app-title').text(config.app);
@@ -355,7 +386,7 @@ function setDynamicTitles(config) {
 function setDynamicLabels(config) {
 
     var rateUnit = "perSecond";
-    if(config.rateUnit != null) {
+    if(config.rateUnit) {
         rateUnit = config.rateUnit;
     }
 
@@ -381,9 +412,9 @@ function setDynamicLabels(config) {
 }
 
 function samplePlural(samples) {
-    if(samples == 1) {
+    if(samples === 1) {
         return samples + ' Sample';
-    } else if(samples == 0) {
+    } else if(samples === 0) {
         return 'No Samples';
     } else {
         return samples + ' Samples';
@@ -393,7 +424,7 @@ function samplePlural(samples) {
 function loadGraph(data, config, dataConfig) {
 
     var target = dataConfig.target;
-    if(target == '') {
+    if(!target) {
         target = '#m_' + config.name_hash + '_' + config.field;
     }
 
@@ -401,33 +432,33 @@ function loadGraph(data, config, dataConfig) {
     var xAxisFormatter = d3.time.format(xFormat);
 
     var hoverFormatter = d3.time.format('%Y-%m-%d %H:%M:%S');
-    if(dataConfig.tz != null && dataConfig.tz != '') {
+    if(dataConfig.tz) {
         var tzf = moment.tz(dataConfig.tz).format("Z z");
         hoverFormatter = d3.time.format('%Y-%m-%d %H:%M:%S ' + tzf);
     }
 
-    var left_margin = config.left_margin != null ? config.left_margin : 60;
-    var bottom_margin = config.bottom_margin != null ? config.bottom_margin : 40;
-    var full_width = config.full_width != null ? config.full_width : false;
-    var full_height = config.full_height != null ? config.full_height : false;
+    var left_margin = config.left_margin ? config.left_margin : 60;
+    var bottom_margin = config.bottom_margin ? config.bottom_margin : 40;
+    var full_width = config.full_width ? config.full_width : false;
+    var full_height = config.full_height ? config.full_height : false;
 
     var x_label = "";
     var y_label = "";
 
     if(config.with_labels) {
-        x_label = config.x_label != null ? config.x_label : "";
-        y_label = config.y_label != null ? config.y_label : "";
+        x_label = config.x_label ? config.x_label : "";
+        y_label = config.y_label ? config.y_label : "";
     }
     var title = "";
     if(config.with_title) {
-        title = config.title != null ? config.title : "";
+        title = config.title ? config.title : "";
     }
 
-    var small_text = config.small_text != null ? config.small_text : false;
+    var small_text = config.small_text ? config.small_text : false;
 
     var hover_label = config.y_label;
 
-    if(config.field.endsWith("Rate") && dataConfig.rateUnit != null) {
+    if(config.field.endsWith("Rate") && dataConfig.rateUnit) {
         switch(dataConfig.rateUnit.toLowerCase()) {
             case "perminute":
                 hover_label = "Per Minute";
@@ -478,8 +509,12 @@ function loadGraph(data, config, dataConfig) {
 
 function showFieldStats(config, field, range) {
     var url = '/console/' + config.index + '/fstats/' + config.app + '?name=' + config.name + '&field=' + field + '&range=' + range;
-    if(config.host != null) url = url + '&host=' + config.host;
-    if(config.rateUnit != null) url = url + '&rateUnit=' + config.rateUnit;
+    if(config.host) {
+        url = url + '&host=' + config.host;
+    }
+    if(config.rateUnit) {
+        url = url + '&rateUnit=' + config.rateUnit;
+    }
 
     $.ajax({
         type: 'GET',
@@ -499,11 +534,21 @@ function showFieldStats(config, field, range) {
 
 function renderFieldStats(config, field, target) {
     var url = '/console/' + config.index + '/fstats/' + config.app + '?name=' + config.name + '&field=' + field + '&range=' + config.range;
-    if(config.host != null) url = url + '&host=' + config.host;
-    if(config.startTimestamp > 0) url = url + '&startTimestamp=' + config.startTimestamp;
-    if(config.endTimestamp > 0) url = url + '&endTimestamp=' + config.endTimestamp;
-    if(config.t != null) url = url + '&t=' + config.t;
-    if(config.rateUnit != null) url = url + '&rateUnit=' + config.rateUnit;
+    if(config.host) {
+        url = url + '&host=' + config.host;
+    }
+    if(config.startTimestamp > 0) {
+        url = url + '&startTimestamp=' + config.startTimestamp;
+    }
+    if(config.endTimestamp > 0) {
+        url = url + '&endTimestamp=' + config.endTimestamp;
+    }
+    if(config.t) {
+        url = url + '&t=' + config.t;
+    }
+    if(config.rateUnit) {
+        url = url + '&rateUnit=' + config.rateUnit;
+    }
 
     $.ajax({
         type: 'GET',
@@ -526,8 +571,12 @@ function showGraphSave(config, field) {
     var url = '/console/' + config.index + '/savegraph/' + config.app + '?name=' + encodeURIComponent(config.name) + '&field=' + field +
             '&host=' + config.host + '&downsampleFn=' + config.downsampleFn + rangeComponent;
 
-    if(config.host != null) url = url + '&host=' + config.host;
-    if(config.rateUnit != null) url = url + '&rateUnit=' + config.rateUnit;
+    if(config.host) {
+        url = url + '&host=' + config.host;
+    }
+    if(config.rateUnit) {
+        url = url + '&rateUnit=' + config.rateUnit;
+    }
 
     $.ajax({
         type: 'GET',
@@ -539,7 +588,7 @@ function showGraphSave(config, field) {
             scrollToTop();
             $('#save-key-form').submit(function(event) {
                 event.preventDefault();
-                saveGraph(config.index, config.app, jQuery(this).serialize());
+                saveGraph(config.index, config.app, $(this).serialize());
             });
         },
         error: handleXHRError
@@ -552,7 +601,7 @@ function saveGraph(index, app, data) {
         url: '/console/' + index + '/savegraph/' + app,
         data: data,
         success: function (html, textStatus) {
-            if (textStatus == "success") {
+            if (textStatus === "success") {
                 window.location = '/console/' + index + '/usergraph/' + html.trim();
             } else {
                 alert("Error: " + textStatus);
@@ -567,12 +616,72 @@ function deleteGraph(index, id, hideId) {
         type: 'DELETE',
         url: '/console/' + index + '/deletegraph/' + id,
         success: function (html, textStatus) {
-            if (textStatus == "success") {
+            if (textStatus === "success") {
                 $('#' + hideId).fadeOut('slow');
             } else {
                 alert("Error: " + textStatus);
             }
         },
         error: handleXHRError
+    });
+}
+
+function loadHistogram(data, config, dataConfig) {
+
+    var target = dataConfig.target;
+    if(!target) {
+        target = '#m_' + config.name_hash + '_' + config.field;
+    }
+
+    var left_margin = config.left_margin ? config.left_margin : 60;
+    var bottom_margin = config.bottom_margin ? config.bottom_margin : 40;
+    var full_width = config.full_width ? config.full_width : false;
+    var full_height = config.full_height ? config.full_height : false;
+
+    var x_label = "";
+    var y_label = "";
+
+    if(config.with_labels) {
+        x_label = config.x_label ? config.x_label : "";
+        y_label = config.y_label ? config.y_label : "";
+    }
+    var title = "";
+    if(config.with_title) {
+        title = config.title ? config.title : "";
+    }
+
+    var small_text = config.small_text ? config.small_text : false;
+
+    MG.data_graphic({
+        chart_type: 'histogram',
+        binned: true,
+        bar_margin: 1,
+        animate_on_load: true,
+        data: data,
+        width: dataConfig.width,
+        full_width: full_width,
+        full_height: full_height,
+        height: dataConfig.height,
+        left: left_margin,
+        bottom: bottom_margin,
+        buffer: 0,
+        show_secondary_x_label: false,
+        small_text: small_text,
+        y_extended_ticks: true,
+        target: target,
+        x_accessor: 'percentile',
+        xax_tick: 1,
+        xax_count: 20,
+        //xax_format: xAxisFormatter,
+        //y_accessor: config.field,
+        y_accessor: 'count',
+        min_y_from_data: false,
+        title: title,
+        x_label: x_label,
+        y_label: y_label,
+        mouseover: function(d, i) {
+            d3.select(target + ' svg .mg-active-datapoint')
+                .text('Value: ' + d3.round(d.x,2) +  '   Count: ' + d.y);
+        }
     });
 }

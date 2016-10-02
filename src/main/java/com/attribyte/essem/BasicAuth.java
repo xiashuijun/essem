@@ -27,7 +27,6 @@ import com.google.common.hash.HashCode;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
-import org.apache.commons.codec.binary.Base64;
 import org.attribyte.api.http.RequestBuilder;
 import org.attribyte.util.EncodingUtil;
 

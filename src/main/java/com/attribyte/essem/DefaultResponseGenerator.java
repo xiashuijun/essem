@@ -17,6 +17,7 @@ package com.attribyte.essem;
 
 import com.attribyte.essem.model.graph.MetricKey;
 import com.attribyte.essem.query.GraphQuery;
+import com.attribyte.essem.query.HistogramQuery;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -329,6 +330,17 @@ public class DefaultResponseGenerator extends ESResponseGenerator {
       meta.put("key", keyJoiner.join(metaList));
 
       graphObj.set("meta", meta);
+   }
+
+   @Override
+   public boolean generateHistogram(HistogramQuery histogramQuery,
+                                    Response esResponse,
+                                    EnumSet<Option> options,
+                                    HttpServletResponse response) throws IOException {
+      response.setContentType("application/json");
+      response.setStatus(esResponse.getStatusCode());
+      response.getOutputStream().write(esResponse.getBody().toByteArray());
+      return true;
    }
 
 }

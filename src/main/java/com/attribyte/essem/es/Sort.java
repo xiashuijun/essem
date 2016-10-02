@@ -11,7 +11,7 @@ public class Sort extends QueryComponent {
    /**
     * Sort direction.
     */
-   public static enum Direction {
+   public enum Direction {
 
       /**
        * Ascending.
